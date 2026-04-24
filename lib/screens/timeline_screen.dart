@@ -51,7 +51,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: const Icon(Icons.menu, color: Colors.black),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.black),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/timeline_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/calendar_screen.dart';
+import 'widgets/side_drawer.dart';
 
 void main() {
   runApp(const DiaryApp());
@@ -35,14 +37,25 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const TimelineScreen(),
-    const Center(child: Text('Calendar')),
+    const CalendarScreen(),
     const Center(child: Text('Media')),
     const SettingsScreen(),
   ];
 
+  void _onItemSelected(int index) {
+    setState(() {
+      _currentIndex = index % 4; // Map indices to bottom nav if needed
+    });
+    Navigator.of(context).pop(); // Close drawer
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: SideDrawer(
+        onItemSelected: _onItemSelected,
+        selectedIndex: _currentIndex,
+      ),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,

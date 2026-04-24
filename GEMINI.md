@@ -34,5 +34,13 @@
     - [x] Screen Widget Implementation
     - [x] Golden Tests
     - [x] Navigation from Bottom Bar
+- [x] Implement Calendar Navigation Screen (TDD)
+    - [x] Screen Widget Implementation
+    - [x] Golden Tests
+    - [x] Integration (Navigation from Bottom Bar)
+- [x] Implement Side Navigation Drawer (TDD)
+    - [x] Widget Implementation
+    - [x] Golden Tests
+    - [x] Integration (Global access from screens)
 - [ ] Implement Analytics/Stats Screen (TDD)
 - [ ] Final Polishing & Deployment Preparation
