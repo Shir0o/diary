@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>New Entry - Diary</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6750A4",
+                        "on-primary": "#FFFFFF",
+                        "primary-container": "#EADDFF",
+                        "on-primary-container": "#21005D",
+                        "background-light": "#FEF7FF",
+                        "background-dark": "#141218",
+                        "surface-light": "#FEF7FF",
+                        "surface-dark": "#141218",
+                        "on-surface-light": "#1D1B20",
+                        "on-surface-dark": "#E6E1E5",
+                        "outline": "#79747E"
+                    },
+                    fontFamily: {
+                        "display": ["IBM Plex Sans", "sans-serif"],
+                        "body": ["IBM Plex Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for cleaner UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-on-surface-light dark:text-on-surface-dark font-display antialiased transition-colors duration-200">
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-md mx-auto shadow-2xl dark:shadow-black/50">
+<!-- Status Bar Simulation Area -->
+<div class="h-12 w-full shrink-0 bg-background-light dark:bg-background-dark"></div>
+<!-- Top App Bar -->
+<div class="flex items-center justify-between px-4 py-2 bg-background-light dark:bg-background-dark z-10">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-primary/10 active:bg-primary/20 text-on-surface-light dark:text-on-surface-dark transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</button>
+<h2 class="text-lg font-semibold tracking-tight text-on-surface-light dark:text-on-surface-dark">New Entry</h2>
+<button class="flex items-center justify-center px-4 py-2 rounded-full bg-primary text-white font-medium text-sm hover:shadow-md transition-all active:scale-95">
+                Save
+            </button>
+</div>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto no-scrollbar flex flex-col px-6 pt-4 pb-24">
+<!-- Date & Time Header -->
+<div class="mb-6 animate-fade-in-up">
+<h1 class="text-3xl font-bold tracking-tight text-on-surface-light dark:text-on-surface-dark leading-tight">
+                    Oct 26, 2023
+                </h1>
+<p class="text-lg text-outline dark:text-gray-400 font-medium mt-1">
+                    8:30 PM <span class="mx-2 text-outline/50">•</span> Thursday
+                </p>
+</div>
+<!-- Main Text Input -->
+<div class="flex-1 h-full w-full">
+<textarea autofocus="" class="w-full h-full bg-transparent border-0 p-0 text-lg leading-relaxed text-on-surface-light dark:text-on-surface-dark placeholder:text-outline/60 focus:ring-0 focus:outline-none resize-none font-normal" placeholder="Write your heart out..."></textarea>
+</div>
+</div>
+<!-- Bottom Toolbar (Sticky) -->
+<!-- Using a slightly elevated surface color or backdrop blur for iOS feel -->
+<div class="absolute bottom-0 left-0 right-0 bg-surface-light/90 dark:bg-surface-dark/90 backdrop-blur-md border-t border-outline/10 dark:border-outline/20 px-6 py-4 pb-8 flex items-center justify-between z-20">
+<div class="flex items-center gap-1">
+<button aria-label="Add Image" class="p-3 rounded-xl text-primary hover:bg-primary-container/30 transition-colors group">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0, 'wght' 400;">image</span>
+</button>
+<button aria-label="Add Tag" class="p-3 rounded-xl text-primary hover:bg-primary-container/30 transition-colors group">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0, 'wght' 400;">label</span>
+</button>
+<button aria-label="Add Mood" class="p-3 rounded-xl text-primary hover:bg-primary-container/30 transition-colors group">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0, 'wght' 400;">mood</span>
+</button>
+<div class="w-[1px] h-6 bg-outline/20 mx-2"></div>
+<button aria-label="Location" class="p-3 rounded-xl text-outline hover:text-primary hover:bg-primary-container/30 transition-colors group">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0, 'wght' 400;">location_on</span>
+</button>
+</div>
+<!-- Character/Word count or Sync Status -->
+<div class="flex items-center gap-2 text-xs font-medium text-outline">
+<span class="material-symbols-outlined text-[16px] animate-pulse">cloud_upload</span>
+<span>Saving...</span>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/diary_entry.dart';
+import '../helpers/font_helper.dart';
 
 class EntryCard extends StatelessWidget {
   final DiaryEntry entry;
@@ -28,7 +27,8 @@ class EntryCard extends StatelessWidget {
               children: [
                 Text(
                   DateFormat('h:mm a').format(entry.date),
-                  style: _safeInter(
+                  style: safeGoogleFont(
+                    'Inter',
                     color: Colors.grey,
                     fontSize: 12,
                   ),
@@ -42,7 +42,8 @@ class EntryCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               entry.title,
-              style: _safeInter(
+              style: safeGoogleFont(
+                'Inter',
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -50,7 +51,8 @@ class EntryCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               entry.content,
-              style: _safeInter(
+              style: safeGoogleFont(
+                'Inter',
                 color: Colors.black87,
                 fontSize: 14,
                 height: 1.4,
@@ -64,7 +66,8 @@ class EntryCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     entry.location!,
-                    style: _safeInter(
+                    style: safeGoogleFont(
+                      'Inter',
                       color: const Color(0xFF6751a4),
                       fontSize: 12,
                     ),
@@ -76,38 +79,5 @@ class EntryCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  TextStyle _safeInter({
-    Color? color,
-    double? fontSize,
-    FontWeight? fontWeight,
-    double? height,
-  }) {
-    // If in test environment, return default TextStyle
-    if (RegExp(r'_test.dart$').hasMatch(Platform.script.path) || Platform.environment.containsKey('FLUTTER_TEST')) {
-      return TextStyle(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-      );
-    }
-    
-    try {
-      return GoogleFonts.inter(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-      );
-    } catch (e) {
-      return TextStyle(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-      );
-    }
   }
 }

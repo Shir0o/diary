@@ -20,3 +20,15 @@
 - Upon completion of a feature, capture a screenshot or screen recording of it running on an iOS or Android emulator.
 - Use tools like integration tests or manual runs to facilitate this process.
 - This ensures the final product meets the required standards and provides visual proof of functionality.
+
+## Progress Tracker
+
+- [x] Initial Project Setup
+- [x] Implement Timeline Screen (TDD)
+- [x] Implement New Entry Screen (TDD)
+    - [x] Screen Logic/Model
+    - [x] Screen Widget Implementation
+    - [x] Golden Tests
+    - [x] Integration (Navigation from Home)
+- [ ] Implement Analytics/Stats Screen (TDD)
+- [ ] Final Polishing & Deployment Preparation

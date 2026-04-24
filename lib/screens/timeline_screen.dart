@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/diary_entry.dart';
 import '../widgets/timeline_node.dart';
 import '../widgets/entry_card.dart';
+import 'new_entry_screen.dart';
+import '../helpers/font_helper.dart';
 
 class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
@@ -46,7 +46,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
       appBar: AppBar(
         title: Text(
           'Diary',
-          style: _safeInter(fontWeight: FontWeight.bold),
+          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -87,7 +87,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
                           padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
                           child: Text(
                             _formatDate(entry.date),
-                            style: _safeInter(
+                            style: safeGoogleFont(
+                              'Inter',
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
                               fontSize: 14,
@@ -104,7 +105,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const NewEntryScreen()),
+          );
+        },
         backgroundColor: const Color(0xFF6751a4),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -138,38 +143,5 @@ class _TimelineScreenState extends State<TimelineScreen> {
       return 'Today';
     }
     return '${date.day}/${date.month}/${date.year}';
-  }
-
-  TextStyle _safeInter({
-    Color? color,
-    double? fontSize,
-    FontWeight? fontWeight,
-    double? height,
-  }) {
-    // If in test environment, return default TextStyle
-    if (RegExp(r'_test.dart$').hasMatch(Platform.script.path) || Platform.environment.containsKey('FLUTTER_TEST')) {
-      return TextStyle(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-      );
-    }
-
-    try {
-      return GoogleFonts.inter(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-      );
-    } catch (e) {
-      return TextStyle(
-        color: color,
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-        height: height,
-      );
-    }
   }
 }
