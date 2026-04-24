@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'screens/timeline_screen.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const DiaryApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class DiaryApp extends StatelessWidget {
+  const DiaryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      title: 'Diary',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
+        useMaterial3: true,
       ),
+      home: const TimelineScreen(),
     );
   }
 }
