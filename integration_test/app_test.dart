@@ -53,5 +53,30 @@ void main() {
       // Verify we are back on the Timeline screen
       expect(find.text('Diary'), findsOneWidget);
     });
+
+    testWidgets('navigate between Timeline and Settings', (tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      // Verify we start on Timeline
+      expect(find.text('Diary'), findsOneWidget);
+
+      // Tap on Settings tab
+      final settingsTab = find.byIcon(Icons.settings);
+      await tester.tap(settingsTab);
+      await tester.pumpAndSettle();
+
+      // Verify we are on the Settings screen
+      expect(find.text('Settings').first, findsOneWidget);
+      expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
+
+      // Tap on Timeline tab to go back
+      final timelineTab = find.byIcon(Icons.timeline);
+      await tester.tap(timelineTab);
+      await tester.pumpAndSettle();
+
+      // Verify we are back on Timeline
+      expect(find.text('Diary'), findsOneWidget);
+    });
   });
 }

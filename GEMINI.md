@@ -30,5 +30,9 @@
     - [x] Screen Widget Implementation
     - [x] Golden Tests
     - [x] Integration (Navigation from Home)
+- [x] Implement Settings & Backup Screen (TDD)
+    - [x] Screen Widget Implementation
+    - [x] Golden Tests
+    - [x] Navigation from Bottom Bar
 - [ ] Implement Analytics/Stats Screen (TDD)
 - [ ] Final Polishing & Deployment Preparation

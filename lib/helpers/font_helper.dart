@@ -9,6 +9,7 @@ TextStyle safeGoogleFont(
   FontWeight? fontWeight,
   double? height,
   FontStyle? fontStyle,
+  double? letterSpacing,
 }) {
   final bool isTest = RegExp(r'_test.dart$').hasMatch(Platform.script.path) || Platform.environment.containsKey('FLUTTER_TEST');
 
@@ -19,6 +20,7 @@ TextStyle safeGoogleFont(
       fontWeight: fontWeight,
       height: height,
       fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
     );
   }
 
@@ -30,6 +32,7 @@ TextStyle safeGoogleFont(
       fontWeight: fontWeight,
       height: height,
       fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
     );
   } catch (e) {
     return TextStyle(
@@ -38,6 +41,7 @@ TextStyle safeGoogleFont(
       fontWeight: fontWeight,
       height: height,
       fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
     );
   }
 }

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6751a4",
+                        "background-light": "#FEF7FF",
+                        "background-dark": "#17161c",
+                        "outline-variant": "#CAC4D0",
+                    },
+                    fontFamily: {
+                        "display": ["IBM Plex Sans", "Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#141316] dark:text-white transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<div class="sticky top-0 z-10 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 px-4 py-3 backdrop-blur-md border-b border-transparent transition-colors">
+<button class="flex h-10 w-10 items-center justify-center rounded-full text-[#141316] dark:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-[#141316] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] absolute left-1/2 -translate-x-1/2">Settings</h2>
+<div class="w-10"></div> 
+</div>
+<div class="h-2"></div>
+<h3 class="text-[#141316] dark:text-white text-sm font-bold leading-tight tracking-wider uppercase px-6 pb-2 pt-4 opacity-70">Security &amp; Appearance</h3>
+<div class="mx-4 flex flex-col overflow-hidden rounded-xl border border-outline-variant/40 bg-white dark:bg-[#201f24] shadow-sm">
+<div class="flex items-center gap-4 px-4 min-h-[64px] justify-between border-b border-outline-variant/30">
+<div class="flex items-center gap-4">
+<div class="text-[#141316] dark:text-white flex items-center justify-center rounded-lg bg-[#f2f1f3] dark:bg-white/10 shrink-0 size-10">
+<span class="material-symbols-outlined">fingerprint</span>
+</div>
+<p class="text-[#141316] dark:text-white text-base font-medium leading-normal flex-1 truncate">Biometric Lock</p>
+</div>
+<div class="shrink-0">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-[#f2f1f3] dark:bg-white/20 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary transition-colors">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 min-h-[64px] justify-between cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<div class="text-[#141316] dark:text-white flex items-center justify-center rounded-lg bg-[#f2f1f3] dark:bg-white/10 shrink-0 size-10">
+<span class="material-symbols-outlined">palette</span>
+</div>
+<p class="text-[#141316] dark:text-white text-base font-medium leading-normal flex-1 truncate">Theme</p>
+</div>
+<div class="shrink-0 flex items-center gap-2">
+<p class="text-[#141316]/60 dark:text-white/60 text-base font-normal leading-normal">System Default</p>
+<span class="material-symbols-outlined text-[#141316]/40 dark:text-white/40">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="h-4"></div>
+<h3 class="text-[#141316] dark:text-white text-sm font-bold leading-tight tracking-wider uppercase px-6 pb-2 pt-4 opacity-70">Cloud Backup</h3>
+<div class="mx-4 mb-8 flex flex-col rounded-xl border border-outline-variant/40 bg-white dark:bg-[#201f24] shadow-sm p-5 gap-5">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="text-primary flex items-center justify-center rounded-full bg-primary/10 shrink-0 size-12">
+<span class="material-symbols-outlined text-2xl">cloud_sync</span>
+</div>
+<div class="flex flex-col">
+<h4 class="text-[#141316] dark:text-white text-base font-bold leading-tight">Auto-backup</h4>
+<p class="text-[#141316]/60 dark:text-white/60 text-sm mt-1">Back up your diary entries to Google Drive automatically.</p>
+</div>
+</div>
+<div class="shrink-0 mt-1">
+<label class="relative flex h-[31px] w-[51px] cursor-pointer items-center rounded-full border-none bg-[#f2f1f3] dark:bg-white/20 p-0.5 has-[:checked]:justify-end has-[:checked]:bg-primary transition-colors">
+<div class="h-full w-[27px] rounded-full bg-white shadow-sm" style="box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 8px, rgba(0, 0, 0, 0.06) 0px 3px 1px;"></div>
+<input checked="" class="invisible absolute" type="checkbox"/>
+</label>
+</div>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2 text-sm text-[#141316]/70 dark:text-white/70">
+<span class="material-symbols-outlined text-lg">history</span>
+<span>Last backup: <span class="font-medium text-[#141316] dark:text-white">Oct 24, 2023 • 10:42 AM</span></span>
+</div>
+<button class="relative mt-2 flex w-full items-center justify-center gap-3 rounded-full bg-white border border-outline-variant shadow-sm hover:shadow-md active:scale-[0.99] transition-all py-3 px-4 group">
+<svg class="h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="text-sm font-semibold text-[#1f1f1f]">Backup to Google Drive</span>
+</button>
+</div>
+</div>
+<div class="mt-auto pb-8 flex flex-col items-center justify-center text-center opacity-50 px-8">
+<span class="material-symbols-outlined text-2xl mb-2">lock</span>
+<p class="text-xs font-medium">Your data is encrypted locally.</p>
+<p class="text-[10px] mt-1">Version 2.4.0</p>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 z-50 flex h-[80px] w-full items-center justify-around border-t border-outline-variant/20 bg-background-light/95 dark:bg-[#1e1d23]/95 backdrop-blur-md pb-2">
+<div class="group flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 text-[#141316]/60 dark:text-white/60 hover:text-[#141316] dark:hover:text-white">
+<div class="flex h-8 w-16 items-center justify-center rounded-full transition-colors group-hover:bg-black/5 dark:group-hover:bg-white/10">
+<span class="material-symbols-outlined text-2xl">view_agenda</span>
+</div>
+<span class="text-xs font-medium">Timeline</span>
+</div>
+<div class="group flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 text-[#141316]/60 dark:text-white/60 hover:text-[#141316] dark:hover:text-white">
+<div class="flex h-8 w-16 items-center justify-center rounded-full transition-colors group-hover:bg-black/5 dark:group-hover:bg-white/10">
+<span class="material-symbols-outlined text-2xl">calendar_month</span>
+</div>
+<span class="text-xs font-medium">Calendar</span>
+</div>
+<div class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 text-[#141316] dark:text-white">
+<div class="flex h-8 w-16 items-center justify-center rounded-full bg-[#e8def8] dark:bg-[#4a4458]">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">settings</span>
+</div>
+<span class="text-xs font-bold">Settings</span>
+</div>
+</div>
+</body></html>
