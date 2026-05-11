@@ -7,10 +7,34 @@ import 'package:diary/models/diary_entry.dart';
 void main() {
   group('AnalyticsScreen Golden Tests', () {
     final mockEntries = [
-      DiaryEntry(id: '1', date: DateTime(2026, 4, 24), title: 'T1', content: 'C1', mood: '🚀'),
-      DiaryEntry(id: '2', date: DateTime(2026, 4, 23), title: 'T2', content: 'C2', mood: '🚀'),
-      DiaryEntry(id: '3', date: DateTime(2026, 4, 22), title: 'T3', content: 'C3', mood: '☕'),
-      DiaryEntry(id: '4', date: DateTime(2026, 4, 20), title: 'T4', content: 'C4', mood: '📝'),
+      DiaryEntry(
+        id: '1',
+        date: DateTime(2026, 4, 24),
+        title: 'T1',
+        content: 'C1',
+        mood: '🚀',
+      ),
+      DiaryEntry(
+        id: '2',
+        date: DateTime(2026, 4, 23),
+        title: 'T2',
+        content: 'C2',
+        mood: '🚀',
+      ),
+      DiaryEntry(
+        id: '3',
+        date: DateTime(2026, 4, 22),
+        title: 'T3',
+        content: 'C3',
+        mood: '☕',
+      ),
+      DiaryEntry(
+        id: '4',
+        date: DateTime(2026, 4, 20),
+        title: 'T4',
+        content: 'C4',
+        mood: '📝',
+      ),
     ];
 
     testGoldens('AnalyticsScreen - appearance', (WidgetTester tester) async {

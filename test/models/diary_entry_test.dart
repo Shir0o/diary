@@ -4,7 +4,7 @@ import 'package:diary/models/diary_entry.dart';
 void main() {
   group('DiaryEntry', () {
     final testDate = DateTime(2023, 10, 24, 10, 30);
-    
+
     test('should create a DiaryEntry instance', () {
       final entry = DiaryEntry(
         id: '1',

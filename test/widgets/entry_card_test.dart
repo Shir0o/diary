@@ -4,7 +4,9 @@ import 'package:diary/widgets/entry_card.dart';
 import 'package:diary/models/diary_entry.dart';
 
 void main() {
-  testWidgets('EntryCard should display entry details', (WidgetTester tester) async {
+  testWidgets('EntryCard should display entry details', (
+    WidgetTester tester,
+  ) async {
     final entry = DiaryEntry(
       id: '1',
       date: DateTime(2023, 10, 24, 10, 30),
@@ -16,9 +18,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: EntryCard(entry: entry),
-        ),
+        home: Scaffold(body: EntryCard(entry: entry)),
       ),
     );
 

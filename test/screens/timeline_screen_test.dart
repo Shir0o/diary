@@ -4,12 +4,10 @@ import 'package:diary/screens/timeline_screen.dart';
 import 'package:diary/models/diary_entry.dart';
 
 void main() {
-  testWidgets('TimelineScreen should render entries and FAB', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: TimelineScreen(),
-      ),
-    );
+  testWidgets('TimelineScreen should render entries and FAB', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: TimelineScreen()));
 
     expect(find.text('Diary'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsOneWidget);

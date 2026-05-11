@@ -25,7 +25,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       id: '1',
       date: DateTime(2026, 4, 24, 10, 0),
       title: 'Starting a new project',
-      content: 'Today I started the Diary app project. It\'s going to be a great journey of building something meaningful.',
+      content:
+          'Today I started the Diary app project. It\'s going to be a great journey of building something meaningful.',
       mood: '🚀',
       location: 'Home Office',
     ),
@@ -33,7 +34,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       id: '2',
       date: DateTime(2026, 4, 24, 14, 0),
       title: 'Coffee Break',
-      content: 'Had a wonderful cup of coffee while thinking about the UI design.',
+      content:
+          'Had a wonderful cup of coffee while thinking about the UI design.',
       mood: '☕',
       location: 'Local Cafe',
     ),

@@ -18,7 +18,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
       id: '1',
       date: DateTime.now(),
       title: 'Starting a new project',
-      content: 'Today I started the Diary app project. It\'s going to be a great journey of building something meaningful.',
+      content:
+          'Today I started the Diary app project. It\'s going to be a great journey of building something meaningful.',
       mood: '🚀',
       location: 'Home Office',
     ),
@@ -26,7 +27,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
       id: '2',
       date: DateTime.now().subtract(const Duration(hours: 2)),
       title: 'Coffee Break',
-      content: 'Had a wonderful cup of coffee while thinking about the UI design.',
+      content:
+          'Had a wonderful cup of coffee while thinking about the UI design.',
       mood: '☕',
       location: 'Local Cafe',
     ),
@@ -79,17 +81,18 @@ class _TimelineScreenState extends State<TimelineScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TimelineNode(
-                  isFirst: isFirst,
-                  isLast: isLast,
-                ),
+                TimelineNode(isFirst: isFirst, isLast: isLast),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (isFirst || _isNewDay(index))
                         Padding(
-                          padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            top: 16,
+                            bottom: 8,
+                          ),
                           child: Text(
                             _formatDate(entry.date),
                             style: safeGoogleFont(
@@ -132,7 +135,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    if (date.day == now.day && date.month == now.month && date.year == now.year) {
+    if (date.day == now.day &&
+        date.month == now.month &&
+        date.year == now.year) {
       return 'Today';
     }
     return '${date.day}/${date.month}/${date.year}';

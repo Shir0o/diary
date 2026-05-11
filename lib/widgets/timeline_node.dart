@@ -57,9 +57,9 @@ class _TimelinePainter extends CustomPainter {
     final circlePaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(Offset(center, 20), 6, circlePaint);
-    
+
     // Draw white inner circle
     final innerPaint = Paint()
       ..color = Colors.white

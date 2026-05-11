@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:diary/screens/settings_screen.dart';
 
 void main() {
-  testWidgets('SettingsScreen should display all required sections and items', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: SettingsScreen(),
-    ));
+  testWidgets('SettingsScreen should display all required sections and items', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
 
     // Top App Bar
     expect(find.text('Settings'), findsOneWidget);
@@ -24,7 +24,10 @@ void main() {
 
     // Cloud Backup Items
     expect(find.text('Auto-backup'), findsOneWidget);
-    expect(find.text('Back up your diary entries to Google Drive automatically.'), findsOneWidget);
+    expect(
+      find.text('Back up your diary entries to Google Drive automatically.'),
+      findsOneWidget,
+    );
     expect(find.text('Backup to Google Drive'), findsOneWidget);
     expect(find.textContaining('Last backup:'), findsOneWidget);
 
@@ -33,10 +36,10 @@ void main() {
     expect(find.text('Version 2.4.0'), findsOneWidget);
   });
 
-  testWidgets('Toggling switches should update state (UI check)', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: SettingsScreen(),
-    ));
+  testWidgets('Toggling switches should update state (UI check)', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
 
     final switches = find.byType(Switch);
     expect(switches, findsNWidgets(2));
@@ -44,7 +47,7 @@ void main() {
     // Toggle biometric lock
     await tester.tap(switches.first);
     await tester.pump();
-    
+
     // Toggle auto-backup
     await tester.tap(switches.last);
     await tester.pump();

@@ -13,10 +13,7 @@ void main() {
             height: 844,
             width: 390,
             child: Scaffold(
-              drawer: SideDrawer(
-                onItemSelected: (_) {},
-                selectedIndex: 0,
-              ),
+              drawer: SideDrawer(onItemSelected: (_) {}, selectedIndex: 0),
               body: const Center(child: Text('Body')),
             ),
           ),

@@ -156,17 +156,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                     children: [
                       InkWell(
                         onTap: () {},
-                        child: const Icon(Icons.image_outlined, color: Color(0xFF6750A4)),
+                        child: const Icon(
+                          Icons.image_outlined,
+                          color: Color(0xFF6750A4),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       InkWell(
                         onTap: () {},
-                        child: const Icon(Icons.label_outlined, color: Color(0xFF6750A4)),
+                        child: const Icon(
+                          Icons.label_outlined,
+                          color: Color(0xFF6750A4),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       InkWell(
                         onTap: () {},
-                        child: const Icon(Icons.mood_outlined, color: Color(0xFF6750A4)),
+                        child: const Icon(
+                          Icons.mood_outlined,
+                          color: Color(0xFF6750A4),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Container(
@@ -177,7 +186,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       const SizedBox(width: 16),
                       InkWell(
                         onTap: () {},
-                        child: const Icon(Icons.location_on_outlined, color: Color(0xFF79747E)),
+                        child: const Icon(
+                          Icons.location_on_outlined,
+                          color: Color(0xFF79747E),
+                        ),
                       ),
                     ],
                   ),

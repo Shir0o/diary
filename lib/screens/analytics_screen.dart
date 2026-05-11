@@ -7,18 +7,20 @@ class AnalyticsScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
   final DateTime? referenceDate;
 
-  const AnalyticsScreen({
-    super.key,
-    required this.entries,
-    this.referenceDate,
-  });
+  const AnalyticsScreen({super.key, required this.entries, this.referenceDate});
 
   @override
   Widget build(BuildContext context) {
     final totalEntries = AnalyticsHelper.calculateTotalEntries(entries);
-    final streak = AnalyticsHelper.calculateCurrentStreak(entries, relativeTo: referenceDate);
+    final streak = AnalyticsHelper.calculateCurrentStreak(
+      entries,
+      relativeTo: referenceDate,
+    );
     final moodDist = AnalyticsHelper.calculateMoodDistribution(entries);
-    final weeklyActivity = AnalyticsHelper.getWeeklyActivity(entries, relativeTo: referenceDate);
+    final weeklyActivity = AnalyticsHelper.getWeeklyActivity(
+      entries,
+      relativeTo: referenceDate,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FA),
@@ -78,7 +80,13 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 0,
       color: Colors.white,
@@ -105,11 +113,7 @@ class AnalyticsScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: safeGoogleFont(
-                'Inter',
-                fontSize: 12,
-                color: Colors.grey,
-              ),
+              style: safeGoogleFont('Inter', fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
@@ -171,7 +175,11 @@ class AnalyticsScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     '${(percentage * 100).toStringAsFixed(0)}%',
-                    style: safeGoogleFont('Inter', fontSize: 12, color: Colors.grey),
+                    style: safeGoogleFont(
+                      'Inter',
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ),
@@ -183,7 +191,9 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildActivityChart(List<DayActivity> activity) {
-    final maxCount = activity.map((e) => e.count).fold(0, (max, e) => e > max ? e : max);
+    final maxCount = activity
+        .map((e) => e.count)
+        .fold(0, (max, e) => e > max ? e : max);
     final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Simplified labels
 
     return Card(
@@ -203,8 +213,10 @@ class AnalyticsScreen extends StatelessWidget {
             children: activity.asMap().entries.map((entry) {
               final idx = entry.key;
               final day = entry.value;
-              final heightFactor = maxCount == 0 ? 0.05 : (day.count / maxCount).clamp(0.05, 1.0);
-              
+              final heightFactor = maxCount == 0
+                  ? 0.05
+                  : (day.count / maxCount).clamp(0.05, 1.0);
+
               return Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -212,14 +224,20 @@ class AnalyticsScreen extends StatelessWidget {
                     width: 20,
                     height: 100 * heightFactor,
                     decoration: BoxDecoration(
-                      color: day.count > 0 ? const Color(0xFF6751a4) : const Color(0xFFF3EDF7),
+                      color: day.count > 0
+                          ? const Color(0xFF6751a4)
+                          : const Color(0xFFF3EDF7),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _getWeekdayLabel(day.date),
-                    style: safeGoogleFont('Inter', fontSize: 10, color: Colors.grey),
+                    style: safeGoogleFont(
+                      'Inter',
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               );

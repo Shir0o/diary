@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:diary/widgets/side_drawer.dart';
 
 void main() {
-  Widget createWidgetUnderTest({required Function(int) onItemSelected, int selectedIndex = 0}) {
+  Widget createWidgetUnderTest({
+    required Function(int) onItemSelected,
+    int selectedIndex = 0,
+  }) {
     return MaterialApp(
       home: Scaffold(
         drawer: SideDrawer(
@@ -15,7 +18,9 @@ void main() {
     );
   }
 
-  testWidgets('SideDrawer renders header and navigation items', (WidgetTester tester) async {
+  testWidgets('SideDrawer renders header and navigation items', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(createWidgetUnderTest(onItemSelected: (_) {}));
 
     // Open the drawer
@@ -31,11 +36,13 @@ void main() {
     expect(find.text('Settings'), findsOneWidget);
   });
 
-  testWidgets('Tapping an item calls onItemSelected', (WidgetTester tester) async {
+  testWidgets('Tapping an item calls onItemSelected', (
+    WidgetTester tester,
+  ) async {
     int? tappedIndex;
-    await tester.pumpWidget(createWidgetUnderTest(
-      onItemSelected: (index) => tappedIndex = index,
-    ));
+    await tester.pumpWidget(
+      createWidgetUnderTest(onItemSelected: (index) => tappedIndex = index),
+    );
 
     // Open the drawer
     final ScaffoldState state = tester.firstState(find.byType(Scaffold));

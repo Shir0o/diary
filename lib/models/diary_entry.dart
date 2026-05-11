@@ -37,7 +37,11 @@ class DiaryEntry {
       content: json['content'] as String,
       mood: json['mood'] as String,
       location: json['location'] as String?,
-      imageUrls: (json['imageUrls'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      imageUrls:
+          (json['imageUrls'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 }
