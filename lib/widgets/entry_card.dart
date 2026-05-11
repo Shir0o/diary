@@ -33,10 +33,7 @@ class EntryCard extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
-                Text(
-                  entry.mood,
-                  style: const TextStyle(fontSize: 20),
-                ),
+                Text(entry.mood, style: const TextStyle(fontSize: 20)),
               ],
             ),
             const SizedBox(height: 8),
@@ -62,7 +59,11 @@ class EntryCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.location_on, size: 14, color: Color(0xFF6751a4)),
+                  const Icon(
+                    Icons.location_on,
+                    size: 14,
+                    color: Color(0xFF6751a4),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     entry.location!,

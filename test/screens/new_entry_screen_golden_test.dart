@@ -7,10 +7,8 @@ void main() {
   testGoldens('NewEntryScreen - appearance', (tester) async {
     await tester.pumpWidgetBuilder(
       const NewEntryScreen(),
-      wrapper: (child) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: child,
-      ),
+      wrapper: (child) =>
+          MaterialApp(debugShowCheckedModeBanner: false, home: child),
       surfaceSize: const Size(390, 844), // iPhone 13/14 size
     );
 

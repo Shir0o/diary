@@ -178,10 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: const Color(0xFF141316).withOpacity(0.6),
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: Color(0xFFCAC4D0),
-            ),
+            const Icon(Icons.chevron_right, color: Color(0xFFCAC4D0)),
           ],
         ),
       ),

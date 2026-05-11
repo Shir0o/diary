@@ -10,10 +10,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
       await testMain();
     },
     config: GoldenToolkitConfiguration(
-      defaultDevices: const [
-        Device.phone,
-        Device.iphone11,
-      ],
+      defaultDevices: const [Device.phone, Device.iphone11],
       enableRealShadows: true,
     ),
   );

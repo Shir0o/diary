@@ -4,30 +4,28 @@ import 'package:diary/screens/calendar_screen.dart';
 import 'package:diary/widgets/entry_card.dart';
 
 void main() {
-  testWidgets('CalendarScreen should render CalendarDatePicker and entries', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: CalendarScreen(),
-      ),
-    );
+  testWidgets('CalendarScreen should render CalendarDatePicker and entries', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: CalendarScreen()));
 
     expect(find.text('Calendar'), findsOneWidget);
     expect(find.byType(CalendarDatePicker), findsOneWidget);
   });
 
-  testWidgets('Selecting a date should filter entries (mock test)', (WidgetTester tester) async {
+  testWidgets('Selecting a date should filter entries (mock test)', (
+    WidgetTester tester,
+  ) async {
+    // The hardcoded entries in CalendarScreen are dated 2026-04-24; pin the
+    // initial date so this test is independent of the current wall clock.
     await tester.pumpWidget(
-      const MaterialApp(
-        home: CalendarScreen(),
-      ),
+      MaterialApp(home: CalendarScreen(initialDate: DateTime(2026, 4, 24))),
     );
 
-    // Note: Since data is currently hardcoded in CalendarScreen, 
-    // we expect to find specific entries for Today.
     expect(find.byType(EntryCard), findsAtLeastNWidgets(1));
 
     // Tap a different date (e.g., yesterday)
-    // Finding a date in CalendarDatePicker is tricky by text if it's not unique, 
+    // Finding a date in CalendarDatePicker is tricky by text if it's not unique,
     // but usually we can find the day number.
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
     await tester.tap(find.text(yesterday.day.toString()).last);

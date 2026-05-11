@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:diary/screens/new_entry_screen.dart';
 
 void main() {
-  testWidgets('NewEntryScreen should display all required UI elements', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: NewEntryScreen(),
-    ));
+  testWidgets('NewEntryScreen should display all required UI elements', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: NewEntryScreen()));
 
     // Top App Bar elements
     expect(find.byIcon(Icons.arrow_back), findsOneWidget);
@@ -25,15 +25,15 @@ void main() {
     expect(find.byIcon(Icons.label_outlined), findsOneWidget);
     expect(find.byIcon(Icons.mood_outlined), findsOneWidget);
     expect(find.byIcon(Icons.location_on_outlined), findsOneWidget);
-    
+
     // Status indicator
     expect(find.text('Saving...'), findsOneWidget);
   });
 
-  testWidgets('Entering text should update the TextField', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: NewEntryScreen(),
-    ));
+  testWidgets('Entering text should update the TextField', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: NewEntryScreen()));
 
     const testText = 'My secret diary entry';
     await tester.enterText(find.byType(TextField), testText);

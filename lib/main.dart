@@ -89,7 +89,9 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       drawer: SideDrawer(
         onItemSelected: _onItemSelected,
-        selectedIndex: _currentIndex == 0 ? 1 : (_currentIndex == 1 ? 2 : (_currentIndex == 2 ? 4 : 6)),
+        selectedIndex: _currentIndex == 0
+            ? 1
+            : (_currentIndex == 1 ? 2 : (_currentIndex == 2 ? 4 : 6)),
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -103,10 +105,22 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.timeline), label: 'Timeline'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Calendar'),
-          BottomNavigationBarItem(icon: Icon(Icons.analytics), label: 'Analytics'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timeline),
+            label: 'Timeline',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );
