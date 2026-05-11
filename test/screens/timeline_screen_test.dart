@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:diary/screens/timeline_screen.dart';
-import 'package:diary/models/diary_entry.dart';
 
 void main() {
   testWidgets('TimelineScreen should render entries and FAB', (

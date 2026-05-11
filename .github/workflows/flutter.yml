@@ -26,9 +26,7 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        run: flutter analyze
 
       - name: Run tests (excluding goldens)
-        run: |
-          mapfile -t files < <(find test -name '*_test.dart' ! -name '*_golden_test.dart')
-          flutter test "${files[@]}"
+        run: flutter test --exclude-tags golden

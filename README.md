@@ -13,10 +13,12 @@ This project follows strict Test-Driven Design (TDD) and documentation standards
 
 ### Running Tests
 
-To run all unit and widget tests:
+To run the full local test suite (unit, widget, and golden tests):
 ```bash
 flutter test
 ```
+
+CI runs the same tests _except_ the golden suite — see [Continuous Integration](#continuous-integration) below.
 
 ### Visual Validation
 
@@ -24,6 +26,19 @@ To run integration tests and perform visual validation (requires an emulator/dev
 ```bash
 flutter test integration_test/app_test.dart
 ```
+
+### Continuous Integration
+
+The [`Flutter CI`](.github/workflows/flutter.yml) workflow runs on every push to `main` and on pull requests targeting `main`. It performs:
+- `dart format --output=none --set-exit-if-changed .` — formatting check
+- `flutter analyze` — static analysis (fails on errors, warnings, and infos)
+- `flutter test --exclude-tags golden` — runs every test except those tagged `golden`; goldens are skipped in CI because they require platform-specific font rendering
+
+Golden test files are tagged with `@Tags(['golden'])` at the library level so the runner can exclude them.
+
+### Code Ownership
+
+[`.github/CODEOWNERS`](.github/CODEOWNERS) assigns ownership of the entire repository to [@Shir0o](https://github.com/Shir0o), who is automatically requested for review on every pull request.
 
 ## UI Design
 The UI is based on the "Diary" project from Stitch.

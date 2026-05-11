@@ -118,7 +118,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       hintStyle: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 18,
-                        color: const Color(0xFF79747E).withOpacity(0.6),
+                        color: const Color(0xFF79747E).withValues(alpha: 0.6),
                       ),
                       border: InputBorder.none,
                     ),
@@ -140,10 +140,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFFEF7FF).withOpacity(0.9),
+              color: const Color(0xFFFEF7FF).withValues(alpha: 0.9),
               border: Border(
                 top: BorderSide(
-                  color: const Color(0xFF79747E).withOpacity(0.1),
+                  color: const Color(0xFF79747E).withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -181,7 +181,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       Container(
                         width: 1,
                         height: 24,
-                        color: const Color(0xFF79747E).withOpacity(0.2),
+                        color: const Color(0xFF79747E).withValues(alpha: 0.2),
                       ),
                       const SizedBox(width: 16),
                       InkWell(

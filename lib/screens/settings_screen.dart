@@ -17,7 +17,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFEF7FF).withOpacity(0.95),
+        backgroundColor: const Color(0xFFFEF7FF).withValues(alpha: 0.95),
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'IBM Plex Sans',
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: const Color(0xFF141316).withOpacity(0.7),
+          color: const Color(0xFF141316).withValues(alpha: 0.7),
           letterSpacing: 1.2,
         ),
       ),
@@ -88,10 +88,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFCAC4D0).withOpacity(0.4)),
+        border: Border.all(
+          color: const Color(0xFFCAC4D0).withValues(alpha: 0.4),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -114,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: showBorder
             ? Border(
                 bottom: BorderSide(
-                  color: const Color(0xFFCAC4D0).withOpacity(0.3),
+                  color: const Color(0xFFCAC4D0).withValues(alpha: 0.3),
                 ),
               )
             : null,
@@ -137,7 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6751a4),
+            activeThumbColor: const Color(0xFF6751a4),
           ),
         ],
       ),
@@ -175,7 +177,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: safeGoogleFont(
                 'IBM Plex Sans',
                 fontSize: 16,
-                color: const Color(0xFF141316).withOpacity(0.6),
+                color: const Color(0xFF141316).withValues(alpha: 0.6),
               ),
             ),
             const Icon(Icons.chevron_right, color: Color(0xFFCAC4D0)),
@@ -204,10 +206,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFCAC4D0).withOpacity(0.4)),
+        border: Border.all(
+          color: const Color(0xFFCAC4D0).withValues(alpha: 0.4),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -223,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6751a4).withOpacity(0.1),
+                  color: const Color(0xFF6751a4).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -252,7 +256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: const Color(0xFF141316).withOpacity(0.6),
+                        color: const Color(0xFF141316).withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -261,12 +265,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Switch(
                 value: _autoBackup,
                 onChanged: (val) => setState(() => _autoBackup = val),
-                activeColor: const Color(0xFF6751a4),
+                activeThumbColor: const Color(0xFF6751a4),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Divider(color: const Color(0xFFCAC4D0).withOpacity(0.3), height: 1),
+          Divider(
+            color: const Color(0xFFCAC4D0).withValues(alpha: 0.3),
+            height: 1,
+          ),
           const SizedBox(height: 20),
           Row(
             children: [
@@ -280,7 +287,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: const Color(0xFF141316).withOpacity(0.7),
+                        color: const Color(0xFF141316).withValues(alpha: 0.7),
                       ),
                     ),
                     Flexible(
@@ -350,7 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'IBM Plex Sans',
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF141316).withOpacity(0.5),
+            color: const Color(0xFF141316).withValues(alpha: 0.5),
           ),
         ),
         const SizedBox(height: 4),
@@ -359,7 +366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: safeGoogleFont(
             'IBM Plex Sans',
             fontSize: 10,
-            color: const Color(0xFF141316).withOpacity(0.5),
+            color: const Color(0xFF141316).withValues(alpha: 0.5),
           ),
         ),
       ],

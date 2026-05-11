@@ -92,7 +92,7 @@ class AnalyticsScreen extends StatelessWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -145,7 +145,7 @@ class AnalyticsScreen extends StatelessWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -194,14 +194,13 @@ class AnalyticsScreen extends StatelessWidget {
     final maxCount = activity
         .map((e) => e.count)
         .fold(0, (max, e) => e > max ? e : max);
-    final dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Simplified labels
 
     return Card(
       elevation: 0,
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -211,7 +210,6 @@ class AnalyticsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: activity.asMap().entries.map((entry) {
-              final idx = entry.key;
               final day = entry.value;
               final heightFactor = maxCount == 0
                   ? 0.05
@@ -256,7 +254,7 @@ class AnalyticsScreen extends StatelessWidget {
   Widget _buildInsightsCard() {
     return Card(
       elevation: 0,
-      color: const Color(0xFF6751a4).withOpacity(0.05),
+      color: const Color(0xFF6751a4).withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: Color(0xFF6751a4), width: 0.5),
