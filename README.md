@@ -13,10 +13,12 @@ This project follows strict Test-Driven Design (TDD) and documentation standards
 
 ### Running Tests
 
-To run all unit and widget tests:
+To run the full local test suite (unit, widget, and golden tests):
 ```bash
 flutter test
 ```
+
+CI runs the same tests _except_ the golden suite — see [Continuous Integration](#continuous-integration) below.
 
 ### Visual Validation
 
