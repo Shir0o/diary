@@ -31,8 +31,10 @@ flutter test integration_test/app_test.dart
 
 The [`Flutter CI`](.github/workflows/flutter.yml) workflow runs on every push to `main` and on pull requests targeting `main`. It performs:
 - `dart format --output=none --set-exit-if-changed .` — formatting check
-- `flutter analyze --no-fatal-warnings --no-fatal-infos` — static analysis (errors only)
-- `flutter test` for every `*_test.dart` outside of `*_golden_test.dart` — goldens are skipped in CI because they require platform-specific font rendering
+- `flutter analyze` — static analysis (fails on errors, warnings, and infos)
+- `flutter test --exclude-tags golden` — runs every test except those tagged `golden`; goldens are skipped in CI because they require platform-specific font rendering
+
+Golden test files are tagged with `@Tags(['golden'])` at the library level so the runner can exclude them.
 
 ### Code Ownership
 

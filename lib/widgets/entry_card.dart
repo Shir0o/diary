@@ -14,7 +14,7 @@ class EntryCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Padding(

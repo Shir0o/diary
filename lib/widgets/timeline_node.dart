@@ -42,7 +42,7 @@ class _TimelinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.width / 2;
     final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
+      ..color = Colors.grey.withValues(alpha: 0.3)
       ..strokeWidth = 2;
 
     // Draw line
