@@ -1,10 +1,36 @@
+import 'package:diary/data/in_memory_diary_entry_store.dart';
 import 'package:diary/main.dart';
+import 'package:diary/models/diary_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  final testEntries = [
+    DiaryEntry(
+      id: '1',
+      date: DateTime(2026, 4, 24, 10, 0),
+      title: 'Starting a new project',
+      content: 'Today I started the Diary app project.',
+      mood: '🚀',
+      location: 'Home Office',
+    ),
+    DiaryEntry(
+      id: '2',
+      date: DateTime(2026, 4, 24, 14, 0),
+      title: 'Coffee Break',
+      content: 'Had a wonderful cup of coffee.',
+      mood: '☕',
+      location: 'Local Cafe',
+    ),
+  ];
+
+  Widget createApp() {
+    return DiaryApp(entryStore: InMemoryDiaryEntryStore(testEntries));
+  }
+
   testWidgets('menu button opens the main drawer', (tester) async {
-    await tester.pumpWidget(const DiaryApp());
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
 
     expect(find.byType(BottomNavigationBar), findsNothing);
 
@@ -21,7 +47,8 @@ void main() {
   testWidgets('drawer destinations navigate to existing screens', (
     tester,
   ) async {
-    await tester.pumpWidget(const DiaryApp());
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
@@ -41,7 +68,8 @@ void main() {
   });
 
   testWidgets('saving a new entry adds it to the timeline', (tester) async {
-    await tester.pumpWidget(const DiaryApp());
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -53,7 +81,8 @@ void main() {
   });
 
   testWidgets('editing an entry updates it in the timeline', (tester) async {
-    await tester.pumpWidget(const DiaryApp());
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Coffee Break'));
     await tester.pumpAndSettle();

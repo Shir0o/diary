@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'data/diary_entry_store.dart';
+import 'data/sqlite_diary_entry_store.dart';
 import 'screens/timeline_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/calendar_screen.dart';
@@ -12,7 +14,9 @@ void main() {
 }
 
 class DiaryApp extends StatelessWidget {
-  const DiaryApp({super.key});
+  final DiaryEntryStore? entryStore;
+
+  const DiaryApp({super.key, this.entryStore});
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +27,15 @@ class DiaryApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      home: MainScreen(entryStore: entryStore ?? SqliteDiaryEntryStore()),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final DiaryEntryStore entryStore;
+
+  const MainScreen({super.key, required this.entryStore});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -38,9 +44,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
+  List<DiaryEntry> _entries = [];
+  bool _isLoadingEntries = true;
 
-  // Centralized entries for consistency across screens.
-  final List<DiaryEntry> _entries = [
+  static final List<DiaryEntry> _defaultEntries = [
     DiaryEntry(
       id: '1',
       date: DateTime(2026, 4, 24, 10, 0),
@@ -66,6 +73,29 @@ class _MainScreenState extends State<MainScreen> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadEntries();
+  }
+
+  @override
+  void dispose() {
+    widget.entryStore.close();
+    super.dispose();
+  }
+
+  Future<void> _loadEntries() async {
+    await widget.entryStore.seedEntriesIfEmpty(_defaultEntries);
+    final entries = await widget.entryStore.loadEntries();
+
+    if (!mounted) return;
+    setState(() {
+      _entries = entries;
+      _isLoadingEntries = false;
+    });
+  }
+
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
@@ -75,6 +105,8 @@ class _MainScreenState extends State<MainScreen> {
       MaterialPageRoute(builder: (context) => const NewEntryScreen()),
     );
     if (entry == null) return;
+
+    await widget.entryStore.upsertEntry(entry);
 
     setState(() {
       _entries.insert(0, entry);
@@ -87,6 +119,8 @@ class _MainScreenState extends State<MainScreen> {
       MaterialPageRoute(builder: (context) => NewEntryScreen(entry: entry)),
     );
     if (updatedEntry == null) return;
+
+    await widget.entryStore.upsertEntry(updatedEntry);
 
     setState(() {
       final index = _entries.indexWhere((item) => item.id == updatedEntry.id);
@@ -125,6 +159,10 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildCurrentScreen() {
+    if (_isLoadingEntries) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return switch (_currentIndex) {
       0 => TimelineScreen(
         entries: _entries,
