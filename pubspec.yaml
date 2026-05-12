@@ -1,5 +1,5 @@
 name: diary
-description: "A new Flutter project."
+description: "A personal diary app for writing, reviewing, and reflecting on entries."
 publish_to: 'none'
 version: 0.1.0+1
 
