@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../helpers/font_helper.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -12,16 +14,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricLock = false;
   bool _autoBackup = true;
 
+  void _showThemeDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Theme'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: const Text('System Default'),
+                value: ThemeMode.system,
+                groupValue: themeProvider.themeMode,
+                onChanged: (val) {
+                  if (val != null) themeProvider.setThemeMode(val);
+                  Navigator.pop(context);
+                },
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('Light'),
+                value: ThemeMode.light,
+                groupValue: themeProvider.themeMode,
+                onChanged: (val) {
+                  if (val != null) themeProvider.setThemeMode(val);
+                  Navigator.pop(context);
+                },
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('Dark'),
+                value: ThemeMode.dark,
+                groupValue: themeProvider.themeMode,
+                onChanged: (val) {
+                  if (val != null) themeProvider.setThemeMode(val);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _getThemeName(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return 'System Default';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+      backgroundColor: isDark ? null : const Color(0xFFFEF7FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFEF7FF).withValues(alpha: 0.95),
+        backgroundColor: isDark ? null : const Color(0xFFFEF7FF).withValues(alpha: 0.95),
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFF141316)),
+            icon: Icon(Icons.menu, color: isDark ? Colors.white : const Color(0xFF141316)),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -29,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Settings',
           style: safeGoogleFont(
             'IBM Plex Sans',
-            color: const Color(0xFF141316),
+            color: isDark ? Colors.white : const Color(0xFF141316),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -52,8 +112,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildNavigationItem(
               icon: Icons.palette_outlined,
               title: 'Theme',
-              subtitle: 'System Default',
-              onTap: () {},
+              subtitle: _getThemeName(themeProvider.themeMode),
+              onTap: _showThemeDialog,
             ),
           ]),
           const SizedBox(height: 16),
@@ -67,6 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Text(
@@ -75,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'IBM Plex Sans',
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: const Color(0xFF141316).withValues(alpha: 0.7),
+          color: (isDark ? Colors.white : const Color(0xFF141316)).withValues(alpha: 0.7),
           letterSpacing: 1.2,
         ),
       ),
@@ -83,10 +144,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[900] : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: const Color(0xFFCAC4D0).withValues(alpha: 0.4),
@@ -110,6 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<bool> onChanged,
     bool showBorder = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -132,7 +195,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'IBM Plex Sans',
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF141316),
+                color: isDark ? Colors.white : const Color(0xFF141316),
               ),
             ),
           ),
@@ -152,6 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -168,7 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'IBM Plex Sans',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF141316),
+                  color: isDark ? Colors.white : const Color(0xFF141316),
                 ),
               ),
             ),
@@ -177,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: safeGoogleFont(
                 'IBM Plex Sans',
                 fontSize: 16,
-                color: const Color(0xFF141316).withValues(alpha: 0.6),
+                color: (isDark ? Colors.white : const Color(0xFF141316)).withValues(alpha: 0.6),
               ),
             ),
             const Icon(Icons.chevron_right, color: Color(0xFFCAC4D0)),
@@ -188,23 +252,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildIconContainer(IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F1F3),
+        color: isDark ? Colors.grey[800] : const Color(0xFFF2F1F3),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: const Color(0xFF141316), size: 24),
+      child: Icon(icon, color: isDark ? Colors.white : const Color(0xFF141316), size: 24),
     );
   }
 
   Widget _buildCloudBackupCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[900] : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: const Color(0xFFCAC4D0).withValues(alpha: 0.4),
@@ -247,7 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'IBM Plex Sans',
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF141316),
+                        color: isDark ? Colors.white : const Color(0xFF141316),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -256,7 +322,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: const Color(0xFF141316).withValues(alpha: 0.6),
+                        color: (isDark ? Colors.white : const Color(0xFF141316)).withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -277,7 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
           Row(
             children: [
-              const Icon(Icons.history, size: 18, color: Color(0xFF141316)),
+              Icon(Icons.history, size: 18, color: isDark ? Colors.white : const Color(0xFF141316)),
               const SizedBox(width: 8),
               Expanded(
                 child: Row(
@@ -287,7 +353,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: const Color(0xFF141316).withValues(alpha: 0.7),
+                        color: (isDark ? Colors.white : const Color(0xFF141316)).withValues(alpha: 0.7),
                       ),
                     ),
                     Flexible(
@@ -297,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'IBM Plex Sans',
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF141316),
+                          color: isDark ? Colors.white : const Color(0xFF141316),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -311,8 +377,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF1F1F1F),
+              backgroundColor: isDark ? Colors.grey[800] : Colors.white,
+              foregroundColor: isDark ? Colors.white : const Color(0xFF1F1F1F),
               elevation: 0,
               side: const BorderSide(color: Color(0xFFCAC4D0)),
               shape: RoundedRectangleBorder(
@@ -324,7 +390,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Simplified Google Logo with Icons
                 const Icon(Icons.backup, size: 20, color: Color(0xFF4285F4)),
                 const SizedBox(width: 8),
                 Flexible(
@@ -347,9 +412,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildFooter() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
-        const Icon(Icons.lock, size: 24, color: Color(0xFF141316)),
+        Icon(Icons.lock, size: 24, color: isDark ? Colors.white : const Color(0xFF141316)),
         const SizedBox(height: 8),
         Text(
           'Your data is encrypted locally.',
@@ -357,7 +423,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'IBM Plex Sans',
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF141316).withValues(alpha: 0.5),
+            color: (isDark ? Colors.white : const Color(0xFF141316)).withValues(alpha: 0.5),
           ),
         ),
         const SizedBox(height: 4),
@@ -366,7 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: safeGoogleFont(
             'IBM Plex Sans',
             fontSize: 10,
-            color: const Color(0xFF141316).withValues(alpha: 0.5),
+            color: (isDark ? Colors.white : const Color(0xFF141316)).withValues(alpha: 0.5),
           ),
         ),
       ],

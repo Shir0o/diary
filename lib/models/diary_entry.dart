@@ -6,6 +6,7 @@ class DiaryEntry {
   final String mood;
   final String? location;
   final List<String> imageUrls;
+  final List<String> tags;
 
   DiaryEntry({
     required this.id,
@@ -15,6 +16,7 @@ class DiaryEntry {
     required this.mood,
     this.location,
     this.imageUrls = const [],
+    this.tags = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -26,6 +28,7 @@ class DiaryEntry {
       'mood': mood,
       'location': location,
       'imageUrls': imageUrls,
+      'tags': tags,
     };
   }
 
@@ -39,6 +42,11 @@ class DiaryEntry {
       location: json['location'] as String?,
       imageUrls:
           (json['imageUrls'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      tags:
+          (json['tags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],

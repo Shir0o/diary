@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/diary_entry.dart';
 import '../widgets/entry_card.dart';
+import '../helpers/diary_search_delegate.dart';
 import '../helpers/font_helper.dart';
+import '../providers/diary_provider.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? initialDate;
-  const CalendarScreen({super.key, this.initialDate});
+  final List<DiaryEntry>? entries;
+  const CalendarScreen({super.key, this.initialDate, this.entries});
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -20,36 +24,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _selectedDate = widget.initialDate ?? DateTime.now();
   }
 
-  final List<DiaryEntry> _entries = [
-    DiaryEntry(
-      id: '1',
-      date: DateTime(2026, 4, 24, 10, 0),
-      title: 'Starting a new project',
-      content:
-          'Today I started the Diary app project. It\'s going to be a great journey of building something meaningful.',
-      mood: '🚀',
-      location: 'Home Office',
-    ),
-    DiaryEntry(
-      id: '2',
-      date: DateTime(2026, 4, 24, 14, 0),
-      title: 'Coffee Break',
-      content:
-          'Had a wonderful cup of coffee while thinking about the UI design.',
-      mood: '☕',
-      location: 'Local Cafe',
-    ),
-    DiaryEntry(
-      id: '3',
-      date: DateTime(2026, 4, 23, 11, 0),
-      title: 'Planning phase',
-      content: 'Spent the day planning the features and architecture.',
-      mood: '📝',
-    ),
-  ];
-
-  List<DiaryEntry> get _filteredEntries {
-    return _entries.where((entry) {
+  List<DiaryEntry> _filteredEntries(List<DiaryEntry> entries) {
+    return entries.where((entry) {
       return entry.date.year == _selectedDate.year &&
           entry.date.month == _selectedDate.month &&
           entry.date.day == _selectedDate.day;
@@ -58,6 +34,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<DiaryEntry> entries;
+    bool isLoading = false;
+
+    if (widget.entries != null) {
+      entries = widget.entries!;
+    } else {
+      final diaryProvider = Provider.of<DiaryProvider>(context);
+      entries = diaryProvider.entries;
+      isLoading = diaryProvider.isLoading;
+    }
+
+    final filteredEntries = _filteredEntries(entries);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -77,41 +66,48 @@ class _CalendarScreenState extends State<CalendarScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          CalendarDatePicker(
-            initialDate: _selectedDate,
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2030),
-            onDateChanged: (date) {
-              setState(() {
-                _selectedDate = date;
-              });
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: DiarySearchDelegate(entries),
+              );
             },
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: _filteredEntries.isEmpty
-                ? Center(
-                    child: Text(
-                      'No entries for this day',
-                      style: safeGoogleFont('Inter', color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _filteredEntries.length,
-                    itemBuilder: (context, index) {
-                      return EntryCard(entry: _filteredEntries[index]);
-                    },
-                  ),
-          ),
         ],
       ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                CalendarDatePicker(
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                  onDateChanged: (date) {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                  },
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: filteredEntries.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No entries for this day',
+                            style: safeGoogleFont('Inter', color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: filteredEntries.length,
+                          itemBuilder: (context, index) {
+                            return EntryCard(entry: filteredEntries[index]);
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

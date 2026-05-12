@@ -1,12 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:diary/screens/settings_screen.dart';
+import 'package:diary/providers/diary_provider.dart';
+import 'package:diary/providers/theme_provider.dart';
 
 void main() {
+  SharedPreferences.setMockInitialValues({});
+
+  Widget createSettingsScreen() {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => DiaryProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: const MaterialApp(home: SettingsScreen()),
+    );
+  }
+
   testWidgets('SettingsScreen should display all required sections and items', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    await tester.pumpWidget(createSettingsScreen());
+    await tester.pumpAndSettle(); // Allow providers to initialize
 
     // Top App Bar
     expect(find.text('Settings'), findsOneWidget);
@@ -39,7 +56,8 @@ void main() {
   testWidgets('Toggling switches should update state (UI check)', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    await tester.pumpWidget(createSettingsScreen());
+    await tester.pumpAndSettle();
 
     final switches = find.byType(Switch);
     expect(switches, findsNWidgets(2));

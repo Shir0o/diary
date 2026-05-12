@@ -1,24 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/diary_entry.dart';
 import '../helpers/analytics_helper.dart';
 import '../helpers/font_helper.dart';
+import '../providers/diary_provider.dart';
 
 class AnalyticsScreen extends StatelessWidget {
-  final List<DiaryEntry> entries;
+  final List<DiaryEntry>? entries;
   final DateTime? referenceDate;
 
-  const AnalyticsScreen({super.key, required this.entries, this.referenceDate});
+  const AnalyticsScreen({super.key, this.entries, this.referenceDate});
 
   @override
   Widget build(BuildContext context) {
-    final totalEntries = AnalyticsHelper.calculateTotalEntries(entries);
+    final List<DiaryEntry> displayEntries;
+    bool isLoading = false;
+
+    if (entries != null) {
+      displayEntries = entries!;
+    } else {
+      final diaryProvider = Provider.of<DiaryProvider>(context);
+      displayEntries = diaryProvider.entries;
+      isLoading = diaryProvider.isLoading;
+    }
+
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final totalEntries = AnalyticsHelper.calculateTotalEntries(displayEntries);
     final streak = AnalyticsHelper.calculateCurrentStreak(
-      entries,
+      displayEntries,
       relativeTo: referenceDate,
     );
-    final moodDist = AnalyticsHelper.calculateMoodDistribution(entries);
+    final moodDist = AnalyticsHelper.calculateMoodDistribution(displayEntries);
     final weeklyActivity = AnalyticsHelper.getWeeklyActivity(
-      entries,
+      displayEntries,
       relativeTo: referenceDate,
     );
 

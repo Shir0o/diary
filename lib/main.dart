@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'screens/timeline_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/analytics_screen.dart';
+import 'screens/media_screen.dart';
+import 'screens/help_screen.dart';
+import 'screens/about_screen.dart';
 import 'widgets/side_drawer.dart';
-import 'models/diary_entry.dart';
+import 'providers/diary_provider.dart';
+
+import 'providers/theme_provider.dart';
 
 void main() {
-  runApp(const DiaryApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => DiaryProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
+      child: const DiaryApp(),
+    ),
+  );
 }
 
 class DiaryApp extends StatelessWidget {
@@ -15,11 +29,22 @@ class DiaryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       title: 'Diary',
       debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6751a4),
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: const MainScreen(),
@@ -37,49 +62,19 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // Centralized mock entries for consistency across screens
-  final List<DiaryEntry> _mockEntries = [
-    DiaryEntry(
-      id: '1',
-      date: DateTime(2026, 4, 24, 10, 0),
-      title: 'Starting a new project',
-      content: 'Today I started the Diary app project.',
-      mood: '🚀',
-      location: 'Home Office',
-    ),
-    DiaryEntry(
-      id: '2',
-      date: DateTime(2026, 4, 24, 14, 0),
-      title: 'Coffee Break',
-      content: 'Had a wonderful cup of coffee.',
-      mood: '☕',
-      location: 'Local Cafe',
-    ),
-    DiaryEntry(
-      id: '3',
-      date: DateTime(2026, 4, 23, 11, 0),
-      title: 'Planning phase',
-      content: 'Spent the day planning.',
-      mood: '📝',
-    ),
-  ];
-
   late final List<Widget> _screens = [
     const TimelineScreen(),
     const CalendarScreen(),
-    AnalyticsScreen(entries: _mockEntries),
+    const MediaScreen(),
+    const AnalyticsScreen(),
     const SettingsScreen(),
+    const HelpScreen(),
+    const AboutScreen(),
   ];
 
   void _onItemSelected(int index) {
     setState(() {
-      // Mapping drawer indices to screens
-      // Timeline: 1, Calendar: 2, Media: 3 (ignored for now), Analytics: 4, Settings: 6, Help: 7, About: 8
-      // Simplified mapping for now to existing bottom nav indices
-      if (index == 1) _currentIndex = 0; // Timeline
-      if (index == 2) _currentIndex = 1; // Calendar
-      if (index == 4) _currentIndex = 2; // Analytics
-      if (index == 6) _currentIndex = 3; // Settings
+      _currentIndex = index;
     });
     Navigator.of(context).pop(); // Close drawer
   }
@@ -89,40 +84,40 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       drawer: SideDrawer(
         onItemSelected: _onItemSelected,
-        selectedIndex: _currentIndex == 0
-            ? 1
-            : (_currentIndex == 1 ? 2 : (_currentIndex == 2 ? 4 : 6)),
+        selectedIndex: _currentIndex,
       ),
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF6751a4),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.timeline),
-            label: 'Timeline',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Calendar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Analytics',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+      bottomNavigationBar: _currentIndex < 4
+          ? BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: const Color(0xFF6751a4),
+              unselectedItemColor: Colors.grey,
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.timeline),
+                  label: 'Timeline',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_today),
+                  label: 'Calendar',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.photo_library),
+                  label: 'Media',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.analytics),
+                  label: 'Analytics',
+                ),
+              ],
+            )
+          : null,
     );
   }
 }

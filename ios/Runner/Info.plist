@@ -47,6 +47,12 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to tag where you wrote your diary entry.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photos to let you attach images to your diary entries.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to let you take photos for your diary entries.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
