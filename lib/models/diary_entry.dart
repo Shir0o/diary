@@ -46,9 +46,7 @@ class DiaryEntry {
               .toList() ??
           [],
       tags:
-          (json['tags'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           [],
     );
   }

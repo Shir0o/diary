@@ -54,28 +54,22 @@ void main() {
       expect(find.text('Diary'), findsOneWidget);
     });
 
-    testWidgets('navigate between Timeline and Settings', (tester) async {
+    testWidgets('navigate between Timeline and Calendar', (tester) async {
       app.main();
       await tester.pumpAndSettle();
 
       // Verify we start on Timeline
       expect(find.text('Diary'), findsOneWidget);
 
-      // Open the drawer and choose Settings
-      await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Settings').last);
+      // Tap on Calendar tab
+      await tester.tap(find.byIcon(Icons.calendar_today));
       await tester.pumpAndSettle();
 
-      // Verify we are on the Settings screen
-      expect(find.text('Settings').first, findsOneWidget);
-      expect(find.text('DATA & PRIVACY'), findsOneWidget);
+      // Verify we are on the Calendar screen
+      expect(find.text('Calendar'), findsAtLeastNWidgets(1));
 
-      // Use the drawer to go back to Timeline because Settings is not a
-      // bottom-navigation item.
-      await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Timeline').last);
+      // Tap on Timeline tab to go back
+      await tester.tap(find.byIcon(Icons.timeline));
       await tester.pumpAndSettle();
 
       // Verify we are back on Timeline

@@ -17,12 +17,12 @@ class DiaryProvider with ChangeNotifier {
   Future<void> _loadEntries() async {
     _isLoading = true;
     notifyListeners();
-    
+
     _entries = await _repository.loadEntries();
-    
+
     // Sort entries by date descending
     _sortEntries();
-    
+
     _isLoading = false;
     notifyListeners();
   }

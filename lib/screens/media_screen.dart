@@ -49,10 +49,7 @@ class MediaScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(allImages[index]),
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.file(File(allImages[index]), fit: BoxFit.cover),
                 );
               },
             ),

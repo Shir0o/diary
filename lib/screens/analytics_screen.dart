@@ -25,9 +25,7 @@ class AnalyticsScreen extends StatelessWidget {
     }
 
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final totalEntries = AnalyticsHelper.calculateTotalEntries(displayEntries);
