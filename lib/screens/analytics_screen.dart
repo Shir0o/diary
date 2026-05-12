@@ -6,8 +6,14 @@ import '../helpers/font_helper.dart';
 class AnalyticsScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
   final DateTime? referenceDate;
+  final VoidCallback? onMenuPressed;
 
-  const AnalyticsScreen({super.key, required this.entries, this.referenceDate});
+  const AnalyticsScreen({
+    super.key,
+    required this.entries,
+    this.referenceDate,
+    this.onMenuPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +41,7 @@ class AnalyticsScreen extends StatelessWidget {
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed: onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
       ),

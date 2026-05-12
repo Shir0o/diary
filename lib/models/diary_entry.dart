@@ -17,6 +17,26 @@ class DiaryEntry {
     this.imageUrls = const [],
   });
 
+  DiaryEntry copyWith({
+    String? id,
+    DateTime? date,
+    String? title,
+    String? content,
+    String? mood,
+    String? location,
+    List<String>? imageUrls,
+  }) {
+    return DiaryEntry(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      mood: mood ?? this.mood,
+      location: location ?? this.location,
+      imageUrls: imageUrls ?? this.imageUrls,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

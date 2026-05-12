@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../helpers/font_helper.dart';
+import '../models/diary_entry.dart';
 
 class NewEntryScreen extends StatefulWidget {
-  const NewEntryScreen({super.key});
+  final DiaryEntry? entry;
+
+  const NewEntryScreen({super.key, this.entry});
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
 }
 
 class _NewEntryScreenState extends State<NewEntryScreen> {
-  final TextEditingController _controller = TextEditingController();
-  final DateTime _now = DateTime.now();
+  late final TextEditingController _controller;
+  late final DateTime _entryDate;
+
+  bool get _isEditing => widget.entry != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.entry?.content);
+    _entryDate = widget.entry?.date ?? DateTime.now();
+  }
 
   @override
   void dispose() {
@@ -45,8 +57,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ElevatedButton(
               onPressed: () {
-                // Save logic
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(_buildEntry());
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6750A4),
@@ -71,7 +82,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 children: [
                   const SizedBox(height: 16),
                   Text(
-                    DateFormat('MMM dd, yyyy').format(_now),
+                    DateFormat('MMM dd, yyyy').format(_entryDate),
                     style: safeGoogleFont(
                       'IBM Plex Sans',
                       fontSize: 32,
@@ -83,7 +94,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   Row(
                     children: [
                       Text(
-                        DateFormat('h:mm a').format(_now),
+                        DateFormat('h:mm a').format(_entryDate),
                         style: safeGoogleFont(
                           'IBM Plex Sans',
                           fontSize: 18,
@@ -98,7 +109,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        DateFormat('EEEE').format(_now),
+                        DateFormat('EEEE').format(_entryDate),
                         style: safeGoogleFont(
                           'IBM Plex Sans',
                           fontSize: 18,
@@ -219,5 +230,28 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         ],
       ),
     );
+  }
+
+  DiaryEntry _buildEntry() {
+    final content = _controller.text.trim();
+    final existingEntry = widget.entry;
+
+    return DiaryEntry(
+      id: existingEntry?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      date: existingEntry?.date ?? _entryDate,
+      title: _titleFromContent(content),
+      content: content,
+      mood: existingEntry?.mood ?? '📝',
+      location: existingEntry?.location,
+      imageUrls: existingEntry?.imageUrls ?? const [],
+    );
+  }
+
+  String _titleFromContent(String content) {
+    if (content.isEmpty) {
+      return _isEditing ? widget.entry!.title : 'Untitled Entry';
+    }
+
+    return content.split('\n').first.trim();
   }
 }

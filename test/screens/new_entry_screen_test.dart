@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:diary/models/diary_entry.dart';
 import 'package:diary/screens/new_entry_screen.dart';
 
 void main() {
@@ -38,5 +39,83 @@ void main() {
     const testText = 'My secret diary entry';
     await tester.enterText(find.byType(TextField), testText);
     expect(find.text(testText), findsOneWidget);
+  });
+
+  testWidgets('Save returns a diary entry with entered content', (
+    WidgetTester tester,
+  ) async {
+    DiaryEntry? savedEntry;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () async {
+                savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                  MaterialPageRoute(builder: (_) => const NewEntryScreen()),
+                );
+              },
+              child: const Text('Open'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Saved entry body');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(savedEntry, isNotNull);
+    expect(savedEntry!.title, 'Saved entry body');
+    expect(savedEntry!.content, 'Saved entry body');
+  });
+
+  testWidgets('Editing pre-fills content and returns the same entry id', (
+    WidgetTester tester,
+  ) async {
+    final existingEntry = DiaryEntry(
+      id: 'entry-1',
+      date: DateTime(2026, 4, 24, 10),
+      title: 'Original title',
+      content: 'Original body',
+      mood: '🚀',
+    );
+    DiaryEntry? savedEntry;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () async {
+                savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                  MaterialPageRoute(
+                    builder: (_) => NewEntryScreen(entry: existingEntry),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Original body'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Updated body');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(savedEntry, isNotNull);
+    expect(savedEntry!.id, 'entry-1');
+    expect(savedEntry!.content, 'Updated body');
   });
 }
