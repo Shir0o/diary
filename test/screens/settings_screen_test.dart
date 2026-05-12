@@ -38,7 +38,7 @@ void main() {
     expect(find.text('Entries are saved on this device.'), findsOneWidget);
     expect(find.text('Device privacy'), findsOneWidget);
     expect(find.text('Theme'), findsOneWidget);
-    expect(find.text('Light mode'), findsOneWidget);
+    expect(find.text('System default'), findsOneWidget);
     expect(find.byType(Switch), findsNothing);
 
     // Footer
@@ -53,5 +53,20 @@ void main() {
 
     expect(find.byType(Switch), findsNothing);
     expect(find.textContaining('Google Drive'), findsNothing);
+  });
+
+  testWidgets('Theme setting opens theme selector', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(createSettingsScreen());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Theme'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Select theme'), findsOneWidget);
+    expect(find.text('System default'), findsWidgets);
+    expect(find.text('Light mode'), findsOneWidget);
+    expect(find.text('Dark mode'), findsOneWidget);
   });
 }

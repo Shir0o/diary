@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../helpers/font_helper.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
       appBar: AppBar(
@@ -50,9 +54,10 @@ class SettingsScreen extends StatelessWidget {
           _buildSectionHeader('APPEARANCE'),
           _buildSettingsCard([
             _buildInfoItem(
-              icon: Icons.light_mode_outlined,
+              icon: _themeIcon(themeProvider.themeMode),
               title: 'Theme',
-              subtitle: 'Light mode',
+              subtitle: _themeLabel(themeProvider.themeMode),
+              onTap: () => _showThemeDialog(context),
             ),
           ]),
           const SizedBox(height: 32),
@@ -103,9 +108,10 @@ class SettingsScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
+    VoidCallback? onTap,
     bool showBorder = false,
   }) {
-    return Container(
+    final content = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         border: showBorder
@@ -145,8 +151,18 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+          if (onTap != null)
+            const Icon(Icons.chevron_right, color: Color(0xFFCAC4D0)),
         ],
       ),
+    );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: content,
     );
   }
 
@@ -181,5 +197,55 @@ class SettingsScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _showThemeDialog(BuildContext context) async {
+    final themeProvider = context.read<ThemeProvider>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select theme'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ThemeMode.values.map((mode) {
+            final isSelected = themeProvider.themeMode == mode;
+            return ListTile(
+              title: Text(_themeLabel(mode)),
+              leading: Icon(_themeIcon(mode)),
+              trailing: isSelected
+                  ? const Icon(Icons.check, color: Color(0xFF6751a4))
+                  : null,
+              onTap: () {
+                themeProvider.setThemeMode(mode);
+                Navigator.of(context).pop();
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  String _themeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return 'System default';
+      case ThemeMode.light:
+        return 'Light mode';
+      case ThemeMode.dark:
+        return 'Dark mode';
+    }
+  }
+
+  IconData _themeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return Icons.brightness_auto_outlined;
+      case ThemeMode.light:
+        return Icons.light_mode_outlined;
+      case ThemeMode.dark:
+        return Icons.dark_mode_outlined;
+    }
   }
 }

@@ -13,7 +13,7 @@ Implement a first-release settings screen that accurately describes supported pr
         - Local storage
         - Device privacy guidance
     - **Appearance**:
-        - Theme set to Light mode for the first release
+        - Theme selector with System default, Light mode, and Dark mode options
 - **Footer**: Version info ("Version 0.1.0").
 - **Navigation**: Accessed via the "Settings" tab in the `bottomNavigationBar`.
 

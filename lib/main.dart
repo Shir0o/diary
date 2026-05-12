@@ -9,7 +9,6 @@ import 'screens/help_screen.dart';
 import 'screens/about_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'providers/diary_provider.dart';
-
 import 'providers/theme_provider.dart';
 
 void main() {
@@ -29,10 +28,12 @@ class DiaryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       title: 'Diary',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.light,
+      themeMode: themeProvider.themeMode,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
         useMaterial3: true,

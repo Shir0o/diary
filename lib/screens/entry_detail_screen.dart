@@ -14,6 +14,7 @@ class EntryDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentEntry = _currentEntry(context);
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
       appBar: AppBar(
@@ -27,9 +28,9 @@ class EntryDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: Colors.black),
             onPressed: () {
-              Navigator.of(context).pushReplacement(
+              Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => NewEntryScreen(entry: entry),
+                  builder: (context) => NewEntryScreen(entry: currentEntry),
                 ),
               );
             },
@@ -47,7 +48,7 @@ class EntryDetailScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             Text(
-              DateFormat('MMM dd, yyyy').format(entry.date),
+              DateFormat('MMM dd, yyyy').format(currentEntry.date),
               style: safeGoogleFont(
                 'IBM Plex Sans',
                 fontSize: 32,
@@ -58,7 +59,7 @@ class EntryDetailScreen extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  DateFormat('h:mm a').format(entry.date),
+                  DateFormat('h:mm a').format(currentEntry.date),
                   style: safeGoogleFont(
                     'IBM Plex Sans',
                     fontSize: 18,
@@ -70,7 +71,7 @@ class EntryDetailScreen extends StatelessWidget {
                 const Text('•', style: TextStyle(color: Color(0xFF79747E))),
                 const SizedBox(width: 8),
                 Text(
-                  DateFormat('EEEE').format(entry.date),
+                  DateFormat('EEEE').format(currentEntry.date),
                   style: safeGoogleFont(
                     'IBM Plex Sans',
                     fontSize: 18,
@@ -79,10 +80,10 @@ class EntryDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Text(entry.mood, style: const TextStyle(fontSize: 32)),
+                Text(currentEntry.mood, style: const TextStyle(fontSize: 32)),
               ],
             ),
-            if (entry.location != null)
+            if (currentEntry.location != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Row(
@@ -94,7 +95,7 @@ class EntryDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      entry.location!,
+                      currentEntry.location!,
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
@@ -104,12 +105,12 @@ class EntryDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            if (entry.tags.isNotEmpty)
+            if (currentEntry.tags.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Wrap(
                   spacing: 4,
-                  children: entry.tags.map((tag) {
+                  children: currentEntry.tags.map((tag) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -133,12 +134,12 @@ class EntryDetailScreen extends StatelessWidget {
               ),
             const SizedBox(height: 24),
             Text(
-              entry.content,
+              currentEntry.content,
               style: safeGoogleFont('IBM Plex Sans', fontSize: 18, height: 1.6),
             ),
-            if (entry.imageUrls.isNotEmpty) ...[
+            if (currentEntry.imageUrls.isNotEmpty) ...[
               const SizedBox(height: 24),
-              ...entry.imageUrls.map(
+              ...currentEntry.imageUrls.map(
                 (path) => Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: ClipRRect(
@@ -157,6 +158,14 @@ class EntryDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  DiaryEntry _currentEntry(BuildContext context) {
+    final entries = context.watch<DiaryProvider>().entries;
+    for (final candidate in entries) {
+      if (candidate.id == entry.id) return candidate;
+    }
+    return entry;
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
