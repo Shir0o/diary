@@ -61,18 +61,21 @@ void main() {
       // Verify we start on Timeline
       expect(find.text('Diary'), findsOneWidget);
 
-      // Tap on Settings tab
-      final settingsTab = find.byIcon(Icons.settings);
-      await tester.tap(settingsTab);
+      // Open the drawer and choose Settings
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings').last);
       await tester.pumpAndSettle();
 
       // Verify we are on the Settings screen
       expect(find.text('Settings').first, findsOneWidget);
-      expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
+      expect(find.text('DATA & PRIVACY'), findsOneWidget);
 
-      // Tap on Timeline tab to go back
-      final timelineTab = find.byIcon(Icons.timeline);
-      await tester.tap(timelineTab);
+      // Use the drawer to go back to Timeline because Settings is not a
+      // bottom-navigation item.
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Timeline').last);
       await tester.pumpAndSettle();
 
       // Verify we are back on Timeline

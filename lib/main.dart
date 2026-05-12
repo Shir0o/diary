@@ -29,12 +29,10 @@ class DiaryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return MaterialApp(
       title: 'Diary',
       debugShowCheckedModeBanner: false,
-      themeMode: themeProvider.themeMode,
+      themeMode: ThemeMode.light,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
         useMaterial3: true,
@@ -63,7 +61,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
-    const TimelineScreen(),
+    TimelineScreen(onCalendarTap: () => _selectTab(1)),
     const CalendarScreen(),
     const MediaScreen(),
     const AnalyticsScreen(),
@@ -71,6 +69,12 @@ class _MainScreenState extends State<MainScreen> {
     const HelpScreen(),
     const AboutScreen(),
   ];
+
+  void _selectTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   void _onItemSelected(int index) {
     setState(() {
@@ -93,11 +97,7 @@ class _MainScreenState extends State<MainScreen> {
               selectedItemColor: const Color(0xFF6751a4),
               unselectedItemColor: Colors.grey,
               currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
+              onTap: _selectTab,
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.timeline),

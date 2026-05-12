@@ -12,7 +12,9 @@ import '../providers/diary_provider.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DateTime? initialDate;
-  const NewEntryScreen({super.key, this.initialDate});
+  final DiaryEntry? entry;
+
+  const NewEntryScreen({super.key, this.initialDate, this.entry});
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
@@ -23,7 +25,18 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   late final DateTime _now;
   String _selectedMood = '😊'; // Default mood
   final List<String> _moods = [
-    '😊', '😢', '😡', '😴', '🥳', '🤔', '😎', '🤢', '🚀', '☕', '📝', '🌈'
+    '😊',
+    '😢',
+    '😡',
+    '😴',
+    '🥳',
+    '🤔',
+    '😎',
+    '🤢',
+    '🚀',
+    '☕',
+    '📝',
+    '🌈',
   ];
   String? _currentLocation;
   bool _isLoadingLocation = false;
@@ -31,13 +44,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<String> _selectedTags = [];
   final List<String> _availableTags = [
-    'Personal', 'Work', 'Travel', 'Food', 'Health', 'Ideas'
+    'Personal',
+    'Work',
+    'Travel',
+    'Food',
+    'Health',
+    'Ideas',
   ];
 
   @override
   void initState() {
     super.initState();
-    _now = widget.initialDate ?? DateTime.now();
+    _now = widget.entry?.date ?? widget.initialDate ?? DateTime.now();
+    if (widget.entry != null) {
+      final entry = widget.entry!;
+      _controller.text = entry.content;
+      _selectedMood = entry.mood;
+      _currentLocation = entry.location;
+      _selectedTags.addAll(entry.tags);
+      _selectedImages.addAll(entry.imageUrls.map((path) => XFile(path)));
+    }
   }
 
   @override
@@ -92,9 +118,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error getting location: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error getting location: $e')));
       }
     } finally {
       if (mounted) {
@@ -214,7 +240,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                           });
                           setState(() {}); // Update main screen
                         },
-                        selectedColor: const Color(0xFF6750A4).withValues(alpha: 0.2),
+                        selectedColor: const Color(
+                          0xFF6750A4,
+                        ).withValues(alpha: 0.2),
                         checkmarkColor: const Color(0xFF6750A4),
                       );
                     }).toList(),
@@ -238,7 +266,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     }
 
     final entry = DiaryEntry(
-      id: const Uuid().v4(),
+      id: widget.entry?.id ?? const Uuid().v4(),
       date: _now,
       title: _controller.text.split('\n').first, // Simple title from first line
       content: _controller.text,
@@ -248,7 +276,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       tags: _selectedTags,
     );
 
-    Provider.of<DiaryProvider>(context, listen: false).addEntry(entry);
+    final diaryProvider = Provider.of<DiaryProvider>(context, listen: false);
+    if (widget.entry == null) {
+      diaryProvider.addEntry(entry);
+    } else {
+      diaryProvider.updateEntry(entry);
+    }
     Navigator.of(context).pop();
   }
 
@@ -264,7 +297,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'New Entry',
+          widget.entry == null ? 'New Entry' : 'Edit Entry',
           style: safeGoogleFont(
             'IBM Plex Sans',
             color: Colors.black,
@@ -380,7 +413,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6750A4).withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFF6750A4,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -541,13 +576,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 Row(
                   children: [
                     const Icon(
-                      Icons.cloud_upload_outlined,
+                      Icons.check_circle_outline,
                       size: 16,
                       color: Color(0xFF79747E),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Saving...',
+                      'Stored locally',
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 12,

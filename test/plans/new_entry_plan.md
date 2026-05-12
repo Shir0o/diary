@@ -13,7 +13,7 @@ Implement the "New Entry" screen as per the Stitch design specifications (ID: `1
     - Full-screen multiline text input with placeholder "Write your heart out...".
 - **Bottom Toolbar:**
     - Icons for: Image, Tag, Mood, Location.
-    - Status indicator (e.g., "Saving...").
+    - Status indicator ("Stored locally").
 
 ## TDD Strategy
 

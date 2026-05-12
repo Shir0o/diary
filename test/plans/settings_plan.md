@@ -1,7 +1,7 @@
-# Implementation Plan: Settings & Backup Screen
+# Implementation Plan: Settings Screen
 
 ## Objective
-Implement the "Settings & Backup" screen as per the Stitch design specifications (ID: `ef30d0344a424feab31fc6cbf85546c3`). This screen should provide options for biometric lock, theme selection, and cloud backup (specifically Google Drive).
+Implement a first-release settings screen that accurately describes supported privacy and appearance behavior without exposing placeholder backup, biometric, or encryption controls.
 
 ## Design Specifications
 - **Theme Color:** Purple (#6751A4)
@@ -9,24 +9,21 @@ Implement the "Settings & Backup" screen as per the Stitch design specifications
 - **Font:** IBM Plex Sans (fallback to Inter)
 - **Top Bar:** Menu button, Screen Title ("Settings"), centered.
 - **Sections:**
-    - **Security & Appearance**:
-        - Biometric Lock (with Switch)
-        - Theme (with text "System Default" and chevron)
-    - **Cloud Backup**:
-        - Auto-backup (with Switch and description)
-        - Last backup info
-        - "Backup to Google Drive" button (with Google logo)
-- **Footer**: Version info ("Version 2.4.0") and "Your data is encrypted locally".
+    - **Data & Privacy**:
+        - Local storage
+        - Device privacy guidance
+    - **Appearance**:
+        - Theme set to Light mode for the first release
+- **Footer**: Version info ("Version 0.1.0").
 - **Navigation**: Accessed via the "Settings" tab in the `bottomNavigationBar`.
 
 ## TDD Strategy
 
 ### 1. Widget Tests (`test/screens/settings_screen_test.dart`)
-- Verify sections "SECURITY & APPEARANCE" and "CLOUD BACKUP" are present.
-- Verify presence of Biometric Lock switch.
+- Verify sections "DATA & PRIVACY" and "APPEARANCE" are present.
+- Verify presence of local storage messaging.
 - Verify presence of Theme setting.
-- Verify presence of Auto-backup switch.
-- Verify presence of "Backup to Google Drive" button.
+- Verify placeholder switches and Google Drive backup text are absent.
 - Verify version information.
 
 ### 2. Golden Tests (`test/screens/settings_screen_golden_test.dart`)
@@ -43,10 +40,10 @@ Implement the "Settings & Backup" screen as per the Stitch design specifications
     - Implement basic layout with `Scaffold`, `AppBar`, and a scrollable body.
 2. **Implement Sections**:
     - Build reusable section header and list item widgets or use `ListTile`.
-    - Implement "Security & Appearance" section.
-    - Implement "Cloud Backup" section with the custom Google Drive button.
+    - Implement "Data & Privacy" section.
+    - Implement "Appearance" section.
 3. **Implement Footer**:
-    - Add version and encryption info at the bottom.
+    - Add version info at the bottom.
 4. **Update Main Navigation**:
     - Modify `lib/main.dart` or `lib/screens/timeline_screen.dart` to handle tab switching between `TimelineScreen` and `SettingsScreen`.
 5. **Verify and Refine**:

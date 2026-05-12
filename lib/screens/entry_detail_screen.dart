@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import '../models/diary_entry.dart';
 import '../helpers/font_helper.dart';
+import '../providers/diary_provider.dart';
+import 'new_entry_screen.dart';
 
 class EntryDetailScreen extends StatelessWidget {
   final DiaryEntry entry;
@@ -11,12 +14,10 @@ class EntryDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: isDark ? null : const Color(0xFFFEF7FF),
+      backgroundColor: const Color(0xFFFEF7FF),
       appBar: AppBar(
-        backgroundColor: isDark ? null : const Color(0xFFFEF7FF),
+        backgroundColor: const Color(0xFFFEF7FF),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -26,14 +27,16 @@ class EntryDetailScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: Colors.black),
             onPressed: () {
-              // Edit logic could go here
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => NewEntryScreen(entry: entry),
+                ),
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.black),
-            onPressed: () {
-              // Delete logic could go here
-            },
+            onPressed: () => _confirmDelete(context),
           ),
         ],
       ),
@@ -64,10 +67,7 @@ class EntryDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '•',
-                  style: TextStyle(color: Color(0xFF79747E)),
-                ),
+                const Text('•', style: TextStyle(color: Color(0xFF79747E))),
                 const SizedBox(width: 8),
                 Text(
                   DateFormat('EEEE').format(entry.date),
@@ -79,10 +79,7 @@ class EntryDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Text(
-                  entry.mood,
-                  style: const TextStyle(fontSize: 32),
-                ),
+                Text(entry.mood, style: const TextStyle(fontSize: 32)),
               ],
             ),
             if (entry.location != null)
@@ -137,30 +134,59 @@ class EntryDetailScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               entry.content,
-              style: safeGoogleFont(
-                'IBM Plex Sans',
-                fontSize: 18,
-                height: 1.6,
-              ),
+              style: safeGoogleFont('IBM Plex Sans', fontSize: 18, height: 1.6),
             ),
             if (entry.imageUrls.isNotEmpty) ...[
               const SizedBox(height: 24),
-              ...entry.imageUrls.map((path) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.file(
-                        File(path),
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
+              ...entry.imageUrls.map(
+                (path) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      File(path),
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                  )),
+                  ),
+                ),
+              ),
             ],
             const SizedBox(height: 48),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete entry?'),
+        content: const Text('This entry will be permanently removed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !context.mounted) return;
+
+    await Provider.of<DiaryProvider>(
+      context,
+      listen: false,
+    ).deleteEntry(entry.id);
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
   }
 }

@@ -32,20 +32,16 @@ class HelpScreen extends StatelessWidget {
           ),
           _buildFaqItem(
             'Are my entries private?',
-            'Yes, your entries are stored locally on your device.',
+            'Entries are stored locally on your device.',
           ),
           _buildFaqItem(
             'How can I back up my data?',
-            'Go to Settings and use the Google Drive backup feature.',
+            'Backup and export are planned for a future release.',
           ),
           const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6751a4),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Contact Support'),
+          Text(
+            'For support, open an issue on the project repository.',
+            style: safeGoogleFont('Inter', color: Colors.black54, fontSize: 14),
           ),
         ],
       ),
@@ -69,11 +65,7 @@ class HelpScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             answer,
-            style: safeGoogleFont(
-              'Inter',
-              color: Colors.black87,
-              fontSize: 14,
-            ),
+            style: safeGoogleFont('Inter', color: Colors.black87, fontSize: 14),
           ),
         ],
       ),

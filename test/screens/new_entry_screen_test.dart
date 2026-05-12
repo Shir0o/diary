@@ -26,8 +26,8 @@ void main() {
     expect(find.byIcon(Icons.mood_outlined), findsOneWidget);
     expect(find.byIcon(Icons.location_on_outlined), findsOneWidget);
 
-    // Status indicator
-    expect(find.text('Saving...'), findsOneWidget);
+    // Local storage status
+    expect(find.text('Stored locally'), findsOneWidget);
   });
 
   testWidgets('Entering text should update the TextField', (

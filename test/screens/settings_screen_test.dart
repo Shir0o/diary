@@ -30,44 +30,28 @@ void main() {
     expect(find.byIcon(Icons.menu), findsOneWidget);
 
     // Section Headers
-    expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
-    expect(find.text('CLOUD BACKUP'), findsOneWidget);
+    expect(find.text('DATA & PRIVACY'), findsOneWidget);
+    expect(find.text('APPEARANCE'), findsOneWidget);
 
-    // Security & Appearance Items
-    expect(find.text('Biometric Lock'), findsOneWidget);
+    // Data & Appearance Items
+    expect(find.text('Local storage'), findsOneWidget);
+    expect(find.text('Entries are saved on this device.'), findsOneWidget);
+    expect(find.text('Device privacy'), findsOneWidget);
     expect(find.text('Theme'), findsOneWidget);
-    expect(find.text('System Default'), findsOneWidget);
-    expect(find.byType(Switch), findsAtLeastNWidgets(1));
-
-    // Cloud Backup Items
-    expect(find.text('Auto-backup'), findsOneWidget);
-    expect(
-      find.text('Back up your diary entries to Google Drive automatically.'),
-      findsOneWidget,
-    );
-    expect(find.text('Backup to Google Drive'), findsOneWidget);
-    expect(find.textContaining('Last backup:'), findsOneWidget);
+    expect(find.text('Light mode'), findsOneWidget);
+    expect(find.byType(Switch), findsNothing);
 
     // Footer
-    expect(find.text('Your data is encrypted locally.'), findsOneWidget);
-    expect(find.text('Version 2.4.0'), findsOneWidget);
+    expect(find.text('Version 0.1.0'), findsOneWidget);
   });
 
-  testWidgets('Toggling switches should update state (UI check)', (
+  testWidgets('SettingsScreen should not expose placeholder switches', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(createSettingsScreen());
     await tester.pumpAndSettle();
 
-    final switches = find.byType(Switch);
-    expect(switches, findsNWidgets(2));
-
-    // Toggle biometric lock
-    await tester.tap(switches.first);
-    await tester.pump();
-
-    // Toggle auto-backup
-    await tester.tap(switches.last);
-    await tester.pump();
+    expect(find.byType(Switch), findsNothing);
+    expect(find.textContaining('Google Drive'), findsNothing);
   });
 }

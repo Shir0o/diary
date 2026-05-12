@@ -10,7 +10,9 @@ import '../providers/diary_provider.dart';
 
 class TimelineScreen extends StatefulWidget {
   final List<DiaryEntry>? entries;
-  const TimelineScreen({super.key, this.entries});
+  final VoidCallback? onCalendarTap;
+
+  const TimelineScreen({super.key, this.entries, this.onCalendarTap});
 
   @override
   State<TimelineScreen> createState() => _TimelineScreenState();
@@ -58,63 +60,61 @@ class _TimelineScreenState extends State<TimelineScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.calendar_month, color: Colors.black),
-            onPressed: () {
-              // Quick link to calendar could be wired here
-            },
+            onPressed: widget.onCalendarTap,
           ),
         ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : entries.isEmpty
-              ? Center(
-                  child: Text(
-                    'No entries yet. Start writing!',
-                    style: safeGoogleFont('Inter', color: Colors.grey),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) {
-                    final entry = entries[index];
-                    final isFirst = index == 0;
-                    final isLast = index == entries.length - 1;
+          ? Center(
+              child: Text(
+                'No entries yet. Start writing!',
+                style: safeGoogleFont('Inter', color: Colors.grey),
+              ),
+            )
+          : ListView.builder(
+              itemCount: entries.length,
+              itemBuilder: (context, index) {
+                final entry = entries[index];
+                final isFirst = index == 0;
+                final isLast = index == entries.length - 1;
 
-                    return IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          TimelineNode(isFirst: isFirst, isLast: isLast),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (isFirst || _isNewDay(entries, index))
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 16,
-                                      top: 16,
-                                      bottom: 8,
-                                    ),
-                                    child: Text(
-                                      _formatDate(entry.date),
-                                      style: safeGoogleFont(
-                                        'Inter',
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey,
-                                        fontSize: 14,
-                                      ),
-                                    ),
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TimelineNode(isFirst: isFirst, isLast: isLast),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isFirst || _isNewDay(entries, index))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  top: 16,
+                                  bottom: 8,
+                                ),
+                                child: Text(
+                                  _formatDate(entry.date),
+                                  style: safeGoogleFont(
+                                    'Inter',
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                    fontSize: 14,
                                   ),
-                                EntryCard(entry: entry),
-                              ],
-                            ),
-                          ),
-                        ],
+                                ),
+                              ),
+                            EntryCard(entry: entry),
+                          ],
+                        ),
                       ),
-                    );
-                  },
-                ),
+                    ],
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(

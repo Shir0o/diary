@@ -34,11 +34,7 @@ class AboutScreen extends StatelessWidget {
                 color: const Color(0xFF6751a4),
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(
-                Icons.book,
-                size: 64,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.book, size: 64, color: Colors.white),
             ),
             const SizedBox(height: 24),
             Text(
@@ -51,16 +47,12 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Version 1.0.0',
-              style: safeGoogleFont(
-                'Inter',
-                color: Colors.grey,
-                fontSize: 16,
-              ),
+              'Version 0.1.0',
+              style: safeGoogleFont('Inter', color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 48),
             Text(
-              'Built with Flutter 🚀',
+              'Built with Flutter',
               style: safeGoogleFont(
                 'Inter',
                 fontSize: 14,
