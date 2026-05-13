@@ -10,4 +10,8 @@ class AppConfig {
   static String get googleIosClientId {
     return dotenv.maybeGet('GOOGLE_IOS_CLIENT_ID') ?? '';
   }
+
+  static String get googleWebClientId {
+    return dotenv.maybeGet('GOOGLE_WEB_CLIENT_ID') ?? '';
+  }
 }

@@ -9,6 +9,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     envString: '''
 GOOGLE_ANDROID_CLIENT_ID=test-android-client-id
 GOOGLE_IOS_CLIENT_ID=test-ios-client-id
+GOOGLE_WEB_CLIENT_ID=test-web-client-id
 ''',
   );
   return GoldenToolkit.runWithConfiguration(
