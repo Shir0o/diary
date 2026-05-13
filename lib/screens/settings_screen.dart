@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../helpers/font_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final VoidCallback? onMenuPressed;
+
+  const SettingsScreen({super.key, this.onMenuPressed});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -22,7 +24,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Color(0xFF141316)),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed:
+                widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
         title: Text(

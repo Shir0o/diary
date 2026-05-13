@@ -1,11 +1,11 @@
 {
-    "name": "diary",
-    "short_name": "diary",
+    "name": "Diary",
+    "short_name": "Diary",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A personal diary app for writing, reviewing, and reflecting on entries.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

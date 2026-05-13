@@ -6,14 +6,25 @@ import 'new_entry_screen.dart';
 import '../helpers/font_helper.dart';
 
 class TimelineScreen extends StatefulWidget {
-  const TimelineScreen({super.key});
+  final VoidCallback? onMenuPressed;
+  final VoidCallback? onAddEntry;
+  final ValueChanged<DiaryEntry>? onEditEntry;
+  final List<DiaryEntry>? entries;
+
+  const TimelineScreen({
+    super.key,
+    this.onMenuPressed,
+    this.onAddEntry,
+    this.onEditEntry,
+    this.entries,
+  });
 
   @override
   State<TimelineScreen> createState() => _TimelineScreenState();
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
-  final List<DiaryEntry> _entries = [
+  static final List<DiaryEntry> _defaultEntries = [
     DiaryEntry(
       id: '1',
       date: DateTime.now(),
@@ -41,6 +52,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
     ),
   ];
 
+  List<DiaryEntry> get _entries => widget.entries ?? _defaultEntries;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +69,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed:
+                widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
         actions: [
@@ -103,7 +117,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             ),
                           ),
                         ),
-                      EntryCard(entry: entry),
+                      EntryCard(
+                        entry: entry,
+                        onTap: widget.onEditEntry == null
+                            ? null
+                            : () => widget.onEditEntry!(entry),
+                      ),
                     ],
                   ),
                 ),
@@ -113,15 +132,17 @@ class _TimelineScreenState extends State<TimelineScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const NewEntryScreen()),
-          );
-        },
+        onPressed: widget.onAddEntry ?? _openNewEntry,
         backgroundColor: const Color(0xFF6751a4),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
+  }
+
+  void _openNewEntry() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const NewEntryScreen()));
   }
 
   bool _isNewDay(int index) {

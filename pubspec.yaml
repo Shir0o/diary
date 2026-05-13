@@ -1,5 +1,5 @@
 name: diary
-description: "A new Flutter project."
+description: "A personal diary app for writing, reviewing, and reflecting on entries."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -9,8 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_dotenv: ^6.0.1
   google_fonts: ^8.0.2
   intl: ^0.20.2
+  path: ^1.9.1
+  sqflite: ^2.4.2+1
 
 dev_dependencies:
   flutter_test:
@@ -20,6 +23,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   golden_toolkit: ^0.15.0
   flutter_launcher_icons: ^0.13.1
+  sqflite_common_ffi: ^2.4.0+3
 
 flutter_launcher_icons:
   android: "launcher_icon"
@@ -29,3 +33,5 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  assets:
+    - .env

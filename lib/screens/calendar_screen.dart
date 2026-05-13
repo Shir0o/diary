@@ -5,7 +5,17 @@ import '../helpers/font_helper.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? initialDate;
-  const CalendarScreen({super.key, this.initialDate});
+  final VoidCallback? onMenuPressed;
+  final ValueChanged<DiaryEntry>? onEditEntry;
+  final List<DiaryEntry>? entries;
+
+  const CalendarScreen({
+    super.key,
+    this.initialDate,
+    this.onMenuPressed,
+    this.onEditEntry,
+    this.entries,
+  });
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -20,7 +30,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _selectedDate = widget.initialDate ?? DateTime.now();
   }
 
-  final List<DiaryEntry> _entries = [
+  static final List<DiaryEntry> _defaultEntries = [
     DiaryEntry(
       id: '1',
       date: DateTime(2026, 4, 24, 10, 0),
@@ -48,6 +58,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     ),
   ];
 
+  List<DiaryEntry> get _entries => widget.entries ?? _defaultEntries;
+
   List<DiaryEntry> get _filteredEntries {
     return _entries.where((entry) {
       return entry.date.year == _selectedDate.year &&
@@ -71,7 +83,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed:
+                widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
         actions: [
@@ -106,7 +119,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: _filteredEntries.length,
                     itemBuilder: (context, index) {
-                      return EntryCard(entry: _filteredEntries[index]);
+                      final entry = _filteredEntries[index];
+                      return EntryCard(
+                        entry: entry,
+                        onTap: widget.onEditEntry == null
+                            ? null
+                            : () => widget.onEditEntry!(entry),
+                      );
                     },
                   ),
           ),
