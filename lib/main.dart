@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'data/diary_entry_store.dart';
 import 'data/sqlite_diary_entry_store.dart';
 import 'screens/timeline_screen.dart';
@@ -9,7 +10,9 @@ import 'screens/new_entry_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env', isOptional: true);
   runApp(const DiaryApp());
 }
 

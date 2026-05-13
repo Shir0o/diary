@@ -5,6 +5,9 @@
 .dart_tool/
 .DS_Store
 .flutter-plugins-dependencies
+.env
+.env.*
+!.env.example
 .history
 .idea/
 .pub-cache/

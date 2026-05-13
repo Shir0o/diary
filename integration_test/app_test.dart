@@ -8,7 +8,7 @@ void main() {
 
   group('end-to-end test', () {
     testWidgets('navigate to New Entry and back', (tester) async {
-      app.main();
+      await app.main();
       await tester.pumpAndSettle();
 
       // Verify we are on the Timeline screen
@@ -37,7 +37,7 @@ void main() {
     });
 
     testWidgets('navigate to New Entry and use back button', (tester) async {
-      app.main();
+      await app.main();
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(FloatingActionButton));
@@ -57,7 +57,7 @@ void main() {
     testWidgets('navigate between Timeline and Settings from drawer', (
       tester,
     ) async {
-      app.main();
+      await app.main();
       await tester.pumpAndSettle();
 
       // Verify we start on Timeline

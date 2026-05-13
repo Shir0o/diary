@@ -8,6 +8,17 @@ A Flutter-based personal diary application.
 
 ## Development
 
+### Environment
+
+Create a local `.env` file before running the app:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the Google OAuth client IDs for the platforms you are testing. The
+local `.env` file is intentionally gitignored.
+
 ### Standards
 This project follows strict Test-Driven Design (TDD) and documentation standards as defined in [GEMINI.md](GEMINI.md).
 
