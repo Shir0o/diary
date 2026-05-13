@@ -16,8 +16,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   late final TextEditingController _controller;
   late final DateTime _entryDate;
 
-  bool get _isEditing => widget.entry != null;
-
   @override
   void initState() {
     super.initState();
@@ -249,7 +247,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   String _titleFromContent(String content) {
     if (content.isEmpty) {
-      return _isEditing ? widget.entry!.title : 'Untitled Entry';
+      return 'Untitled Entry';
     }
 
     return content.split('\n').first.trim();

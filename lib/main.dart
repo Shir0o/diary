@@ -46,6 +46,13 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  static const List<_MainDestination> _destinations = [
+    _MainDestination(drawerIndex: 0),
+    _MainDestination(drawerIndex: 1),
+    _MainDestination(drawerIndex: 3),
+    _MainDestination(drawerIndex: 4),
+  ];
+
   int _currentIndex = 0;
   List<DiaryEntry> _entries = [];
   bool _isLoadingEntries = true;
@@ -138,13 +145,23 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onItemSelected(int index) {
+    final screenIndex = _screenIndexForDrawerIndex(index);
+    if (screenIndex == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
     setState(() {
-      if (index == 0) _currentIndex = 0; // Timeline
-      if (index == 1) _currentIndex = 1; // Calendar
-      if (index == 3) _currentIndex = 2; // Analytics
-      if (index == 4) _currentIndex = 3; // Settings
+      _currentIndex = screenIndex;
     });
     Navigator.of(context).pop(); // Close drawer
+  }
+
+  int? _screenIndexForDrawerIndex(int drawerIndex) {
+    final screenIndex = _destinations.indexWhere(
+      (destination) => destination.drawerIndex == drawerIndex,
+    );
+    return screenIndex == -1 ? null : screenIndex;
   }
 
   @override
@@ -153,9 +170,7 @@ class _MainScreenState extends State<MainScreen> {
       key: _scaffoldKey,
       drawer: SideDrawer(
         onItemSelected: _onItemSelected,
-        selectedIndex: _currentIndex == 0
-            ? 0
-            : (_currentIndex == 1 ? 1 : (_currentIndex == 2 ? 3 : 4)),
+        selectedIndex: _destinations[_currentIndex].drawerIndex,
       ),
       body: _buildCurrentScreen(),
     );
@@ -182,4 +197,10 @@ class _MainScreenState extends State<MainScreen> {
       _ => SettingsScreen(onMenuPressed: _openDrawer),
     };
   }
+}
+
+class _MainDestination {
+  final int drawerIndex;
+
+  const _MainDestination({required this.drawerIndex});
 }

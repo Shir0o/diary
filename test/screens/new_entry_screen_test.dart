@@ -118,4 +118,46 @@ void main() {
     expect(savedEntry!.id, 'entry-1');
     expect(savedEntry!.content, 'Updated body');
   });
+
+  testWidgets('Clearing content while editing returns untitled entry', (
+    WidgetTester tester,
+  ) async {
+    final existingEntry = DiaryEntry(
+      id: 'entry-1',
+      date: DateTime(2026, 4, 24, 10),
+      title: 'Original title',
+      content: 'Original body',
+      mood: '🚀',
+    );
+    DiaryEntry? savedEntry;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () async {
+                savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                  MaterialPageRoute(
+                    builder: (_) => NewEntryScreen(entry: existingEntry),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(savedEntry, isNotNull);
+    expect(savedEntry!.title, 'Untitled Entry');
+    expect(savedEntry!.content, isEmpty);
+  });
 }
