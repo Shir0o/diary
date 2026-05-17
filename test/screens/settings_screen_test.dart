@@ -33,7 +33,7 @@ void main() {
 
     // Footer
     expect(find.text('Your data is encrypted locally.'), findsOneWidget);
-    expect(find.text('Version 2.4.0'), findsOneWidget);
+    expect(find.text('Version 0.1.0'), findsOneWidget);
   });
 
   testWidgets('Toggling switches should update state (UI check)', (

@@ -7,6 +7,9 @@ import 'screens/settings_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'screens/new_entry_screen.dart';
+import 'screens/media_screen.dart';
+import 'screens/info_screen.dart';
+import 'screens/entry_search_delegate.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
 
@@ -47,13 +50,16 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   static const List<_MainDestination> _destinations = [
-    _MainDestination(drawerIndex: 0),
-    _MainDestination(drawerIndex: 1),
-    _MainDestination(drawerIndex: 3),
-    _MainDestination(drawerIndex: 4),
+    _MainDestination(drawerIndex: 0, screen: _MainScreen.timeline),
+    _MainDestination(drawerIndex: 1, screen: _MainScreen.calendar),
+    _MainDestination(drawerIndex: 2, screen: _MainScreen.media),
+    _MainDestination(drawerIndex: 3, screen: _MainScreen.analytics),
+    _MainDestination(drawerIndex: 4, screen: _MainScreen.settings),
+    _MainDestination(drawerIndex: 5, screen: _MainScreen.help),
+    _MainDestination(drawerIndex: 6, screen: _MainScreen.about),
   ];
 
-  int _currentIndex = 0;
+  _MainScreen _currentScreen = _MainScreen.timeline;
   List<DiaryEntry> _entries = [];
   bool _isLoadingEntries = true;
 
@@ -144,24 +150,45 @@ class _MainScreenState extends State<MainScreen> {
     _entries.sort((a, b) => b.date.compareTo(a.date));
   }
 
+  Future<void> _searchEntries() async {
+    final selectedEntry = await showSearch<DiaryEntry?>(
+      context: context,
+      delegate: EntrySearchDelegate(_entries),
+    );
+    if (selectedEntry == null) return;
+    await _editEntry(selectedEntry);
+  }
+
+  void _showCalendar() {
+    setState(() {
+      _currentScreen = _MainScreen.calendar;
+    });
+  }
+
   void _onItemSelected(int index) {
-    final screenIndex = _screenIndexForDrawerIndex(index);
-    if (screenIndex == null) {
+    final destination = _destinationForDrawerIndex(index);
+    if (destination == null) {
       Navigator.of(context).pop();
       return;
     }
 
     setState(() {
-      _currentIndex = screenIndex;
+      _currentScreen = destination.screen;
     });
     Navigator.of(context).pop(); // Close drawer
   }
 
-  int? _screenIndexForDrawerIndex(int drawerIndex) {
-    final screenIndex = _destinations.indexWhere(
+  _MainDestination? _destinationForDrawerIndex(int drawerIndex) {
+    final destinationIndex = _destinations.indexWhere(
       (destination) => destination.drawerIndex == drawerIndex,
     );
-    return screenIndex == -1 ? null : screenIndex;
+    return destinationIndex == -1 ? null : _destinations[destinationIndex];
+  }
+
+  int get _selectedDrawerIndex {
+    return _destinations
+        .firstWhere((destination) => destination.screen == _currentScreen)
+        .drawerIndex;
   }
 
   @override
@@ -170,7 +197,7 @@ class _MainScreenState extends State<MainScreen> {
       key: _scaffoldKey,
       drawer: SideDrawer(
         onItemSelected: _onItemSelected,
-        selectedIndex: _destinations[_currentIndex].drawerIndex,
+        selectedIndex: _selectedDrawerIndex,
       ),
       body: _buildCurrentScreen(),
     );
@@ -181,26 +208,41 @@ class _MainScreenState extends State<MainScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return switch (_currentIndex) {
-      0 => TimelineScreen(
+    return switch (_currentScreen) {
+      _MainScreen.timeline => TimelineScreen(
         entries: _entries,
         onMenuPressed: _openDrawer,
         onAddEntry: _createEntry,
+        onSearchEntries: _searchEntries,
+        onCalendarPressed: _showCalendar,
         onEditEntry: _editEntry,
       ),
-      1 => CalendarScreen(
+      _MainScreen.calendar => CalendarScreen(
         entries: _entries,
         onMenuPressed: _openDrawer,
+        onSearchEntries: _searchEntries,
         onEditEntry: _editEntry,
       ),
-      2 => AnalyticsScreen(entries: _entries, onMenuPressed: _openDrawer),
-      _ => SettingsScreen(onMenuPressed: _openDrawer),
+      _MainScreen.media => MediaScreen(
+        entries: _entries,
+        onMenuPressed: _openDrawer,
+      ),
+      _MainScreen.analytics => AnalyticsScreen(
+        entries: _entries,
+        onMenuPressed: _openDrawer,
+      ),
+      _MainScreen.settings => SettingsScreen(onMenuPressed: _openDrawer),
+      _MainScreen.help => InfoScreen.help(onMenuPressed: _openDrawer),
+      _MainScreen.about => InfoScreen.about(onMenuPressed: _openDrawer),
     };
   }
 }
 
 class _MainDestination {
   final int drawerIndex;
+  final _MainScreen screen;
 
-  const _MainDestination({required this.drawerIndex});
+  const _MainDestination({required this.drawerIndex, required this.screen});
 }
+
+enum _MainScreen { timeline, calendar, media, analytics, settings, help, about }

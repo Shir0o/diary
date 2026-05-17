@@ -8,6 +8,8 @@ import '../helpers/font_helper.dart';
 class TimelineScreen extends StatefulWidget {
   final VoidCallback? onMenuPressed;
   final VoidCallback? onAddEntry;
+  final VoidCallback? onSearchEntries;
+  final VoidCallback? onCalendarPressed;
   final ValueChanged<DiaryEntry>? onEditEntry;
   final List<DiaryEntry>? entries;
 
@@ -15,6 +17,8 @@ class TimelineScreen extends StatefulWidget {
     super.key,
     this.onMenuPressed,
     this.onAddEntry,
+    this.onSearchEntries,
+    this.onCalendarPressed,
     this.onEditEntry,
     this.entries,
   });
@@ -76,11 +80,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () {},
+            onPressed: widget.onSearchEntries,
           ),
           IconButton(
             icon: const Icon(Icons.calendar_month, color: Colors.black),
-            onPressed: () {},
+            onPressed: widget.onCalendarPressed,
           ),
         ],
       ),
