@@ -64,7 +64,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   List<DiaryEntry> get _filteredEntries {
     return _entries.where((entry) {
-      return entry.date.year == _selectedDate.year &&
+      return !entry.isArchived &&
+          entry.date.year == _selectedDate.year &&
           entry.date.month == _selectedDate.month &&
           entry.date.day == _selectedDate.day;
     }).toList();

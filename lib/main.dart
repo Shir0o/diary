@@ -10,6 +10,7 @@ import 'screens/new_entry_screen.dart';
 import 'screens/media_screen.dart';
 import 'screens/info_screen.dart';
 import 'screens/entry_search_delegate.dart';
+import 'screens/archive_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
 
@@ -52,11 +53,12 @@ class _MainScreenState extends State<MainScreen> {
   static const List<_MainDestination> _destinations = [
     _MainDestination(drawerIndex: 0, screen: _MainScreen.timeline),
     _MainDestination(drawerIndex: 1, screen: _MainScreen.calendar),
-    _MainDestination(drawerIndex: 2, screen: _MainScreen.media),
-    _MainDestination(drawerIndex: 3, screen: _MainScreen.analytics),
-    _MainDestination(drawerIndex: 4, screen: _MainScreen.settings),
-    _MainDestination(drawerIndex: 5, screen: _MainScreen.help),
-    _MainDestination(drawerIndex: 6, screen: _MainScreen.about),
+    _MainDestination(drawerIndex: 2, screen: _MainScreen.archive),
+    _MainDestination(drawerIndex: 3, screen: _MainScreen.media),
+    _MainDestination(drawerIndex: 4, screen: _MainScreen.analytics),
+    _MainDestination(drawerIndex: 5, screen: _MainScreen.settings),
+    _MainDestination(drawerIndex: 6, screen: _MainScreen.help),
+    _MainDestination(drawerIndex: 7, screen: _MainScreen.about),
   ];
 
   _MainScreen _currentScreen = _MainScreen.timeline;
@@ -135,7 +137,6 @@ class _MainScreenState extends State<MainScreen> {
       MaterialPageRoute(
         builder: (context) => NewEntryScreen(
           entry: entry,
-          onDelete: () => _deleteEntry(entry.id),
         ),
       ),
     );
@@ -152,7 +153,42 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _deleteEntry(String id) async {
-    await widget.entryStore.deleteEntry(id);
+    await widget.entryStore.trashEntry(id, true);
+    if (!mounted) return;
+    setState(() {
+      final index = _entries.indexWhere((item) => item.id == id);
+      if (index != -1) {
+        _entries[index] = _entries[index].copyWith(isDeleted: true);
+      }
+    });
+  }
+
+  Future<void> _archiveEntry(String id, bool archived) async {
+    await widget.entryStore.archiveEntry(id, archived);
+    if (!mounted) return;
+    setState(() {
+      final index = _entries.indexWhere((item) => item.id == id);
+      if (index != -1) {
+        _entries[index] = _entries[index].copyWith(isArchived: archived);
+      }
+    });
+  }
+
+  Future<void> _restoreEntry(String id) async {
+    await widget.entryStore.archiveEntry(id, false);
+    await widget.entryStore.trashEntry(id, false);
+    if (!mounted) return;
+    setState(() {
+      final index = _entries.indexWhere((item) => item.id == id);
+      if (index != -1) {
+        _entries[index] =
+            _entries[index].copyWith(isArchived: false, isDeleted: false);
+      }
+    });
+  }
+
+  Future<void> _permanentlyDeleteEntry(String id) async {
+    await widget.entryStore.permanentlyDeleteEntry(id);
     if (!mounted) return;
     setState(() {
       _entries.removeWhere((item) => item.id == id);
@@ -223,25 +259,35 @@ class _MainScreenState extends State<MainScreen> {
 
     return switch (_currentScreen) {
       _MainScreen.timeline => TimelineScreen(
-        entries: _entries,
+        entries: _entries.where((e) => !e.isArchived && !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
         onAddEntry: _createEntry,
         onSearchEntries: _searchEntries,
         onCalendarPressed: _showCalendar,
         onEditEntry: _editEntry,
+        onDeleteEntry: _deleteEntry,
+        onArchiveEntry: (id) => _archiveEntry(id, true),
       ),
       _MainScreen.calendar => CalendarScreen(
-        entries: _entries,
+        entries: _entries.where((e) => !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
         onSearchEntries: _searchEntries,
         onEditEntry: _editEntry,
       ),
+      _MainScreen.archive => ArchiveScreen(
+        archivedEntries:
+            _entries.where((e) => e.isArchived && !e.isDeleted).toList(),
+        deletedEntries: _entries.where((e) => e.isDeleted).toList(),
+        onMenuPressed: _openDrawer,
+        onRestoreEntry: _restoreEntry,
+        onPermanentlyDeleteEntry: _permanentlyDeleteEntry,
+      ),
       _MainScreen.media => MediaScreen(
-        entries: _entries,
+        entries: _entries.where((e) => !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
       ),
       _MainScreen.analytics => AnalyticsScreen(
-        entries: _entries,
+        entries: _entries.where((e) => !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
       ),
       _MainScreen.settings => SettingsScreen(onMenuPressed: _openDrawer),
@@ -258,4 +304,13 @@ class _MainDestination {
   const _MainDestination({required this.drawerIndex, required this.screen});
 }
 
-enum _MainScreen { timeline, calendar, media, analytics, settings, help, about }
+enum _MainScreen {
+  timeline,
+  calendar,
+  archive,
+  media,
+  analytics,
+  settings,
+  help,
+  about,
+}

@@ -40,6 +40,11 @@ class SideDrawer extends StatelessWidget {
           label: Text('Calendar'),
         ),
         const NavigationDrawerDestination(
+          icon: Icon(Icons.archive_outlined),
+          selectedIcon: Icon(Icons.archive),
+          label: Text('Archive'),
+        ),
+        const NavigationDrawerDestination(
           icon: Icon(Icons.photo_library_outlined),
           selectedIcon: Icon(Icons.photo_library),
           label: Text('Media'),
