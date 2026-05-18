@@ -119,14 +119,14 @@ void main() {
     expect(savedEntry!.content, 'Updated body');
   });
 
-  testWidgets('Delete icon is hidden when creating a new entry', (
+  testWidgets('Delete icon is not present', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const MaterialApp(home: NewEntryScreen()));
     expect(find.byIcon(Icons.delete_outline), findsNothing);
   });
 
-  testWidgets('Delete icon is hidden when editing without onDelete', (
+  testWidgets('Editing screen title is empty', (
     WidgetTester tester,
   ) async {
     final existingEntry = DiaryEntry(
@@ -139,93 +139,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: NewEntryScreen(entry: existingEntry)),
     );
-    expect(find.byIcon(Icons.delete_outline), findsNothing);
-  });
-
-  testWidgets('Confirming delete invokes onDelete and pops the screen', (
-    WidgetTester tester,
-  ) async {
-    final existingEntry = DiaryEntry(
-      id: 'entry-1',
-      date: DateTime(2026, 4, 24, 10),
-      title: 'Original title',
-      content: 'Original body',
-      mood: '🚀',
-    );
-    var deleteCalls = 0;
-    var routePopped = false;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            return TextButton(
-              onPressed: () async {
-                await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(
-                      entry: existingEntry,
-                      onDelete: () async {
-                        deleteCalls++;
-                      },
-                    ),
-                  ),
-                );
-                routePopped = true;
-              },
-              child: const Text('Open'),
-            );
-          },
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Delete entry?'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
-    await tester.pumpAndSettle();
-
-    expect(deleteCalls, 1);
-    expect(routePopped, isTrue);
-  });
-
-  testWidgets('Cancelling delete does not invoke onDelete or pop', (
-    WidgetTester tester,
-  ) async {
-    final existingEntry = DiaryEntry(
-      id: 'entry-1',
-      date: DateTime(2026, 4, 24, 10),
-      title: 'Original title',
-      content: 'Original body',
-      mood: '🚀',
-    );
-    var deleteCalls = 0;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: NewEntryScreen(
-          entry: existingEntry,
-          onDelete: () async {
-            deleteCalls++;
-          },
-        ),
-      ),
-    );
-
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
-    await tester.pumpAndSettle();
-
-    expect(deleteCalls, 0);
-    expect(find.text('Edit Entry'), findsOneWidget);
+    expect(find.text('Edit Entry'), findsNothing);
   });
 
   testWidgets('Clearing content while editing returns untitled entry', (

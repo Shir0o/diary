@@ -84,13 +84,10 @@ void main() {
     await tester.pumpWidget(createApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Coffee Break'));
-    await tester.pumpAndSettle();
+    expect(find.text('Coffee Break'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    // Swipe left (end to start) to delete
+    await tester.drag(find.text('Coffee Break'), const Offset(-500, 0));
     await tester.pumpAndSettle();
 
     expect(find.text('Coffee Break'), findsNothing);
