@@ -132,7 +132,12 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _editEntry(DiaryEntry entry) async {
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(builder: (context) => NewEntryScreen(entry: entry)),
+      MaterialPageRoute(
+        builder: (context) => NewEntryScreen(
+          entry: entry,
+          onDelete: () => _deleteEntry(entry.id),
+        ),
+      ),
     );
     if (updatedEntry == null) return;
 
@@ -143,6 +148,14 @@ class _MainScreenState extends State<MainScreen> {
       if (index == -1) return;
       _entries[index] = updatedEntry;
       _sortEntries();
+    });
+  }
+
+  Future<void> _deleteEntry(String id) async {
+    await widget.entryStore.deleteEntry(id);
+    if (!mounted) return;
+    setState(() {
+      _entries.removeWhere((item) => item.id == id);
     });
   }
 

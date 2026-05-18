@@ -23,6 +23,11 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> deleteEntry(String id) async {
+    _entries.removeWhere((entry) => entry.id == id);
+  }
+
+  @override
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries) async {
     if (_entries.isNotEmpty) return;
     _entries.addAll(entries);

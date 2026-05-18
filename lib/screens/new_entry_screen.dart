@@ -5,8 +5,9 @@ import '../models/diary_entry.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
+  final Future<void> Function()? onDelete;
 
-  const NewEntryScreen({super.key, this.entry});
+  const NewEntryScreen({super.key, this.entry, this.onDelete});
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
@@ -56,6 +57,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (widget.entry != null && widget.onDelete != null)
+            IconButton(
+              icon: const Icon(
+                Icons.delete_outline,
+                color: Color(0xFF6750A4),
+              ),
+              tooltip: 'Delete entry',
+              onPressed: _confirmDelete,
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: ElevatedButton(
@@ -376,6 +386,33 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     setState(() {
       _locationController.text = result.trim();
     });
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete entry?'),
+          content: const Text('This entry will be permanently deleted.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) return;
+
+    await widget.onDelete!();
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   void _showUnavailableMessage(String message) {
