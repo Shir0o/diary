@@ -8,7 +8,7 @@ import 'diary_entry_store.dart';
 
 class SqliteDiaryEntryStore implements DiaryEntryStore {
   static const _databaseName = 'diary_entries.db';
-  static const _databaseVersion = 1;
+  static const _databaseVersion = 3;
   static const _entriesTable = 'entries';
 
   final String? databasePath;
@@ -39,6 +39,34 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
   Future<void> deleteEntry(String id) async {
     final db = await _openDatabase();
     await db.delete(_entriesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> trashEntry(String id, bool isDeleted) async {
+    final db = await _openDatabase();
+    await db.update(
+      _entriesTable,
+      {'is_deleted': isDeleted ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
+  Future<void> permanentlyDeleteEntry(String id) async {
+    final db = await _openDatabase();
+    await db.delete(_entriesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> archiveEntry(String id, bool isArchived) async {
+    final db = await _openDatabase();
+    await db.update(
+      _entriesTable,
+      {'is_archived': isArchived ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   @override
@@ -80,6 +108,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       options: sqflite.OpenDatabaseOptions(
         version: _databaseVersion,
         onCreate: _createSchema,
+        onUpgrade: _onUpgrade,
       ),
     );
     return _database!;
@@ -94,12 +123,23 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
         content TEXT NOT NULL,
         mood TEXT NOT NULL,
         location TEXT,
-        image_urls TEXT NOT NULL
+        image_urls TEXT NOT NULL,
+        is_archived INTEGER NOT NULL DEFAULT 0,
+        is_deleted INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute(
       'CREATE INDEX idx_entries_date ON $_entriesTable(date DESC)',
     );
+  }
+
+  Future<void> _onUpgrade(sqflite.Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE $_entriesTable ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE $_entriesTable ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0');
+    }
   }
 
   Map<String, Object?> _entryToRow(DiaryEntry entry) {
@@ -111,6 +151,8 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       'mood': entry.mood,
       'location': entry.location,
       'image_urls': jsonEncode(entry.imageUrls),
+      'is_archived': entry.isArchived ? 1 : 0,
+      'is_deleted': entry.isDeleted ? 1 : 0,
     };
   }
 
@@ -125,6 +167,8 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       imageUrls: (jsonDecode(row['image_urls']! as String) as List<dynamic>)
           .map((item) => item as String)
           .toList(),
+      isArchived: (row['is_archived'] as int? ?? 0) == 1,
+      isDeleted: (row['is_deleted'] as int? ?? 0) == 1,
     );
   }
 }

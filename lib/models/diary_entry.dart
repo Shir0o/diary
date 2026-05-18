@@ -6,6 +6,8 @@ class DiaryEntry {
   final String mood;
   final String? location;
   final List<String> imageUrls;
+  final bool isArchived;
+  final bool isDeleted;
 
   DiaryEntry({
     required this.id,
@@ -15,6 +17,8 @@ class DiaryEntry {
     required this.mood,
     this.location,
     this.imageUrls = const [],
+    this.isArchived = false,
+    this.isDeleted = false,
   });
 
   DiaryEntry copyWith({
@@ -25,6 +29,8 @@ class DiaryEntry {
     String? mood,
     String? location,
     List<String>? imageUrls,
+    bool? isArchived,
+    bool? isDeleted,
   }) {
     return DiaryEntry(
       id: id ?? this.id,
@@ -34,6 +40,8 @@ class DiaryEntry {
       mood: mood ?? this.mood,
       location: location ?? this.location,
       imageUrls: imageUrls ?? this.imageUrls,
+      isArchived: isArchived ?? this.isArchived,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
@@ -46,6 +54,8 @@ class DiaryEntry {
       'mood': mood,
       'location': location,
       'imageUrls': imageUrls,
+      'isArchived': isArchived,
+      'isDeleted': isDeleted,
     };
   }
 
@@ -62,6 +72,8 @@ class DiaryEntry {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      isArchived: json['isArchived'] as bool? ?? false,
+      isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
 }

@@ -28,6 +28,27 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> trashEntry(String id, bool isDeleted) async {
+    final index = _entries.indexWhere((entry) => entry.id == id);
+    if (index != -1) {
+      _entries[index] = _entries[index].copyWith(isDeleted: isDeleted);
+    }
+  }
+
+  @override
+  Future<void> permanentlyDeleteEntry(String id) async {
+    _entries.removeWhere((entry) => entry.id == id);
+  }
+
+  @override
+  Future<void> archiveEntry(String id, bool isArchived) async {
+    final index = _entries.indexWhere((entry) => entry.id == id);
+    if (index != -1) {
+      _entries[index] = _entries[index].copyWith(isArchived: isArchived);
+    }
+  }
+
+  @override
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries) async {
     if (_entries.isNotEmpty) return;
     _entries.addAll(entries);
