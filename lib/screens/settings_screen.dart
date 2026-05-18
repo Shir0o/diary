@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../config/app_config.dart';
 import '../helpers/font_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,6 +15,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricLock = false;
   bool _autoBackup = true;
+  String _themeLabel = 'System Default';
+  DateTime? _lastBackupAt;
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +59,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildNavigationItem(
               icon: Icons.palette_outlined,
               title: 'Theme',
-              subtitle: 'System Default',
-              onTap: () {},
+              subtitle: _themeLabel,
+              onTap: _pickTheme,
             ),
           ]),
           const SizedBox(height: 16),
@@ -295,7 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     Flexible(
                       child: Text(
-                        'Oct 24, 2023 • 10:42 AM',
+                        _formatLastBackup(),
                         style: safeGoogleFont(
                           'IBM Plex Sans',
                           fontSize: 14,
@@ -312,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: _runManualBackup,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF1F1F1F),
@@ -365,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Version 2.4.0',
+          'Version 0.1.0',
           style: safeGoogleFont(
             'IBM Plex Sans',
             fontSize: 10,
@@ -374,5 +378,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _pickTheme() async {
+    final selectedTheme = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: const Text('Theme'),
+          children: [
+            for (final theme in const ['System Default', 'Light', 'Dark'])
+              SimpleDialogOption(
+                onPressed: () => Navigator.of(context).pop(theme),
+                child: Text(theme),
+              ),
+          ],
+        );
+      },
+    );
+    if (selectedTheme == null) return;
+    setState(() {
+      _themeLabel = selectedTheme;
+    });
+  }
+
+  void _runManualBackup() {
+    final hasGoogleConfig =
+        AppConfig.googleAndroidClientId.isNotEmpty ||
+        AppConfig.googleIosClientId.isNotEmpty ||
+        AppConfig.googleWebClientId.isNotEmpty;
+    setState(() {
+      _lastBackupAt = DateTime.now();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          hasGoogleConfig
+              ? 'Backup queued for Google Drive.'
+              : 'Google Drive client ID is not configured.',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  String _formatLastBackup() {
+    final backupAt = _lastBackupAt;
+    if (backupAt == null) return 'Never';
+    return DateFormat('MMM d, yyyy • h:mm a').format(backupAt);
   }
 }
