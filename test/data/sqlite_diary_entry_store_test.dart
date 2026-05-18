@@ -79,4 +79,35 @@ void main() {
     expect(entries.single.location, 'Desk');
     expect(entries.single.imageUrls, ['image-b']);
   });
+
+  test('deletes an entry by id', () async {
+    final keep = DiaryEntry(
+      id: 'keep',
+      date: DateTime(2026, 4, 24, 9),
+      title: 'Keep',
+      content: 'Keep content',
+      mood: '📝',
+    );
+    final remove = DiaryEntry(
+      id: 'remove',
+      date: DateTime(2026, 4, 23, 9),
+      title: 'Remove',
+      content: 'Remove content',
+      mood: '🚀',
+    );
+
+    await store.upsertEntry(keep);
+    await store.upsertEntry(remove);
+
+    await store.deleteEntry('remove');
+
+    final entries = await store.loadEntries();
+    expect(entries.map((entry) => entry.id), ['keep']);
+  });
+
+  test('deleting a missing id is a no-op', () async {
+    await store.deleteEntry('does-not-exist');
+    final entries = await store.loadEntries();
+    expect(entries, isEmpty);
+  });
 }
