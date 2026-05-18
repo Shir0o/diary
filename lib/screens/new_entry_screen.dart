@@ -59,10 +59,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         actions: [
           if (widget.entry != null && widget.onDelete != null)
             IconButton(
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Color(0xFF6750A4),
-              ),
+              icon: const Icon(Icons.delete_outline, color: Color(0xFF6750A4)),
               tooltip: 'Delete entry',
               onPressed: _confirmDelete,
             ),
