@@ -5,6 +5,8 @@ abstract class DiaryEntryStore {
 
   Future<void> upsertEntry(DiaryEntry entry);
 
+  Future<void> deleteEntry(String id);
+
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries);
 
   Future<void> close();

@@ -80,6 +80,23 @@ void main() {
     expect(find.text('A saved diary entry'), findsWidgets);
   });
 
+  testWidgets('deleting an entry removes it from the timeline', (tester) async {
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Coffee Break'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.delete_outline));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Coffee Break'), findsNothing);
+    expect(find.text('Starting a new project'), findsWidgets);
+  });
+
   testWidgets('editing an entry updates it in the timeline', (tester) async {
     await tester.pumpWidget(createApp());
     await tester.pumpAndSettle();

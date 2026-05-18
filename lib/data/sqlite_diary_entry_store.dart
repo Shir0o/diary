@@ -36,6 +36,12 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> deleteEntry(String id) async {
+    final db = await _openDatabase();
+    await db.delete(_entriesTable, where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries) async {
     final db = await _openDatabase();
     final countRows = await db.rawQuery(
