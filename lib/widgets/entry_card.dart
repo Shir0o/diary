@@ -6,8 +6,14 @@ import '../helpers/font_helper.dart';
 class EntryCard extends StatelessWidget {
   final DiaryEntry entry;
   final VoidCallback? onTap;
+  final EdgeInsetsGeometry margin;
 
-  const EntryCard({super.key, required this.entry, this.onTap});
+  const EntryCard({
+    super.key,
+    required this.entry,
+    this.onTap,
+    this.margin = const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +23,7 @@ class EntryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: margin,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),

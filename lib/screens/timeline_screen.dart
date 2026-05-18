@@ -11,6 +11,8 @@ class TimelineScreen extends StatefulWidget {
   final VoidCallback? onSearchEntries;
   final VoidCallback? onCalendarPressed;
   final ValueChanged<DiaryEntry>? onEditEntry;
+  final ValueChanged<String>? onDeleteEntry;
+  final ValueChanged<String>? onArchiveEntry;
   final List<DiaryEntry>? entries;
 
   const TimelineScreen({
@@ -20,6 +22,8 @@ class TimelineScreen extends StatefulWidget {
     this.onSearchEntries,
     this.onCalendarPressed,
     this.onEditEntry,
+    this.onDeleteEntry,
+    this.onArchiveEntry,
     this.entries,
   });
 
@@ -121,11 +125,48 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             ),
                           ),
                         ),
-                      EntryCard(
-                        entry: entry,
-                        onTap: widget.onEditEntry == null
-                            ? null
-                            : () => widget.onEditEntry!(entry),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 16,
+                        ),
+                        child: Dismissible(
+                          key: Key(entry.id),
+                          direction: DismissDirection.horizontal,
+                          background: Container(
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            decoration: BoxDecoration(
+                              color: Colors.amber,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.archive, color: Colors.white),
+                          ),
+                          secondaryBackground: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.delete, color: Colors.white),
+                          ),
+                          onDismissed: (direction) {
+                            if (direction == DismissDirection.endToStart) {
+                              widget.onDeleteEntry?.call(entry.id);
+                            } else {
+                              widget.onArchiveEntry?.call(entry.id);
+                            }
+                          },
+                          child: EntryCard(
+                            entry: entry,
+                            margin: EdgeInsets.zero,
+                            onTap:
+                                widget.onEditEntry == null
+                                    ? null
+                                    : () => widget.onEditEntry!(entry),
+                          ),
+                        ),
                       ),
                     ],
                   ),
