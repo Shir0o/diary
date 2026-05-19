@@ -91,15 +91,14 @@ void main() {
     // Section Headers
     expect(find.text('ACCOUNT'), findsOneWidget);
     expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
-    expect(find.text('CLOUD BACKUP'), findsOneWidget);
+    expect(find.text('CLOUD SYNC'), findsOneWidget);
 
     // Account Section
     expect(find.text('Sign in with Google'), findsOneWidget);
 
-    // Cloud Backup Items
-    expect(find.text('Auto-backup'), findsOneWidget);
-    expect(find.text('Backup'), findsOneWidget);
-    expect(find.text('Restore'), findsOneWidget);
+    // Cloud Sync Items
+    expect(find.text('Auto-sync'), findsOneWidget);
+    expect(find.text('Sync now'), findsOneWidget);
   });
 
   testWidgets('SettingsScreen shows user info when signed in', (

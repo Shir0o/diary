@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/font_helper.dart';
 import '../services/auth_service.dart';
 import '../services/drive_service.dart';
@@ -27,6 +28,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const _lastSyncAtKey = 'last_sync_at';
+
   bool _biometricLock = false;
   bool _autoBackup = true;
   bool _isSyncing = false;
@@ -40,11 +43,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final enabled = await widget.securityService.isBiometricLockEnabled;
+    final prefs = await SharedPreferences.getInstance();
+    final lastSyncIso = prefs.getString(_lastSyncAtKey);
     if (mounted) {
       setState(() {
         _biometricLock = enabled;
+        _lastSyncAt = lastSyncIso != null
+            ? DateTime.tryParse(lastSyncIso)
+            : null;
       });
     }
+  }
+
+  Future<void> _saveLastSyncAt(DateTime value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastSyncAtKey, value.toUtc().toIso8601String());
   }
 
   Future<void> _toggleBiometricLock(bool enabled) async {
@@ -241,7 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            color: colorScheme.shadow.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -428,7 +441,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            color: colorScheme.shadow.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -614,8 +627,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final result = await widget.authService.driveService.sync();
       if (!mounted) return;
+      final syncedAt = result.remoteModified ?? DateTime.now();
+      await _saveLastSyncAt(syncedAt);
       setState(() {
-        _lastSyncAt = DateTime.now();
+        _lastSyncAt = syncedAt;
       });
       final message = switch (result.outcome) {
         SyncOutcome.uploaded => 'Synced — local changes uploaded.',
