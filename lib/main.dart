@@ -242,8 +242,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _createEntry() async {
+    final existingTags = _entries.expand((e) => e.tags).toSet().toList();
     final entry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(builder: (context) => const NewEntryScreen()),
+      MaterialPageRoute(
+        builder: (context) => NewEntryScreen(existingTags: existingTags),
+      ),
     );
     if (entry == null) return;
 
@@ -257,8 +260,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _editEntry(DiaryEntry entry) async {
+    final existingTags = _entries.expand((e) => e.tags).toSet().toList();
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(builder: (context) => NewEntryScreen(entry: entry)),
+      MaterialPageRoute(
+        builder: (context) =>
+            NewEntryScreen(entry: entry, existingTags: existingTags),
+      ),
     );
     if (updatedEntry == null) return;
 

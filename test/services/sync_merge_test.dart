@@ -186,6 +186,35 @@ void main() {
       expect(result.first.title, 'Edited Title (Newer)');
     });
 
+    test('both sides present: remote newer should keep remote tags', () {
+      final local = [
+        DiaryEntry(
+          id: '1',
+          date: baseTime,
+          title: 'Title',
+          content: 'Content',
+          mood: '😊',
+          tags: const ['old-tag'],
+          updatedAt: baseTime,
+        ),
+      ];
+      final remote = [
+        DiaryEntry(
+          id: '1',
+          date: baseTime,
+          title: 'Title',
+          content: 'Content',
+          mood: '😊',
+          tags: const ['new-tag-1', 'new-tag-2'],
+          updatedAt: baseTime.add(const Duration(minutes: 5)),
+        ),
+      ];
+
+      final result = DiaryEntryStore.merge(local, remote);
+      expect(result.length, 1);
+      expect(result.first.tags, const ['new-tag-1', 'new-tag-2']);
+    });
+
     test(
       'identical updatedAt: tie-break by comparing serialized JSON lexically',
       () {
@@ -211,7 +240,6 @@ void main() {
             updatedAt: baseTime,
           ),
         ];
-
         final result = DiaryEntryStore.merge(local, remote);
         expect(result.length, 1);
         // We expect the one with larger lexically serialized JSON to win.

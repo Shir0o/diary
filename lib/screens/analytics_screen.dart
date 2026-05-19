@@ -26,6 +26,7 @@ class AnalyticsScreen extends StatelessWidget {
       relativeTo: referenceDate,
     );
     final moodDist = AnalyticsHelper.calculateMoodDistribution(entries);
+    final tagDist = AnalyticsHelper.calculateTagDistribution(entries);
     final weeklyActivity = AnalyticsHelper.getWeeklyActivity(
       entries,
       relativeTo: referenceDate,
@@ -78,6 +79,10 @@ class AnalyticsScreen extends StatelessWidget {
           _buildSectionHeader('Mood Distribution', context),
           const SizedBox(height: 8),
           _buildMoodDistribution(moodDist, context),
+          const SizedBox(height: 24),
+          _buildSectionHeader('Tag Distribution', context),
+          const SizedBox(height: 8),
+          _buildTagDistribution(tagDist, context),
           const SizedBox(height: 24),
           _buildSectionHeader('Weekly Activity', context),
           const SizedBox(height: 8),
@@ -194,6 +199,104 @@ class AnalyticsScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     '${(percentage * 100).toStringAsFixed(0)}%',
+                    style: safeGoogleFont(
+                      'Inter',
+                      fontSize: 12,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagDistribution(
+    Map<String, int> distribution,
+    BuildContext context,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (distribution.isEmpty) {
+      return Card(
+        elevation: 0,
+        color: colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Text(
+              'No tags used yet',
+              style: safeGoogleFont(
+                'Inter',
+                fontSize: 14,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final total = distribution.values.fold(0, (sum, val) => sum + val);
+
+    final sortedEntries = distribution.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: sortedEntries.map((e) {
+            final percentage = e.value / total;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.label_outlined,
+                    size: 18,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      e.key,
+                      overflow: TextOverflow.ellipsis,
+                      style: safeGoogleFont(
+                        'Inter',
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 5,
+                    child: LinearProgressIndicator(
+                      value: percentage,
+                      backgroundColor: colorScheme.surfaceVariant,
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(4),
+                      minHeight: 8,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${e.value} (${(percentage * 100).toStringAsFixed(0)}%)',
                     style: safeGoogleFont(
                       'Inter',
                       fontSize: 12,

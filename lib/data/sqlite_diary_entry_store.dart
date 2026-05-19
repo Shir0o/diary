@@ -8,7 +8,7 @@ import 'diary_entry_store.dart';
 
 class SqliteDiaryEntryStore implements DiaryEntryStore {
   static const _databaseName = 'diary_entries.db';
-  static const _databaseVersion = 4;
+  static const _databaseVersion = 5;
   static const _entriesTable = 'entries';
 
   final String? databasePath;
@@ -144,6 +144,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
         mood TEXT NOT NULL,
         location TEXT,
         image_urls TEXT NOT NULL,
+        tags TEXT NOT NULL DEFAULT '[]',
         is_archived INTEGER NOT NULL DEFAULT 0,
         is_deleted INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT
@@ -175,6 +176,11 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
         'UPDATE $_entriesTable SET updated_at = date WHERE updated_at IS NULL',
       );
     }
+    if (oldVersion < 5) {
+      await db.execute(
+        'ALTER TABLE $_entriesTable ADD COLUMN tags TEXT NOT NULL DEFAULT \'[]\'',
+      );
+    }
   }
 
   Map<String, Object?> _entryToRow(DiaryEntry entry) {
@@ -186,6 +192,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       'mood': entry.mood,
       'location': entry.location,
       'image_urls': jsonEncode(entry.imageUrls),
+      'tags': jsonEncode(entry.tags),
       'is_archived': entry.isArchived ? 1 : 0,
       'is_deleted': entry.isDeleted ? 1 : 0,
       'updated_at': entry.updatedAt.toIso8601String(),
@@ -203,6 +210,9 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       mood: row['mood']! as String,
       location: row['location'] as String?,
       imageUrls: (jsonDecode(row['image_urls']! as String) as List<dynamic>)
+          .map((item) => item as String)
+          .toList(),
+      tags: (jsonDecode(row['tags']! as String) as List<dynamic>)
           .map((item) => item as String)
           .toList(),
       isArchived: (row['is_archived'] as int? ?? 0) == 1,

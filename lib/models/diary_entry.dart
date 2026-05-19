@@ -6,6 +6,7 @@ class DiaryEntry {
   final String mood;
   final String? location;
   final List<String> imageUrls;
+  final List<String> tags;
   final bool isArchived;
   final bool isDeleted;
   final DateTime updatedAt;
@@ -18,6 +19,7 @@ class DiaryEntry {
     required this.mood,
     this.location,
     this.imageUrls = const [],
+    this.tags = const [],
     this.isArchived = false,
     this.isDeleted = false,
     DateTime? updatedAt,
@@ -31,6 +33,7 @@ class DiaryEntry {
     String? mood,
     String? location,
     List<String>? imageUrls,
+    List<String>? tags,
     bool? isArchived,
     bool? isDeleted,
     DateTime? updatedAt,
@@ -43,6 +46,7 @@ class DiaryEntry {
       mood: mood ?? this.mood,
       location: location ?? this.location,
       imageUrls: imageUrls ?? this.imageUrls,
+      tags: tags ?? this.tags,
       isArchived: isArchived ?? this.isArchived,
       isDeleted: isDeleted ?? this.isDeleted,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -58,6 +62,7 @@ class DiaryEntry {
       'mood': mood,
       'location': location,
       'imageUrls': imageUrls,
+      'tags': tags,
       'isArchived': isArchived,
       'isDeleted': isDeleted,
       'updatedAt': updatedAt.toIso8601String(),
@@ -76,6 +81,9 @@ class DiaryEntry {
           (json['imageUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
+          [],
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           [],
       isArchived: json['isArchived'] as bool? ?? false,
       isDeleted: json['isDeleted'] as bool? ?? false,

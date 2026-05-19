@@ -13,6 +13,7 @@ void main() {
         content: 'Beautiful morning at the park.',
         mood: '😊',
         location: 'Central Park',
+        tags: const ['nature', 'morning'],
         updatedAt: testDate,
       );
 
@@ -22,6 +23,7 @@ void main() {
       expect(entry.content, 'Beautiful morning at the park.');
       expect(entry.mood, '😊');
       expect(entry.location, 'Central Park');
+      expect(entry.tags, const ['nature', 'morning']);
       expect(entry.updatedAt, testDate);
     });
 
@@ -32,6 +34,7 @@ void main() {
         title: 'Morning Walk',
         content: 'Beautiful morning at the park.',
         mood: '😊',
+        tags: const ['nature', 'morning'],
         updatedAt: testDate,
       );
 
@@ -42,6 +45,7 @@ void main() {
       expect(json['title'], 'Morning Walk');
       expect(json['content'], 'Beautiful morning at the park.');
       expect(json['mood'], '😊');
+      expect(json['tags'], const ['nature', 'morning']);
       expect(json['updatedAt'], testDate.toIso8601String());
     });
 
@@ -53,6 +57,7 @@ void main() {
         'content': 'Beautiful morning at the park.',
         'mood': '😊',
         'location': 'Central Park',
+        'tags': ['nature', 'morning'],
       };
 
       final entry = DiaryEntry.fromJson(json);
@@ -63,6 +68,7 @@ void main() {
       expect(entry.content, 'Beautiful morning at the park.');
       expect(entry.mood, '😊');
       expect(entry.location, 'Central Park');
+      expect(entry.tags, const ['nature', 'morning']);
       expect(entry.updatedAt, testDate); // fallback to date
     });
   });

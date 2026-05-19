@@ -9,9 +9,15 @@ import '../widgets/location_selection_sheet.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
+  final List<String> existingTags;
   final LocationService? locationService;
 
-  const NewEntryScreen({super.key, this.entry, this.locationService});
+  const NewEntryScreen({
+    super.key,
+    this.entry,
+    this.existingTags = const [],
+    this.locationService,
+  });
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
@@ -20,8 +26,10 @@ class NewEntryScreen extends StatefulWidget {
 class _NewEntryScreenState extends State<NewEntryScreen> {
   late final TextEditingController _controller;
   late final TextEditingController _locationController;
+  late final TextEditingController _tagInputController;
   late DateTime _entryDate;
   late String _mood;
+  late List<String> _tags;
   late final LocationService _locationService;
 
   @override
@@ -30,14 +38,17 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _locationService = widget.locationService ?? GeolocatorLocationService();
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
+    _tagInputController = TextEditingController();
     _entryDate = widget.entry?.date ?? DateTime.now();
     _mood = widget.entry?.mood ?? '📝';
+    _tags = List.from(widget.entry?.tags ?? []);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _locationController.dispose();
+    _tagInputController.dispose();
     super.dispose();
   }
 
@@ -179,6 +190,49 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       ],
                     ),
                   ],
+                  if (_tags.isNotEmpty) ...[
+                    const SizedBox(height: AppTheme.spacingSmall),
+                    Wrap(
+                      spacing: AppTheme.spacingSmall,
+                      runSpacing: AppTheme.spacingSmall,
+                      children: _tags.map((tag) {
+                        return InputChip(
+                          label: Text(
+                            tag,
+                            style:
+                                (Theme.of(context).textTheme.labelMedium ??
+                                        const TextStyle())
+                                    .copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                          ),
+                          backgroundColor: colorScheme.primaryContainer,
+                          deleteIcon: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          onDeleted: () {
+                            setState(() {
+                              _tags.remove(tag);
+                            });
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusLarge,
+                            ),
+                            side: BorderSide.none,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacingExtraSmall,
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: AppTheme.spacingLarge),
                   TextField(
                     controller: _controller,
@@ -238,9 +292,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         ),
                       ),
                       InkWell(
-                        onTap: () => _showUnavailableMessage(
-                          'Tags are not available yet.',
-                        ),
+                        onTap: _editTags,
                         child: Icon(
                           Icons.label_outlined,
                           color: colorScheme.primary,
@@ -308,6 +360,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       mood: _mood,
       location: _emptyToNull(_locationController.text),
       imageUrls: existingEntry?.imageUrls ?? const [],
+      tags: _tags,
       updatedAt: DateTime.now(),
     );
   }
@@ -405,5 +458,214 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     }
 
     return content.split('\n').first.trim();
+  }
+
+  Future<void> _editTags() async {
+    _tagInputController.clear();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.background,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            final colorScheme = theme.colorScheme;
+
+            final suggestedTags = widget.existingTags
+                .where((tag) => !_tags.contains(tag))
+                .toList();
+
+            void addTag(String value) {
+              final trimmed = value.trim();
+              if (trimmed.isNotEmpty && !_tags.contains(trimmed)) {
+                setState(() {
+                  _tags.add(trimmed);
+                });
+                setSheetState(() {});
+                _tagInputController.clear();
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: AppTheme.spacingLarge,
+                right: AppTheme.spacingLarge,
+                top: AppTheme.spacingSmall,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    AppTheme.spacingLarge,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add Tags',
+                    style: (theme.textTheme.titleLarge ?? const TextStyle())
+                        .copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                  ),
+                  const SizedBox(height: AppTheme.spacingMedium),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _tagInputController,
+                          decoration: InputDecoration(
+                            hintText: 'Enter tag name...',
+                            hintStyle:
+                                (theme.textTheme.bodyMedium ??
+                                        const TextStyle())
+                                    .copyWith(
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusMedium,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacingMedium,
+                              vertical:
+                                  AppTheme.spacingSmall +
+                                  AppTheme.spacingExtraSmall,
+                            ),
+                          ),
+                          onSubmitted: addTag,
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spacingMedium),
+                      ElevatedButton(
+                        onPressed: () => addTag(_tagInputController.text),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusMedium,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacingMedium,
+                            vertical:
+                                AppTheme.spacingSmall +
+                                AppTheme.spacingExtraSmall,
+                          ),
+                        ),
+                        child: const Text('Add'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacingLarge),
+                  if (_tags.isNotEmpty) ...[
+                    Text(
+                      'Selected Tags',
+                      style: (theme.textTheme.titleSmall ?? const TextStyle())
+                          .copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                    ),
+                    const SizedBox(height: AppTheme.spacingSmall),
+                    Wrap(
+                      spacing: AppTheme.spacingSmall,
+                      runSpacing: AppTheme.spacingSmall,
+                      children: _tags.map((tag) {
+                        return Chip(
+                          label: Text(tag),
+                          onDeleted: () {
+                            setState(() {
+                              _tags.remove(tag);
+                            });
+                            setSheetState(() {});
+                          },
+                          backgroundColor: colorScheme.primaryContainer,
+                          labelStyle:
+                              (theme.textTheme.labelMedium ?? const TextStyle())
+                                  .copyWith(
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                          deleteIconColor: colorScheme.onPrimaryContainer,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusLarge,
+                            ),
+                            side: BorderSide.none,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: AppTheme.spacingLarge),
+                  ],
+                  if (suggestedTags.isNotEmpty) ...[
+                    Text(
+                      'Suggested Tags',
+                      style: (theme.textTheme.titleSmall ?? const TextStyle())
+                          .copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                    ),
+                    const SizedBox(height: AppTheme.spacingSmall),
+                    Wrap(
+                      spacing: AppTheme.spacingSmall,
+                      runSpacing: AppTheme.spacingSmall,
+                      children: suggestedTags.map((tag) {
+                        return ActionChip(
+                          label: Text(tag),
+                          onPressed: () {
+                            setState(() {
+                              _tags.add(tag);
+                            });
+                            setSheetState(() {});
+                          },
+                          backgroundColor: colorScheme.surfaceVariant,
+                          labelStyle:
+                              (theme.textTheme.labelMedium ?? const TextStyle())
+                                  .copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusLarge,
+                            ),
+                            side: BorderSide.none,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: AppTheme.spacingLarge),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Done',
+                          style:
+                              (theme.textTheme.labelLarge ?? const TextStyle())
+                                  .copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
