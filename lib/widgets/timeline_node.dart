@@ -3,24 +3,29 @@ import 'package:flutter/material.dart';
 class TimelineNode extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
-  final Color color;
+  final Color? color;
 
   const TimelineNode({
     super.key,
     this.isFirst = false,
     this.isLast = false,
-    this.color = const Color(0xFF6751a4),
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final nodeColor = colorScheme.primary;
+
     return SizedBox(
       width: 40,
       child: CustomPaint(
         painter: _TimelinePainter(
           isFirst: isFirst,
           isLast: isLast,
-          color: color,
+          color: color ?? nodeColor,
+          lineColor: colorScheme.outline.withValues(alpha: 0.3),
+          innerCircleColor: colorScheme.surface,
         ),
       ),
     );
@@ -31,18 +36,22 @@ class _TimelinePainter extends CustomPainter {
   final bool isFirst;
   final bool isLast;
   final Color color;
+  final Color lineColor;
+  final Color innerCircleColor;
 
   _TimelinePainter({
     required this.isFirst,
     required this.isLast,
     required this.color,
+    required this.lineColor,
+    required this.innerCircleColor,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.width / 2;
     final paint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.3)
+      ..color = lineColor
       ..strokeWidth = 2;
 
     // Draw line
@@ -60,9 +69,9 @@ class _TimelinePainter extends CustomPainter {
 
     canvas.drawCircle(Offset(center, 20), 6, circlePaint);
 
-    // Draw white inner circle
+    // Draw inner circle
     final innerPaint = Paint()
-      ..color = Colors.white
+      ..color = innerCircleColor
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(center, 20), 3, innerPaint);
   }

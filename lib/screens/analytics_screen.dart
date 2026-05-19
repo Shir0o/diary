@@ -17,6 +17,9 @@ class AnalyticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final totalEntries = AnalyticsHelper.calculateTotalEntries(entries);
     final streak = AnalyticsHelper.calculateCurrentStreak(
       entries,
@@ -29,18 +32,18 @@ class AnalyticsScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FA),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
           'Analytics',
           style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
+            icon: Icon(Icons.menu, color: colorScheme.onSurface),
             onPressed: onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -56,7 +59,7 @@ class AnalyticsScreen extends StatelessWidget {
                   'Total Entries',
                   totalEntries.toString(),
                   Icons.book_outlined,
-                  const Color(0xFF6751a4),
+                  colorScheme.primary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -72,15 +75,15 @@ class AnalyticsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader('Mood Distribution'),
+          _buildSectionHeader('Mood Distribution', context),
           const SizedBox(height: 8),
-          _buildMoodDistribution(moodDist),
+          _buildMoodDistribution(moodDist, context),
           const SizedBox(height: 24),
-          _buildSectionHeader('Weekly Activity'),
+          _buildSectionHeader('Weekly Activity', context),
           const SizedBox(height: 8),
-          _buildActivityChart(weeklyActivity),
+          _buildActivityChart(weeklyActivity, context),
           const SizedBox(height: 24),
-          _buildInsightsCard(),
+          _buildInsightsCard(context),
         ],
       ),
     );
@@ -93,12 +96,13 @@ class AnalyticsScreen extends StatelessWidget {
     IconData icon,
     Color color,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      color: Colors.white,
+      color: colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -113,13 +117,13 @@ class AnalyticsScreen extends StatelessWidget {
                 'Inter',
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF1D1B20),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               title,
-              style: safeGoogleFont('Inter', fontSize: 12, color: Colors.grey),
+              style: safeGoogleFont('Inter', fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
           ],
         ),
@@ -127,31 +131,33 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       title,
       style: safeGoogleFont(
         'Inter',
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF1D1B20),
+        color: colorScheme.onSurface,
       ),
     );
   }
 
-  Widget _buildMoodDistribution(Map<String, int> distribution) {
+  Widget _buildMoodDistribution(Map<String, int> distribution, BuildContext context) {
     if (distribution.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
     final total = distribution.values.fold(0, (sum, val) => sum + val);
 
     return Card(
       elevation: 0,
-      color: Colors.white,
+      color: colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -170,8 +176,8 @@ class AnalyticsScreen extends StatelessWidget {
                       children: [
                         LinearProgressIndicator(
                           value: percentage,
-                          backgroundColor: const Color(0xFFF3EDF7),
-                          color: const Color(0xFF6751a4),
+                          backgroundColor: colorScheme.surfaceVariant,
+                          color: colorScheme.primary,
                           borderRadius: BorderRadius.circular(4),
                           minHeight: 8,
                         ),
@@ -184,7 +190,7 @@ class AnalyticsScreen extends StatelessWidget {
                     style: safeGoogleFont(
                       'Inter',
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -196,17 +202,18 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityChart(List<DayActivity> activity) {
+  Widget _buildActivityChart(List<DayActivity> activity, BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final maxCount = activity
         .map((e) => e.count)
         .fold(0, (max, e) => e > max ? e : max);
 
     return Card(
       elevation: 0,
-      color: Colors.white,
+      color: colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -229,8 +236,8 @@ class AnalyticsScreen extends StatelessWidget {
                     height: 100 * heightFactor,
                     decoration: BoxDecoration(
                       color: day.count > 0
-                          ? const Color(0xFF6751a4)
-                          : const Color(0xFFF3EDF7),
+                          ? colorScheme.primary
+                          : colorScheme.surfaceVariant,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -240,7 +247,7 @@ class AnalyticsScreen extends StatelessWidget {
                     style: safeGoogleFont(
                       'Inter',
                       fontSize: 10,
-                      color: Colors.grey,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -257,19 +264,20 @@ class AnalyticsScreen extends StatelessWidget {
     return weekdays[date.weekday - 1];
   }
 
-  Widget _buildInsightsCard() {
+  Widget _buildInsightsCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      color: const Color(0xFF6751a4).withValues(alpha: 0.05),
+      color: colorScheme.primary.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFF6751a4), width: 0.5),
+        side: BorderSide(color: colorScheme.primary, width: 0.5),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(Icons.auto_awesome, color: Color(0xFF6751a4), size: 20),
+            Icon(Icons.auto_awesome, color: colorScheme.primary, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -277,7 +285,7 @@ class AnalyticsScreen extends StatelessWidget {
                 style: safeGoogleFont(
                   'Inter',
                   fontSize: 14,
-                  color: const Color(0xFF6751a4),
+                  color: colorScheme.primary,
                 ),
               ),
             ),
@@ -287,13 +295,14 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       alignment: Alignment.center,
       child: Text(
         'No data available',
-        style: safeGoogleFont('Inter', color: Colors.grey),
+        style: safeGoogleFont('Inter', color: colorScheme.onSurface.withValues(alpha: 0.6)),
       ),
     );
   }

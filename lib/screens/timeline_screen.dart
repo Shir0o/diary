@@ -4,6 +4,7 @@ import '../widgets/timeline_node.dart';
 import '../widgets/entry_card.dart';
 import 'new_entry_screen.dart';
 import '../helpers/font_helper.dart';
+import '../config/app_theme.dart';
 
 class TimelineScreen extends StatefulWidget {
   final VoidCallback? onMenuPressed;
@@ -64,30 +65,33 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
           'Diary',
           style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
+            icon: Icon(Icons.menu, color: colorScheme.onSurface),
             onPressed:
                 widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+            icon: Icon(Icons.search, color: colorScheme.onSurface),
             onPressed: widget.onSearchEntries,
           ),
           IconButton(
-            icon: const Icon(Icons.calendar_month, color: Colors.black),
+            icon: Icon(Icons.calendar_month, color: colorScheme.onSurface),
             onPressed: widget.onCalendarPressed,
           ),
         ],
@@ -120,7 +124,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             style: safeGoogleFont(
                               'Inter',
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey,
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                               fontSize: 14,
                             ),
                           ),
@@ -138,7 +142,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             decoration: BoxDecoration(
                               color: Colors.amber,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
                             ),
                             child: const Icon(Icons.archive, color: Colors.white),
                           ),
@@ -147,7 +151,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
                             ),
                             child: const Icon(Icons.delete, color: Colors.white),
                           ),
@@ -178,8 +182,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: widget.onAddEntry ?? _openNewEntry,
-        backgroundColor: const Color(0xFF6751a4),
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: colorScheme.primary,
+        child: Icon(Icons.add, color: colorScheme.onPrimary),
       ),
     );
   }

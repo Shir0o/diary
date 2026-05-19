@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/diary_entry.dart';
 import '../helpers/font_helper.dart';
+import '../config/app_theme.dart';
 
 class EntryCard extends StatelessWidget {
   final DiaryEntry entry;
@@ -17,18 +18,22 @@ class EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       elevation: 0,
+      color: colorScheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
       ),
       margin: margin,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.spacingMedium),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -39,47 +44,48 @@ class EntryCard extends StatelessWidget {
                     DateFormat('h:mm a').format(entry.date),
                     style: safeGoogleFont(
                       'Inter',
-                      color: Colors.grey,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
                   Text(entry.mood, style: const TextStyle(fontSize: 20)),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacingSmall),
               Text(
                 entry.title,
                 style: safeGoogleFont(
                   'Inter',
+                  color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppTheme.spacingExtraSmall),
               Text(
                 entry.content,
                 style: safeGoogleFont(
                   'Inter',
-                  color: Colors.black87,
+                  color: colorScheme.onSurface.withValues(alpha: 0.8),
                   fontSize: 14,
                   height: 1.4,
                 ),
               ),
               if (entry.location != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTheme.spacingSmall),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on,
                       size: 14,
-                      color: Color(0xFF6751a4),
+                      color: colorScheme.primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       entry.location!,
                       style: safeGoogleFont(
                         'Inter',
-                        color: const Color(0xFF6751a4),
+                        color: colorScheme.primary,
                         fontSize: 12,
                       ),
                     ),

@@ -21,29 +21,33 @@ class ArchiveScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.background,
         appBar: AppBar(
           title: Text(
             'Archive & Trash',
             style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: Colors.white,
+          backgroundColor: colorScheme.background,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
+            icon: Icon(Icons.menu, color: colorScheme.onSurface),
             onPressed: onMenuPressed,
           ),
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            tabs: const [
               Tab(text: 'Archived'),
               Tab(text: 'Trash'),
             ],
-            labelColor: Color(0xFF6751a4),
-            indicatorColor: Color(0xFF6751a4),
+            labelColor: colorScheme.primary,
+            indicatorColor: colorScheme.primary,
+            unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         body: TabBarView(
@@ -95,11 +99,13 @@ class _EntryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (entries.isEmpty) {
       return Center(
         child: Text(
           emptyMessage,
-          style: safeGoogleFont('Inter', color: Colors.grey),
+          style: safeGoogleFont('Inter', color: colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
       );
     }
@@ -121,8 +127,8 @@ class _EntryList extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: () => onAction(entry.id),
-                      icon: Icon(actionIcon, size: 18),
-                      label: Text(actionLabel),
+                      icon: Icon(actionIcon, size: 18, color: colorScheme.primary),
+                      label: Text(actionLabel, style: TextStyle(color: colorScheme.primary)),
                     ),
                     if (secondaryActionIcon != null &&
                         onSecondaryAction != null)
@@ -141,7 +147,7 @@ class _EntryList extends StatelessWidget {
                   ],
                 ),
               ),
-              const Divider(),
+              Divider(color: colorScheme.outline.withValues(alpha: 0.1)),
             ],
           ),
         );

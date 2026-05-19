@@ -17,6 +17,8 @@ class SideDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return StreamBuilder<GoogleSignInAccount?>(
       stream: authService.onCurrentUserChanged,
       initialData: authService.currentUser,
@@ -35,7 +37,7 @@ class SideDrawer extends StatelessWidget {
                   'Inter',
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6751a4),
+                  color: colorScheme.primary,
                 ),
               ),
             ),
