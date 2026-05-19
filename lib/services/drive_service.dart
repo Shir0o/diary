@@ -5,11 +5,70 @@ import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sig
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sqflite;
 
+enum SyncOutcome { uploaded, downloaded, alreadyInSync }
+
+class SyncResult {
+  final SyncOutcome outcome;
+  final DateTime? remoteModified;
+
+  const SyncResult(this.outcome, this.remoteModified);
+}
+
 class DriveService {
   final GoogleSignIn _googleSignIn;
   static const _backupFileName = 'diary_backup.db';
 
   DriveService(this._googleSignIn);
+
+  Future<SyncResult> sync() async {
+    final client = await _googleSignIn.authenticatedClient();
+    if (client == null) throw Exception('User not authenticated');
+
+    final driveApi = drive.DriveApi(client);
+    final query = "name = '$_backupFileName' and trashed = false";
+    final fileList = await driveApi.files.list(
+      q: query,
+      spaces: 'drive',
+      $fields: 'files(id,modifiedTime)',
+    );
+
+    final dbPath = p.join(await sqflite.getDatabasesPath(), 'diary_entries.db');
+    final localFile = File(dbPath);
+    final localExists = await localFile.exists();
+
+    if (fileList.files == null || fileList.files!.isEmpty) {
+      if (!localExists) throw Exception('Nothing to sync');
+      await uploadBackup();
+      return SyncResult(SyncOutcome.uploaded, DateTime.now().toUtc());
+    }
+
+    final remote = fileList.files!.first;
+    final remoteModified = remote.modifiedTime;
+
+    if (!localExists) {
+      await downloadBackup();
+      return SyncResult(SyncOutcome.downloaded, remoteModified);
+    }
+
+    final localModified = (await localFile.lastModified()).toUtc();
+    if (remoteModified != null &&
+        remoteModified.toUtc().isAfter(localModified.add(
+              const Duration(seconds: 2),
+            ))) {
+      await downloadBackup();
+      return SyncResult(SyncOutcome.downloaded, remoteModified);
+    }
+
+    if (remoteModified != null &&
+        localModified.isAfter(remoteModified.toUtc().add(
+              const Duration(seconds: 2),
+            ))) {
+      await uploadBackup();
+      return SyncResult(SyncOutcome.uploaded, DateTime.now().toUtc());
+    }
+
+    return SyncResult(SyncOutcome.alreadyInSync, remoteModified);
+  }
 
   Future<void> uploadBackup() async {
     final client = await _googleSignIn.authenticatedClient();

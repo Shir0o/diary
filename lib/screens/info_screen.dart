@@ -59,33 +59,40 @@ class InfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FA),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
           title,
-          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
+          style: safeGoogleFont(
+            'Inter',
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black),
+          icon: Icon(Icons.menu, color: colorScheme.onSurface),
           onPressed: onMenuPressed,
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Icon(icon, size: 48, color: const Color(0xFF6751A4)),
+          Icon(icon, size: 48, color: colorScheme.primary),
           const SizedBox(height: 16),
           for (final section in sections)
             Card(
               elevation: 0,
-              color: Colors.white,
+              color: colorScheme.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
-                side: BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
+                side: BorderSide(
+                  color: colorScheme.outline.withValues(alpha: 0.3),
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -98,6 +105,7 @@ class InfoScreen extends StatelessWidget {
                         'Inter',
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -106,7 +114,7 @@ class InfoScreen extends StatelessWidget {
                       style: safeGoogleFont(
                         'Inter',
                         fontSize: 14,
-                        color: const Color(0xFF49454F),
+                        color: colorScheme.onSurface.withValues(alpha: 0.75),
                         height: 1.4,
                       ),
                     ),

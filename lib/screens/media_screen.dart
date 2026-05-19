@@ -17,18 +17,23 @@ class MediaScreen extends StatelessWidget {
           _MediaItem(entry: entry, imageUrl: imageUrl),
     ];
 
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FA),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
           'Media',
-          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
+          style: safeGoogleFont(
+            'Inter',
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black),
+          icon: Icon(Icons.menu, color: colorScheme.onSurface),
           onPressed: onMenuPressed,
         ),
       ),
@@ -71,16 +76,17 @@ class _EmptyMediaState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.photo_library_outlined,
               size: 56,
-              color: Color(0xFF6751A4),
+              color: colorScheme.primary,
             ),
             const SizedBox(height: 16),
             Text(
@@ -89,6 +95,7 @@ class _EmptyMediaState extends StatelessWidget {
                 'Inter',
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -100,7 +107,7 @@ class _EmptyMediaState extends StatelessWidget {
               style: safeGoogleFont(
                 'Inter',
                 fontSize: 14,
-                color: const Color(0xFF79747E),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.4,
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import '../helpers/font_helper.dart';
 import '../services/auth_service.dart';
+import '../services/drive_service.dart';
 import '../services/security_service.dart';
 import '../services/theme_service.dart';
 import '../config/app_theme.dart';
@@ -28,9 +29,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricLock = false;
   bool _autoBackup = true;
-  bool _isBackingUp = false;
-  bool _isRestoring = false;
-  DateTime? _lastBackupAt;
+  bool _isSyncing = false;
+  DateTime? _lastSyncAt;
 
   @override
   void initState() {
@@ -150,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ]),
               const SizedBox(height: AppTheme.spacingMedium),
-              _buildSectionHeader('CLOUD BACKUP'),
+              _buildSectionHeader('CLOUD SYNC'),
               _buildCloudBackupCard(user != null),
               const SizedBox(height: AppTheme.spacingExtraLarge),
               _buildFooter(),
@@ -232,6 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSettingsCard(List<Widget> children) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -240,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -285,7 +286,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -315,6 +318,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color? textColor,
     Color? iconColor,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final effectiveIconColor = iconColor ?? colorScheme.onSurface;
+    final effectiveTextColor = textColor ?? colorScheme.onSurface;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -326,16 +332,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (iconColor ?? const Color(0xFF141316)).withValues(
-                  alpha: 0.1,
-                ),
+                color: effectiveIconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                color: iconColor ?? const Color(0xFF141316),
-                size: 24,
-              ),
+              child: Icon(icon, color: effectiveIconColor, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -345,11 +345,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'IBM Plex Sans',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: textColor ?? const Color(0xFF141316),
+                  color: effectiveTextColor,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFFCAC4D0)),
+            Icon(
+              Icons.chevron_right,
+              color: colorScheme.outline.withValues(alpha: 0.8),
+            ),
           ],
         ),
       ),
@@ -363,13 +366,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required ValueChanged<bool> onChanged,
     bool showBorder = false,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: showBorder
             ? Border(
                 bottom: BorderSide(
-                  color: const Color(0xFFCAC4D0).withValues(alpha: 0.3),
+                  color: colorScheme.outline.withValues(alpha: 0.3),
                 ),
               )
             : null,
@@ -385,14 +389,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'IBM Plex Sans',
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF141316),
+                color: colorScheme.onSurface,
               ),
             ),
           ),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: const Color(0xFF6751a4),
+            activeThumbColor: colorScheme.primary,
           ),
         ],
       ),
@@ -400,30 +404,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildIconContainer(IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F1F3),
+        color: colorScheme.onSurface.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: const Color(0xFF141316), size: 24),
+      child: Icon(icon, color: colorScheme.onSurface, size: 24),
     );
   }
 
   Widget _buildCloudBackupCard(bool isSignedIn) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFCAC4D0).withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -439,12 +444,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6751a4).withValues(alpha: 0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.cloud_sync,
-                  color: Color(0xFF6751a4),
+                  color: colorScheme.primary,
                   size: 28,
                 ),
               ),
@@ -454,23 +459,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Auto-backup',
+                      'Auto-sync',
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF141316),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       isSignedIn
-                          ? 'Back up your diary entries to Google Drive automatically.'
-                          : 'Sign in to back up your entries to Google Drive.',
+                          ? 'Keep your diary entries in sync with Google Drive.'
+                          : 'Sign in to sync your entries with Google Drive.',
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: const Color(0xFF141316).withValues(alpha: 0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -481,39 +486,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: isSignedIn
                     ? (val) => setState(() => _autoBackup = val)
                     : null,
-                activeThumbColor: const Color(0xFF6751a4),
+                activeThumbColor: colorScheme.primary,
               ),
             ],
           ),
           const SizedBox(height: 20),
           Divider(
-            color: const Color(0xFFCAC4D0).withValues(alpha: 0.3),
+            color: colorScheme.outline.withValues(alpha: 0.3),
             height: 1,
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              const Icon(Icons.history, size: 18, color: Color(0xFF141316)),
+              Icon(Icons.history, size: 18, color: colorScheme.onSurface),
               const SizedBox(width: 8),
               Expanded(
                 child: Row(
                   children: [
                     Text(
-                      'Last backup: ',
+                      'Last sync: ',
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
-                        color: const Color(0xFF141316).withValues(alpha: 0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     Flexible(
                       child: Text(
-                        isSignedIn ? _formatLastBackup() : 'Not available',
+                        isSignedIn ? _formatLastSync() : 'Not available',
                         style: safeGoogleFont(
                           'IBM Plex Sans',
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF141316),
+                          color: colorScheme.onSurface,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -524,116 +529,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: (isSignedIn && !_isBackingUp && !_isRestoring)
-                      ? _runManualBackup
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1F1F1F),
-                    elevation: 0,
-                    side: const BorderSide(color: Color(0xFFCAC4D0)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_isBackingUp)
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF4285F4),
-                          ),
-                        )
-                      else
-                        const Icon(
-                          Icons.backup,
-                          size: 20,
-                          color: Color(0xFF4285F4),
-                        ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          _isBackingUp ? 'Working...' : 'Backup',
-                          style: safeGoogleFont(
-                            'IBM Plex Sans',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: (isSignedIn && !_isSyncing) ? _runSync : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                disabledBackgroundColor: colorScheme.onSurface.withValues(
+                  alpha: 0.12,
+                ),
+                disabledForegroundColor: colorScheme.onSurface.withValues(
+                  alpha: 0.38,
+                ),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 16,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: (isSignedIn && !_isBackingUp && !_isRestoring)
-                      ? _runRestore
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1F1F1F),
-                    elevation: 0,
-                    side: const BorderSide(color: Color(0xFFCAC4D0)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9999),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_isRestoring)
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF34A853),
-                          ),
-                        )
-                      else
-                        const Icon(
-                          Icons.download,
-                          size: 20,
-                          color: Color(0xFF34A853),
-                        ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          _isRestoring ? 'Working...' : 'Restore',
-                          style: safeGoogleFont(
-                            'IBM Plex Sans',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isSyncing)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.onPrimary,
                       ),
-                    ],
+                    )
+                  else
+                    const Icon(Icons.sync, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isSyncing ? 'Syncing…' : 'Sync now',
+                    style: safeGoogleFont(
+                      'IBM Plex Sans',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -641,9 +585,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildFooter() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        const Icon(Icons.lock, size: 24, color: Color(0xFF141316)),
+        Icon(Icons.lock, size: 24, color: colorScheme.onSurface),
         const SizedBox(height: 8),
         Text(
           'Your data is encrypted locally.',
@@ -651,7 +596,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'IBM Plex Sans',
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF141316).withValues(alpha: 0.5),
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
         const SizedBox(height: 4),
@@ -660,86 +605,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: safeGoogleFont(
             'IBM Plex Sans',
             fontSize: 10,
-            color: const Color(0xFF141316).withValues(alpha: 0.5),
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],
     );
   }
 
-  Future<void> _runManualBackup() async {
-    setState(() => _isBackingUp = true);
+  Future<void> _runSync() async {
+    setState(() => _isSyncing = true);
     try {
-      await widget.authService.driveService.uploadBackup();
+      final result = await widget.authService.driveService.sync();
+      if (!mounted) return;
       setState(() {
-        _lastBackupAt = DateTime.now();
+        _lastSyncAt = DateTime.now();
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Backup successful!'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Backup failed: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isBackingUp = false);
-      }
-    }
-  }
-
-  Future<void> _runRestore() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Restore Backup'),
-        content: const Text(
-          'This will overwrite your local entries with the backup from Google Drive. Continue?',
+      final message = switch (result.outcome) {
+        SyncOutcome.uploaded => 'Synced — local changes uploaded.',
+        SyncOutcome.downloaded =>
+          'Synced — remote changes downloaded. Restart the app to see them.',
+        SyncOutcome.alreadyInSync => 'Already up to date.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Restore'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => _isRestoring = true);
-    try {
-      await widget.authService.driveService.downloadBackup();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Restore successful! Please restart the app to see changes.',
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Restore failed: $e'),
+            content: Text('Sync failed: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -747,14 +644,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isRestoring = false);
+        setState(() => _isSyncing = false);
       }
     }
   }
 
-  String _formatLastBackup() {
-    final backupAt = _lastBackupAt;
-    if (backupAt == null) return 'Never';
-    return DateFormat('MMM d, yyyy • h:mm a').format(backupAt);
+  String _formatLastSync() {
+    final syncAt = _lastSyncAt;
+    if (syncAt == null) return 'Never';
+    return DateFormat('MMM d, yyyy • h:mm a').format(syncAt);
   }
 }
