@@ -119,4 +119,39 @@ void main() {
     expect(find.text('Analytics'), findsWidgets);
     expect(find.text('Total Entries'), findsOneWidget);
   });
+
+  testWidgets(
+    'pause during biometric auth does not re-lock or re-prompt on resume',
+    (tester) async {
+      when(
+        () => mockSecurityService.isBiometricLockEnabled,
+      ).thenAnswer((_) async => true);
+
+      final authCompleter = Completer<bool>();
+      when(
+        () => mockSecurityService.authenticate(),
+      ).thenAnswer((_) => authCompleter.future);
+
+      await tester.pumpWidget(createApp());
+      await tester.pump();
+
+      expect(find.text('Diary is Locked'), findsOneWidget);
+
+      // Simulate the OS biometric prompt backgrounding the app, then resuming
+      // once the user has authenticated. Before the pause guard, the resumed
+      // state would observe _isAuthenticated=false and call authenticate() a
+      // second time.
+      final binding = tester.binding;
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      authCompleter.complete(true);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Diary is Locked'), findsNothing);
+      verify(() => mockSecurityService.authenticate()).called(1);
+    },
+  );
 }
