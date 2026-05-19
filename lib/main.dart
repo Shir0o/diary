@@ -22,18 +22,20 @@ import 'config/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env', isOptional: true);
-  
+
   final authService = AuthService();
   await authService.silentSignIn();
-  
+
   final securityService = SecurityService();
   final themeService = ThemeService();
-  
-  runApp(DiaryApp(
-    authService: authService,
-    securityService: securityService,
-    themeService: themeService,
-  ));
+
+  runApp(
+    DiaryApp(
+      authService: authService,
+      securityService: securityService,
+      themeService: themeService,
+    ),
+  );
 }
 
 class DiaryApp extends StatelessWidget {
@@ -219,11 +221,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _editEntry(DiaryEntry entry) async {
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(
-        builder: (context) => NewEntryScreen(
-          entry: entry,
-        ),
-      ),
+      MaterialPageRoute(builder: (context) => NewEntryScreen(entry: entry)),
     );
     if (updatedEntry == null) return;
 
@@ -266,8 +264,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     setState(() {
       final index = _entries.indexWhere((item) => item.id == id);
       if (index != -1) {
-        _entries[index] =
-            _entries[index].copyWith(isArchived: false, isDeleted: false);
+        _entries[index] = _entries[index].copyWith(
+          isArchived: false,
+          isDeleted: false,
+        );
       }
     });
   }
@@ -333,7 +333,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline, size: 64, color: Color(0xFF6751a4)),
+              const Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: Color(0xFF6751a4),
+              ),
               const SizedBox(height: 24),
               const Text(
                 'Diary is Locked',
@@ -385,8 +389,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         onEditEntry: _editEntry,
       ),
       _MainScreen.archive => ArchiveScreen(
-        archivedEntries:
-            _entries.where((e) => e.isArchived && !e.isDeleted).toList(),
+        archivedEntries: _entries
+            .where((e) => e.isArchived && !e.isDeleted)
+            .toList(),
         deletedEntries: _entries.where((e) => e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
         onRestoreEntry: _restoreEntry,

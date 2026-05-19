@@ -6,18 +6,19 @@ import 'drive_service.dart';
 class AuthService {
   final GoogleSignIn _googleSignIn;
 
-  AuthService({
-    GoogleSignIn? googleSignIn,
-  }) : _googleSignIn = googleSignIn ??
-            GoogleSignIn(
-              scopes: [
-                'email',
-                'https://www.googleapis.com/auth/userinfo.profile',
-                drive.DriveApi.driveFileScope,
-              ],
-            );
+  AuthService({GoogleSignIn? googleSignIn})
+    : _googleSignIn =
+          googleSignIn ??
+          GoogleSignIn(
+            scopes: [
+              'email',
+              'https://www.googleapis.com/auth/userinfo.profile',
+              drive.DriveApi.driveFileScope,
+            ],
+          );
 
-  Stream<GoogleSignInAccount?> get onCurrentUserChanged => _googleSignIn.onCurrentUserChanged;
+  Stream<GoogleSignInAccount?> get onCurrentUserChanged =>
+      _googleSignIn.onCurrentUserChanged;
 
   GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
 

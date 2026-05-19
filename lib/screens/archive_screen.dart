@@ -105,7 +105,10 @@ class _EntryList extends StatelessWidget {
       return Center(
         child: Text(
           emptyMessage,
-          style: safeGoogleFont('Inter', color: colorScheme.onSurface.withValues(alpha: 0.6)),
+          style: safeGoogleFont(
+            'Inter',
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
         ),
       );
     }
@@ -127,13 +130,21 @@ class _EntryList extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: () => onAction(entry.id),
-                      icon: Icon(actionIcon, size: 18, color: colorScheme.primary),
-                      label: Text(actionLabel, style: TextStyle(color: colorScheme.primary)),
+                      icon: Icon(
+                        actionIcon,
+                        size: 18,
+                        color: colorScheme.primary,
+                      ),
+                      label: Text(
+                        actionLabel,
+                        style: TextStyle(color: colorScheme.primary),
+                      ),
                     ),
                     if (secondaryActionIcon != null &&
                         onSecondaryAction != null)
                       TextButton.icon(
-                        onPressed: () => _confirmPermanentDelete(context, entry),
+                        onPressed: () =>
+                            _confirmPermanentDelete(context, entry),
                         icon: Icon(
                           secondaryActionIcon,
                           size: 18,
@@ -155,7 +166,10 @@ class _EntryList extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmPermanentDelete(BuildContext context, DiaryEntry entry) async {
+  Future<void> _confirmPermanentDelete(
+    BuildContext context,
+    DiaryEntry entry,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {

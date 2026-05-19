@@ -14,7 +14,9 @@ import 'package:diary/services/security_service.dart';
 import 'package:diary/services/theme_service.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+
 class MockSecurityService extends Mock implements SecurityService {}
+
 class MockThemeService extends Mock implements ThemeService {}
 
 void main() {
@@ -29,17 +31,17 @@ void main() {
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    authService = AuthService(
-      googleSignIn: mockGoogleSignIn,
-    );
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
 
-    when(() => mockGoogleSignIn.onCurrentUserChanged)
-        .thenAnswer((_) => currentUserController.stream);
+    when(
+      () => mockGoogleSignIn.onCurrentUserChanged,
+    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockGoogleSignIn.currentUser).thenReturn(null);
 
-    when(() => mockSecurityService.isBiometricLockEnabled)
-        .thenAnswer((_) async => false);
-        
+    when(
+      () => mockSecurityService.isBiometricLockEnabled,
+    ).thenAnswer((_) async => false);
+
     when(() => mockThemeService.themeMode).thenReturn(ThemeMode.system);
     when(() => mockThemeService.addListener(any())).thenReturn(null);
     when(() => mockThemeService.removeListener(any())).thenReturn(null);

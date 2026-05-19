@@ -123,7 +123,11 @@ class AnalyticsScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: safeGoogleFont('Inter', fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+              style: safeGoogleFont(
+                'Inter',
+                fontSize: 12,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ],
         ),
@@ -144,7 +148,10 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMoodDistribution(Map<String, int> distribution, BuildContext context) {
+  Widget _buildMoodDistribution(
+    Map<String, int> distribution,
+    BuildContext context,
+  ) {
     if (distribution.isEmpty) {
       return _buildEmptyState(context);
     }
@@ -302,7 +309,10 @@ class AnalyticsScreen extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         'No data available',
-        style: safeGoogleFont('Inter', color: colorScheme.onSurface.withValues(alpha: 0.6)),
+        style: safeGoogleFont(
+          'Inter',
+          color: colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
       ),
     );
   }
