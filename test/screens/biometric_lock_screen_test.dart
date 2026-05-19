@@ -111,7 +111,10 @@ void main() {
     await tester.pump();
 
     // Verify error message is shown
-    expect(find.text('Authentication failed. Please try again.'), findsOneWidget);
+    expect(
+      find.text('Authentication failed. Please try again.'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
 
     // Tapping unlock again clears error (visually)

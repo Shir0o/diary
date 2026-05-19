@@ -49,20 +49,12 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
         ? const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF141316),
-              Color(0xFF1B181E),
-              Color(0xFF221A2C),
-            ],
+            colors: [Color(0xFF141316), Color(0xFF1B181E), Color(0xFF221A2C)],
           )
         : const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFEF7FF),
-              Color(0xFFF6F0FC),
-              Color(0xFFEDE4F9),
-            ],
+            colors: [Color(0xFFFEF7FF), Color(0xFFF6F0FC), Color(0xFFEDE4F9)],
           );
 
     return Scaffold(
@@ -71,22 +63,32 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLarge),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingLarge,
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: colorScheme.surface.withValues(alpha: isDark ? 0.45 : 0.7),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+                      color: colorScheme.surface.withValues(
+                        alpha: isDark ? 0.45 : 0.7,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.borderRadiusLarge,
+                      ),
                       border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: isDark ? 0.08 : 0.15),
+                        color: colorScheme.outline.withValues(
+                          alpha: isDark ? 0.08 : 0.15,
+                        ),
                         width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.3 : 0.08,
+                          ),
                           blurRadius: 30,
                           offset: const Offset(0, 10),
                         ),
@@ -174,7 +176,10 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                                         ),
                                       ),
                                     ),
-                                    icon: const Icon(Icons.fingerprint, size: 20),
+                                    icon: const Icon(
+                                      Icons.fingerprint,
+                                      size: 20,
+                                    ),
                                     label: const Text(
                                       'Unlock with Biometrics',
                                       style: TextStyle(
@@ -201,7 +206,9 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                                   color: colorScheme.error,
                                   size: 16,
                                 ),
-                                const SizedBox(width: AppTheme.spacingExtraSmall),
+                                const SizedBox(
+                                  width: AppTheme.spacingExtraSmall,
+                                ),
                                 Flexible(
                                   child: Text(
                                     _errorMessage!,
@@ -301,12 +308,7 @@ class _PulsingBiometricIconState extends State<PulsingBiometricIcon>
         tween: Tween<double>(begin: 1.06, end: 1.0),
         weight: 50,
       ),
-    ]).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     if (widget.animate) {
       _controller.repeat();
