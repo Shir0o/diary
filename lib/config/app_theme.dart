@@ -32,6 +32,11 @@ class AppTheme {
   static const double borderRadiusMedium = 12.0;
   static const double borderRadiusLarge = 16.0;
 
+  // Opacity levels
+  static const double opacityHint = 0.4;
+  static const double opacitySubtle = 0.5;
+  static const double opacityMedium = 0.6;
+
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,

@@ -35,6 +35,7 @@
     - [x] Screen Widget Implementation
     - [x] Golden Tests
     - [x] Integration (Navigation from Home)
+    - [x] Location Detection & Suggestions Integration (TDD)
 - [x] Implement Settings & Backup Screen (TDD)
     - [x] Screen Widget Implementation
     - [x] Golden Tests
