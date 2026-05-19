@@ -76,4 +76,14 @@ class AnalyticsHelper {
 
     return activity;
   }
+
+  static Map<String, int> calculateTagDistribution(List<DiaryEntry> entries) {
+    final Map<String, int> distribution = {};
+    for (final entry in entries) {
+      for (final tag in entry.tags) {
+        distribution[tag] = (distribution[tag] ?? 0) + 1;
+      }
+    }
+    return distribution;
+  }
 }

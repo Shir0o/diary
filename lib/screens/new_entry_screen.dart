@@ -7,8 +7,13 @@ import '../config/app_theme.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
+  final List<String> existingTags;
 
-  const NewEntryScreen({super.key, this.entry});
+  const NewEntryScreen({
+    super.key,
+    this.entry,
+    this.existingTags = const [],
+  });
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
@@ -17,22 +22,27 @@ class NewEntryScreen extends StatefulWidget {
 class _NewEntryScreenState extends State<NewEntryScreen> {
   late final TextEditingController _controller;
   late final TextEditingController _locationController;
+  late final TextEditingController _tagInputController;
   late DateTime _entryDate;
   late String _mood;
+  late List<String> _tags;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
+    _tagInputController = TextEditingController();
     _entryDate = widget.entry?.date ?? DateTime.now();
     _mood = widget.entry?.mood ?? '📝';
+    _tags = List.from(widget.entry?.tags ?? []);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _locationController.dispose();
+    _tagInputController.dispose();
     super.dispose();
   }
 
@@ -174,6 +184,43 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       ],
                     ),
                   ],
+                  if (_tags.isNotEmpty) ...[
+                    const SizedBox(height: AppTheme.spacingSmall),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _tags.map((tag) {
+                        return InputChip(
+                          label: Text(
+                            tag,
+                            style: safeGoogleFont(
+                              'IBM Plex Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          backgroundColor: colorScheme.primaryContainer,
+                          deleteIcon: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          onDeleted: () {
+                            setState(() {
+                              _tags.remove(tag);
+                            });
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide.none,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: AppTheme.spacingLarge),
                   TextField(
                     controller: _controller,
@@ -233,9 +280,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         ),
                       ),
                       InkWell(
-                        onTap: () => _showUnavailableMessage(
-                          'Tags are not available yet.',
-                        ),
+                        onTap: _editTags,
                         child: Icon(
                           Icons.label_outlined,
                           color: colorScheme.primary,
@@ -303,6 +348,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       mood: _mood,
       location: _emptyToNull(_locationController.text),
       imageUrls: existingEntry?.imageUrls ?? const [],
+      tags: _tags,
       updatedAt: DateTime.now(),
     );
   }
@@ -412,5 +458,190 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     }
 
     return content.split('\n').first.trim();
+  }
+
+  Future<void> _editTags() async {
+    _tagInputController.clear();
+    
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.background,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            final colorScheme = theme.colorScheme;
+            
+            final suggestedTags = widget.existingTags
+                .where((tag) => !_tags.contains(tag))
+                .toList();
+
+            void addTag(String value) {
+              final trimmed = value.trim();
+              if (trimmed.isNotEmpty && !_tags.contains(trimmed)) {
+                setState(() {
+                  _tags.add(trimmed);
+                });
+                setSheetState(() {});
+                _tagInputController.clear();
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 8,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add Tags',
+                    style: safeGoogleFont(
+                      'IBM Plex Sans',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _tagInputController,
+                          decoration: InputDecoration(
+                            hintText: 'Enter tag name...',
+                            hintStyle: safeGoogleFont(
+                              'IBM Plex Sans',
+                              color: colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: addTag,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () => addTag(_tagInputController.text),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text('Add'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (_tags.isNotEmpty) ...[
+                    Text(
+                      'Selected Tags',
+                      style: safeGoogleFont(
+                        'IBM Plex Sans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _tags.map((tag) {
+                        return Chip(
+                          label: Text(tag),
+                          onDeleted: () {
+                            setState(() {
+                              _tags.remove(tag);
+                            });
+                            setSheetState(() {});
+                          },
+                          backgroundColor: colorScheme.primaryContainer,
+                          labelStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+                          deleteIconColor: colorScheme.onPrimaryContainer,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide.none,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                  if (suggestedTags.isNotEmpty) ...[
+                    Text(
+                      'Suggested Tags',
+                      style: safeGoogleFont(
+                        'IBM Plex Sans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: suggestedTags.map((tag) {
+                        return ActionChip(
+                          label: Text(tag),
+                          onPressed: () {
+                            setState(() {
+                              _tags.add(tag);
+                            });
+                            setSheetState(() {});
+                          },
+                          backgroundColor: colorScheme.surfaceVariant,
+                          labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide.none,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Done',
+                          style: safeGoogleFont(
+                            'IBM Plex Sans',
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

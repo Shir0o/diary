@@ -179,4 +179,73 @@ void main() {
     expect(savedEntry!.title, 'Untitled Entry');
     expect(savedEntry!.content, isEmpty);
   });
+
+  testWidgets('Adding tags via bottom sheet updates screen state', (
+    WidgetTester tester,
+  ) async {
+    DiaryEntry? savedEntry;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () async {
+                savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                  MaterialPageRoute(
+                    builder: (_) => const NewEntryScreen(
+                      existingTags: ['work', 'personal'],
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Tap label/tags icon
+    await tester.tap(find.byIcon(Icons.label_outlined));
+    await tester.pumpAndSettle();
+
+    // Should open bottom sheet.
+    expect(find.text('Add Tags'), findsOneWidget);
+    expect(find.text('Suggested Tags'), findsOneWidget);
+    expect(find.text('work'), findsOneWidget);
+    expect(find.text('personal'), findsOneWidget);
+
+    // Enter a new tag in the bottom sheet TextField.
+    final tagTextField = find.byType(TextField).last;
+    await tester.enterText(tagTextField, 'ideas');
+    await tester.tap(find.text('Add'));
+    await tester.pumpAndSettle();
+
+    // Tap a suggested tag 'work'
+    await tester.tap(find.text('work'));
+    await tester.pumpAndSettle();
+
+    // Tap 'Done' button to close bottom sheet
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
+    // Bottom sheet is closed
+    expect(find.text('Add Tags'), findsNothing);
+
+    // Verify chips are shown on screen
+    expect(find.text('ideas'), findsOneWidget);
+    expect(find.text('work'), findsOneWidget);
+
+    // Enter content and save
+    await tester.enterText(find.byType(TextField), 'Tag entry test');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(savedEntry, isNotNull);
+    expect(savedEntry!.tags, containsAll(['ideas', 'work']));
+  });
 }

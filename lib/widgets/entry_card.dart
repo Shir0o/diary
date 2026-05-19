@@ -71,6 +71,34 @@ class EntryCard extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+              if (entry.tags.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spacingSmall),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: entry.tags.map((tag) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '#$tag',
+                        style: safeGoogleFont(
+                          'Inter',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
               if (entry.location != null) ...[
                 const SizedBox(height: AppTheme.spacingSmall),
                 Row(
