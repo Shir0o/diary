@@ -48,7 +48,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       _entriesTable,
       {
         'is_deleted': isDeleted ? 1 : 0,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       },
       where: 'id = ?',
       whereArgs: [id],
@@ -68,7 +68,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       _entriesTable,
       {
         'is_archived': isArchived ? 1 : 0,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       },
       where: 'id = ?',
       whereArgs: [id],

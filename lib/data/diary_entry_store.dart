@@ -56,10 +56,26 @@ abstract class DiaryEntryStore {
         } else if (localEntry.updatedAt.isAfter(remoteEntry.updatedAt)) {
           // Keep local
         } else {
-          // Ties broken by comparing serialized json string lexically
-          final localJson = jsonEncode(localEntry.toJson());
-          final remoteJson = jsonEncode(remoteEntry.toJson());
-          if (remoteJson.compareTo(localJson) > 0) {
+          // Ties broken by comparing key fields first to avoid jsonEncode in most cases
+          var cmp = remoteEntry.content.compareTo(localEntry.content);
+          if (cmp == 0) {
+            cmp = remoteEntry.title.compareTo(localEntry.title);
+          }
+          if (cmp == 0) {
+            cmp = remoteEntry.mood.compareTo(localEntry.mood);
+          }
+          if (cmp == 0) {
+            cmp = remoteEntry.date.toIso8601String().compareTo(
+              localEntry.date.toIso8601String(),
+            );
+          }
+          if (cmp == 0) {
+            // Ultimate fallback to ensure full object comparison correctness
+            final localJson = jsonEncode(localEntry.toJson());
+            final remoteJson = jsonEncode(remoteEntry.toJson());
+            cmp = remoteJson.compareTo(localJson);
+          }
+          if (cmp > 0) {
             merged[remoteEntry.id] = remoteEntry;
           }
         }

@@ -4,12 +4,20 @@ import 'package:uuid/uuid.dart';
 import '../helpers/font_helper.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
+import '../services/location_service.dart';
+import '../widgets/location_selection_sheet.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
   final List<String> existingTags;
+  final LocationService? locationService;
 
-  const NewEntryScreen({super.key, this.entry, this.existingTags = const []});
+  const NewEntryScreen({
+    super.key,
+    this.entry,
+    this.existingTags = const [],
+    this.locationService,
+  });
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
@@ -22,10 +30,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   late DateTime _entryDate;
   late String _mood;
   late List<String> _tags;
+  late final LocationService _locationService;
 
   @override
   void initState() {
     super.initState();
+    _locationService = widget.locationService ?? GeolocatorLocationService();
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
     _tagInputController = TextEditingController();
@@ -48,9 +58,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
@@ -256,7 +266,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: BoxDecoration(
-              color: colorScheme.background.withValues(alpha: 0.9),
+              color: colorScheme.surface.withValues(alpha: 0.9),
               border: Border(
                 top: BorderSide(
                   color: colorScheme.onSurface.withValues(alpha: 0.1),
@@ -411,36 +421,24 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   Future<void> _editLocation() async {
-    final result = await showDialog<String>(
+    await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        final controller = TextEditingController(
-          text: _locationController.text,
-        );
-        return AlertDialog(
-          title: const Text('Entry location'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Add a location'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(''),
-              child: const Text('Clear'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(controller.text),
-              child: const Text('Save'),
-            ),
-          ],
+        return LocationSelectionSheet(
+          locationService: _locationService,
+          initialLocation: _locationController.text,
+          onLocationSelected: (result) {
+            if (mounted) {
+              setState(() {
+                _locationController.text = result ?? '';
+              });
+            }
+          },
         );
       },
     );
-    if (result == null) return;
-    setState(() {
-      _locationController.text = result.trim();
-    });
   }
 
   void _showUnavailableMessage(String message) {

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:diary/models/diary_entry.dart';
 import 'package:diary/screens/new_entry_screen.dart';
+import 'package:diary/services/location_service.dart';
+
+class MockLocationService extends Mock implements LocationService {}
 
 void main() {
   testWidgets('NewEntryScreen should display all required UI elements', (
@@ -247,5 +251,127 @@ void main() {
 
     expect(savedEntry, isNotNull);
     expect(savedEntry!.tags, containsAll(['ideas', 'work']));
+  });
+
+  testWidgets(
+    'Selecting location from bottom sheet updates the location field',
+    (WidgetTester tester) async {
+      final mockLocationService = MockLocationService();
+      when(
+        () => mockLocationService.getAddressSuggestions(any()),
+      ).thenAnswer((_) async => []);
+
+      DiaryEntry? savedEntry;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          NewEntryScreen(locationService: mockLocationService),
+                    ),
+                  );
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // The entry location pin icon is in the bottom toolbar
+      await tester.tap(find.byIcon(Icons.location_on_outlined).last);
+      await tester.pumpAndSettle();
+
+      // Verify the bottom sheet opened
+      expect(find.text('Add Location'), findsOneWidget);
+
+      // Enter some address manually
+      await tester.enterText(find.byType(TextField).last, 'My Custom Address');
+      await tester.tap(find.text('Save').last);
+      await tester.pumpAndSettle();
+
+      // The location should be displayed inline on the screen
+      expect(find.text('My Custom Address'), findsOneWidget);
+
+      // Save the entire entry
+      await tester.enterText(find.byType(TextField).first, 'Body content');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(savedEntry, isNotNull);
+      expect(savedEntry!.location, 'My Custom Address');
+    },
+  );
+
+  testWidgets('Clearing location from bottom sheet removes location field', (
+    WidgetTester tester,
+  ) async {
+    final mockLocationService = MockLocationService();
+    when(
+      () => mockLocationService.getAddressSuggestions(any()),
+    ).thenAnswer((_) async => []);
+
+    final existingEntry = DiaryEntry(
+      id: 'entry-1',
+      date: DateTime(2026, 4, 24, 10),
+      title: 'Title',
+      content: 'Body',
+      mood: '🚀',
+      location: 'Initial Location',
+    );
+    DiaryEntry? savedEntry;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () async {
+                savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                  MaterialPageRoute(
+                    builder: (_) => NewEntryScreen(
+                      entry: existingEntry,
+                      locationService: mockLocationService,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Initial Location'), findsOneWidget);
+
+    // Tap location icon to open sheet
+    await tester.tap(find.byIcon(Icons.location_on_outlined).last);
+    await tester.pumpAndSettle();
+
+    // Tap Clear in the sheet
+    await tester.tap(find.text('Clear'));
+    await tester.pumpAndSettle();
+
+    // The location should be removed from the screen
+    expect(find.text('Initial Location'), findsNothing);
+
+    // Save
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(savedEntry, isNotNull);
+    expect(savedEntry!.location, isNull);
   });
 }

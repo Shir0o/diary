@@ -70,11 +70,15 @@ class DriveService {
 
   Future<SyncResult> _runSyncWithRetry(DiaryEntryStore entryStore) async {
     int attempts = 0;
+    Object? lastError;
+    StackTrace? lastStackTrace;
     while (attempts < 3) {
       attempts++;
       try {
         return await _runSync(entryStore);
-      } catch (e) {
+      } catch (e, stackTrace) {
+        lastError = e;
+        lastStackTrace = stackTrace;
         if (e is drive.DetailedApiRequestError && e.status == 412) {
           // Conflict / concurrency error: retry
           await Future.delayed(const Duration(milliseconds: 500));
@@ -83,10 +87,17 @@ class DriveService {
         rethrow;
       }
     }
+    if (lastError != null) {
+      Error.throwWithStackTrace(
+        lastError,
+        lastStackTrace ?? StackTrace.current,
+      );
+    }
     throw Exception('Sync failed after retries');
   }
 
   Future<SyncResult> _runSync(DiaryEntryStore entryStore) async {
+    final syncStartTime = DateTime.now().toUtc();
     final rawClient = await _getAuthenticatedClient();
     final prefs = await SharedPreferences.getInstance();
     final lastRemoteEtag = prefs.getString('${_prefPrefix}last_remote_etag');
@@ -173,7 +184,7 @@ class DriveService {
         // Update sync state
         await prefs.setString(
           '${_prefPrefix}last_synced_at',
-          DateTime.now().toUtc().toIso8601String(),
+          syncStartTime.toIso8601String(),
         );
         if (client.responseEtag != null) {
           await prefs.setString(
@@ -195,7 +206,7 @@ class DriveService {
 
         await prefs.setString(
           '${_prefPrefix}last_synced_at',
-          DateTime.now().toUtc().toIso8601String(),
+          syncStartTime.toIso8601String(),
         );
         if (client.responseEtag != null) {
           await prefs.setString(
@@ -239,7 +250,7 @@ class DriveService {
       );
       await prefs.setString(
         '${_prefPrefix}last_synced_at',
-        DateTime.now().toUtc().toIso8601String(),
+        syncStartTime.toIso8601String(),
       );
       if (client.responseEtag != null) {
         await prefs.setString(
@@ -283,7 +294,7 @@ class DriveService {
 
     await prefs.setString(
       '${_prefPrefix}last_synced_at',
-      DateTime.now().toUtc().toIso8601String(),
+      syncStartTime.toIso8601String(),
     );
     if (client.responseEtag != null) {
       await prefs.setString(
@@ -341,7 +352,7 @@ class DriveService {
 
   Future<http.Client> _getAuthenticatedClient() async {
     if (_testClient != null) {
-      return _testClient!;
+      return _testClient;
     }
     final client = await _googleSignIn.authenticatedClient();
     if (client == null) throw Exception('User not authenticated');

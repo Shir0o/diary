@@ -240,7 +240,6 @@ void main() {
             updatedAt: baseTime,
           ),
         ];
-
         final result = DiaryEntryStore.merge(local, remote);
         expect(result.length, 1);
         // We expect the one with larger lexically serialized JSON to win.
