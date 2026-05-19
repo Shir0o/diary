@@ -47,9 +47,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
@@ -212,7 +212,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: BoxDecoration(
-              color: colorScheme.background.withValues(alpha: 0.9),
+              color: colorScheme.surface.withValues(alpha: 0.9),
               border: Border(
                 top: BorderSide(
                   color: colorScheme.onSurface.withValues(alpha: 0.1),
