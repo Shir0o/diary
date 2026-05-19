@@ -431,15 +431,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               await widget.authService.driveService.sync(widget.entryStore);
               await _loadEntries();
             } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Sync failed: $e'),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Sync failed: $e'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             }
           }
         },

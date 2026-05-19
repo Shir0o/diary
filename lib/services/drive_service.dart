@@ -31,7 +31,7 @@ class EtagClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     if (_etag != null &&
         (request.method == 'PATCH' || request.method == 'PUT')) {
-      request.headers['If-Match'] = _etag!;
+      request.headers['If-Match'] = _etag;
     }
     final response = await _inner.send(request);
     final captured = response.headers['etag'] ?? response.headers['ETag'];
@@ -352,7 +352,7 @@ class DriveService {
 
   Future<http.Client> _getAuthenticatedClient() async {
     if (_testClient != null) {
-      return _testClient!;
+      return _testClient;
     }
     final client = await _googleSignIn.authenticatedClient();
     if (client == null) throw Exception('User not authenticated');
