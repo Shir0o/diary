@@ -61,9 +61,11 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     final enabled = await widget.securityService.isBiometricLockEnabled;
     final prefs = await SharedPreferences.getInstance();
     final lastSyncIso = prefs.getString(_lastSyncAtKey);
+    final autoSyncEnabled = prefs.getBool('auto_sync') ?? true;
     if (mounted) {
       setState(() {
         _biometricLock = enabled;
+        _autoBackup = autoSyncEnabled;
         _lastSyncAt = lastSyncIso != null
             ? DateTime.tryParse(lastSyncIso)
             : null;
@@ -513,7 +515,13 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               Switch(
                 value: _autoBackup && isSignedIn,
                 onChanged: isSignedIn
-                    ? (val) => setState(() => _autoBackup = val)
+                    ? (val) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('auto_sync', val);
+                        if (mounted) {
+                          setState(() => _autoBackup = val);
+                        }
+                      }
                     : null,
                 activeThumbColor: colorScheme.primary,
               ),
@@ -641,10 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     setState(() => _isSyncing = true);
     _syncAnimationController.repeat();
     try {
-      // Close the database connection before sync to allow downloading and overwriting the file safely
-      await widget.entryStore.close();
-
-      final result = await widget.authService.driveService.sync();
+      final result = await widget.authService.driveService.sync(widget.entryStore);
       if (!mounted) return;
       final syncedAt = result.remoteModified ?? DateTime.now();
       await _saveLastSyncAt(syncedAt);

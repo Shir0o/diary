@@ -8,7 +8,7 @@ import 'diary_entry_store.dart';
 
 class SqliteDiaryEntryStore implements DiaryEntryStore {
   static const _databaseName = 'diary_entries.db';
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
   static const _entriesTable = 'entries';
 
   final String? databasePath;
@@ -46,7 +46,10 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
     final db = await _openDatabase();
     await db.update(
       _entriesTable,
-      {'is_deleted': isDeleted ? 1 : 0},
+      {
+        'is_deleted': isDeleted ? 1 : 0,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -63,7 +66,10 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
     final db = await _openDatabase();
     await db.update(
       _entriesTable,
-      {'is_archived': isArchived ? 1 : 0},
+      {
+        'is_archived': isArchived ? 1 : 0,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -78,6 +84,20 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
     final count = sqflite.Sqflite.firstIntValue(countRows) ?? 0;
     if (count > 0) return;
 
+    final batch = db.batch();
+    for (final entry in entries) {
+      batch.insert(
+        _entriesTable,
+        _entryToRow(entry),
+        conflictAlgorithm: sqflite.ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
+  Future<void> saveEntries(List<DiaryEntry> entries) async {
+    final db = await _openDatabase();
     final batch = db.batch();
     for (final entry in entries) {
       batch.insert(
@@ -125,7 +145,8 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
         location TEXT,
         image_urls TEXT NOT NULL,
         is_archived INTEGER NOT NULL DEFAULT 0,
-        is_deleted INTEGER NOT NULL DEFAULT 0
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT
       )
     ''');
     await db.execute(
@@ -148,6 +169,14 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
         'ALTER TABLE $_entriesTable ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0',
       );
     }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE $_entriesTable ADD COLUMN updated_at TEXT',
+      );
+      await db.execute(
+        'UPDATE $_entriesTable SET updated_at = date WHERE updated_at IS NULL',
+      );
+    }
   }
 
   Map<String, Object?> _entryToRow(DiaryEntry entry) {
@@ -161,13 +190,16 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       'image_urls': jsonEncode(entry.imageUrls),
       'is_archived': entry.isArchived ? 1 : 0,
       'is_deleted': entry.isDeleted ? 1 : 0,
+      'updated_at': entry.updatedAt.toIso8601String(),
     };
   }
 
   DiaryEntry _entryFromRow(Map<String, Object?> row) {
+    final dateStr = row['date']! as String;
+    final updatedAtStr = row['updated_at'] as String?;
     return DiaryEntry(
       id: row['id']! as String,
-      date: DateTime.parse(row['date']! as String),
+      date: DateTime.parse(dateStr),
       title: row['title']! as String,
       content: row['content']! as String,
       mood: row['mood']! as String,
@@ -177,6 +209,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
           .toList(),
       isArchived: (row['is_archived'] as int? ?? 0) == 1,
       isDeleted: (row['is_deleted'] as int? ?? 0) == 1,
+      updatedAt: updatedAtStr != null ? DateTime.parse(updatedAtStr) : DateTime.parse(dateStr),
     );
   }
 }

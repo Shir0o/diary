@@ -15,6 +15,7 @@ class TimelineScreen extends StatefulWidget {
   final ValueChanged<String>? onDeleteEntry;
   final ValueChanged<String>? onArchiveEntry;
   final List<DiaryEntry>? entries;
+  final Future<void> Function()? onRefresh;
 
   const TimelineScreen({
     super.key,
@@ -26,6 +27,7 @@ class TimelineScreen extends StatefulWidget {
     this.onDeleteEntry,
     this.onArchiveEntry,
     this.entries,
+    this.onRefresh,
   });
 
   @override
@@ -96,9 +98,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _entries.length,
-        itemBuilder: (context, index) {
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh ?? () async {},
+        child: ListView.builder(
+          itemCount: _entries.length,
+          itemBuilder: (context, index) {
           final entry = _entries[index];
           final isFirst = index == 0;
           final isLast = index == _entries.length - 1;
@@ -191,6 +195,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
           );
         },
       ),
+    ),
       floatingActionButton: FloatingActionButton(
         onPressed: widget.onAddEntry ?? _openNewEntry,
         backgroundColor: colorScheme.primary,

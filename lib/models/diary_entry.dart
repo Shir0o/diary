@@ -8,6 +8,7 @@ class DiaryEntry {
   final List<String> imageUrls;
   final bool isArchived;
   final bool isDeleted;
+  final DateTime updatedAt;
 
   DiaryEntry({
     required this.id,
@@ -19,7 +20,8 @@ class DiaryEntry {
     this.imageUrls = const [],
     this.isArchived = false,
     this.isDeleted = false,
-  });
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   DiaryEntry copyWith({
     String? id,
@@ -31,6 +33,7 @@ class DiaryEntry {
     List<String>? imageUrls,
     bool? isArchived,
     bool? isDeleted,
+    DateTime? updatedAt,
   }) {
     return DiaryEntry(
       id: id ?? this.id,
@@ -42,6 +45,7 @@ class DiaryEntry {
       imageUrls: imageUrls ?? this.imageUrls,
       isArchived: isArchived ?? this.isArchived,
       isDeleted: isDeleted ?? this.isDeleted,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -56,6 +60,7 @@ class DiaryEntry {
       'imageUrls': imageUrls,
       'isArchived': isArchived,
       'isDeleted': isDeleted,
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
@@ -74,6 +79,9 @@ class DiaryEntry {
           [],
       isArchived: json['isArchived'] as bool? ?? false,
       isDeleted: json['isDeleted'] as bool? ?? false,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : DateTime.parse(json['date'] as String),
     );
   }
 }
