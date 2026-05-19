@@ -74,23 +74,21 @@ class EntryCard extends StatelessWidget {
               if (entry.tags.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spacingSmall),
                 Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
+                  spacing: AppTheme.spacingExtraSmall,
+                  runSpacing: AppTheme.spacingExtraSmall,
                   children: entry.tags.map((tag) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                        horizontal: AppTheme.spacingSmall,
+                        vertical: AppTheme.spacingExtraSmall / 2,
                       ),
                       decoration: BoxDecoration(
                         color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
                       ),
                       child: Text(
                         '#$tag',
-                        style: safeGoogleFont(
-                          'Inter',
-                          fontSize: 11,
+                        style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
                           fontWeight: FontWeight.w500,
                           color: colorScheme.onPrimaryContainer,
                         ),

@@ -187,15 +187,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   if (_tags.isNotEmpty) ...[
                     const SizedBox(height: AppTheme.spacingSmall),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: AppTheme.spacingSmall,
+                      runSpacing: AppTheme.spacingSmall,
                       children: _tags.map((tag) {
                         return InputChip(
                           label: Text(
                             tag,
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 12,
+                            style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle()).copyWith(
                               fontWeight: FontWeight.w500,
                               color: colorScheme.onPrimaryContainer,
                             ),
@@ -212,10 +210,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             });
                           },
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
                             side: BorderSide.none,
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingExtraSmall),
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         );
                       }).toList(),
@@ -491,10 +489,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
             return Padding(
               padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 8,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                left: AppTheme.spacingLarge,
+                right: AppTheme.spacingLarge,
+                top: AppTheme.spacingSmall,
+                bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spacingLarge,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -502,14 +500,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 children: [
                   Text(
                     'Add Tags',
-                    style: safeGoogleFont(
-                      'IBM Plex Sans',
-                      fontSize: 20,
+                    style: (theme.textTheme.titleLarge ?? const TextStyle()).copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacingMedium),
                   Row(
                     children: [
                       Expanded(
@@ -517,54 +513,51 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                           controller: _tagInputController,
                           decoration: InputDecoration(
                             hintText: 'Enter tag name...',
-                            hintStyle: safeGoogleFont(
-                              'IBM Plex Sans',
+                            hintStyle: (theme.textTheme.bodyMedium ?? const TextStyle()).copyWith(
                               color: colorScheme.onSurface.withValues(alpha: 0.4),
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
+                              horizontal: AppTheme.spacingMedium,
+                              vertical: AppTheme.spacingSmall + AppTheme.spacingExtraSmall,
                             ),
                           ),
                           onSubmitted: addTag,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppTheme.spacingMedium),
                       ElevatedButton(
                         onPressed: () => addTag(_tagInputController.text),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
                           ),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                            horizontal: AppTheme.spacingMedium,
+                            vertical: AppTheme.spacingSmall + AppTheme.spacingExtraSmall,
                           ),
                         ),
                         child: const Text('Add'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppTheme.spacingLarge),
                   if (_tags.isNotEmpty) ...[
                     Text(
                       'Selected Tags',
-                      style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 14,
+                      style: (theme.textTheme.titleSmall ?? const TextStyle()).copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacingSmall),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: AppTheme.spacingSmall,
+                      runSpacing: AppTheme.spacingSmall,
                       children: _tags.map((tag) {
                         return Chip(
                           label: Text(tag),
@@ -575,31 +568,31 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             setSheetState(() {});
                           },
                           backgroundColor: colorScheme.primaryContainer,
-                          labelStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+                          labelStyle: (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
+                            color: colorScheme.onPrimaryContainer,
+                          ),
                           deleteIconColor: colorScheme.onPrimaryContainer,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
                             side: BorderSide.none,
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppTheme.spacingLarge),
                   ],
                   if (suggestedTags.isNotEmpty) ...[
                     Text(
                       'Suggested Tags',
-                      style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 14,
+                      style: (theme.textTheme.titleSmall ?? const TextStyle()).copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppTheme.spacingSmall),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: AppTheme.spacingSmall,
+                      runSpacing: AppTheme.spacingSmall,
                       children: suggestedTags.map((tag) {
                         return ActionChip(
                           label: Text(tag),
@@ -610,15 +603,17 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             setSheetState(() {});
                           },
                           backgroundColor: colorScheme.surfaceVariant,
-                          labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                          labelStyle: (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
                             side: BorderSide.none,
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppTheme.spacingLarge),
                   ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -627,8 +622,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(
                           'Done',
-                          style: safeGoogleFont(
-                            'IBM Plex Sans',
+                          style: (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.primary,
                           ),
