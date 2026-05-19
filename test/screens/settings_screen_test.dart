@@ -99,10 +99,15 @@ void main() {
     // Section Headers
     expect(find.text('ACCOUNT'), findsOneWidget);
     expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
+    expect(find.text('TRASH & ARCHIVE'), findsOneWidget);
     expect(find.text('CLOUD SYNC'), findsOneWidget);
 
     // Account Section
     expect(find.text('Sign in with Google'), findsOneWidget);
+
+    // Trash & Archive Items
+    expect(find.text('Auto-delete Trash'), findsOneWidget);
+    expect(find.text('Retention Period'), findsOneWidget);
 
     // Cloud Sync Items
     expect(find.text('Auto-sync'), findsOneWidget);
@@ -139,17 +144,26 @@ void main() {
     await tester.pumpAndSettle();
 
     final switches = find.byType(Switch);
-    expect(switches, findsNWidgets(2));
+    expect(switches, findsNWidgets(3));
 
     // Toggle biometric lock
-    await tester.tap(switches.first);
+    await tester.tap(switches.at(0));
     await tester.pump();
 
+    // Toggle auto-delete trash
+    expect(find.text('Retention Period'), findsOneWidget);
+    await tester.tap(switches.at(1));
+    await tester.pumpAndSettle();
+    expect(find.text('Retention Period'), findsNothing);
+
     // Toggle auto-backup
-    await tester.tap(switches.last);
+    final switchesAfterHide = find.byType(Switch);
+    await tester.tap(switchesAfterHide.at(2));
     await tester.pump();
 
     // Check for Theme dropdown
     expect(find.byType(DropdownButton<ThemeModeOption>), findsOneWidget);
+    // Check for Retention Period dropdown is hidden now
+    expect(find.byType(DropdownButton<int>), findsNothing);
   });
 }

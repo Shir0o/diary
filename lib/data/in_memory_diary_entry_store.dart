@@ -55,6 +55,11 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> deleteEntriesDeletedBefore(DateTime cutoff) async {
+    _entries.removeWhere((e) => e.isDeleted && e.updatedAt.isBefore(cutoff));
+  }
+
+  @override
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries) async {
     if (_entries.isNotEmpty) return;
     _entries.addAll(entries);

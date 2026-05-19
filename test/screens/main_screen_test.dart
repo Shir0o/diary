@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
 
@@ -26,6 +27,7 @@ void main() {
   late StreamController<GoogleSignInAccount?> currentUserController;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockGoogleSignIn = MockGoogleSignIn();
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();

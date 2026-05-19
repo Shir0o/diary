@@ -76,6 +76,16 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> deleteEntriesDeletedBefore(DateTime cutoff) async {
+    final db = await _openDatabase();
+    await db.delete(
+      _entriesTable,
+      where: 'is_deleted = 1 AND updated_at < ?',
+      whereArgs: [cutoff.toIso8601String()],
+    );
+  }
+
+  @override
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries) async {
     final db = await _openDatabase();
     final countRows = await db.rawQuery(

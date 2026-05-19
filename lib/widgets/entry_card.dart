@@ -8,12 +8,14 @@ class EntryCard extends StatelessWidget {
   final DiaryEntry entry;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry margin;
+  final Widget? trailing;
 
   const EntryCard({
     super.key,
     required this.entry,
     this.onTap,
     this.margin = const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    this.trailing,
   });
 
   @override
@@ -48,7 +50,16 @@ class EntryCard extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
-                  Text(entry.mood, style: const TextStyle(fontSize: 20)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (trailing != null) ...[
+                        trailing!,
+                        const SizedBox(width: 8),
+                      ],
+                      Text(entry.mood, style: const TextStyle(fontSize: 20)),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: AppTheme.spacingSmall),

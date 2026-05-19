@@ -14,6 +14,8 @@ abstract class DiaryEntryStore {
 
   Future<void> archiveEntry(String id, bool isArchived);
 
+  Future<void> deleteEntriesDeletedBefore(DateTime cutoff);
+
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries);
 
   Future<void> saveEntries(List<DiaryEntry> entries);
