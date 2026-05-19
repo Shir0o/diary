@@ -13,6 +13,7 @@ import 'screens/media_screen.dart';
 import 'screens/info_screen.dart';
 import 'screens/entry_search_delegate.dart';
 import 'screens/archive_screen.dart';
+import 'screens/biometric_lock_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
 import 'services/auth_service.dart';
@@ -377,31 +378,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_isAuthenticated) {
-      final colorScheme = Theme.of(context).colorScheme;
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.lock_outline, size: 64, color: colorScheme.primary),
-              const SizedBox(height: 24),
-              Text(
-                'Diary is Locked',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _checkAuthentication,
-                icon: const Icon(Icons.fingerprint),
-                label: const Text('Unlock with Biometrics'),
-              ),
-            ],
-          ),
-        ),
+      return BiometricLockScreen(
+        onUnlock: _checkAuthentication,
+        isAuthenticating: _isAuthenticating,
       );
     }
 
