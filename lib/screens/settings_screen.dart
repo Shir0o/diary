@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
-import '../config/app_config.dart';
 import '../helpers/font_helper.dart';
-import '../services/auth_service.dart';
-import '../services/security_service.dart';
-
 import '../services/auth_service.dart';
 import '../services/security_service.dart';
 import '../services/theme_service.dart';
@@ -59,7 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Biometric authentication is not available')),
+              content: Text('Biometric authentication is not available'),
+            ),
           );
         }
         return;
@@ -110,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         initialData: widget.authService.currentUser,
         builder: (context, snapshot) {
           final user = snapshot.data;
-          
+
           return ListView(
             padding: const EdgeInsets.only(bottom: 24),
             children: [
@@ -141,7 +138,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildDropdownItem(
                   icon: Icons.palette_outlined,
                   title: 'Theme',
-                  value: ThemeModeOption.fromMode(widget.themeService.themeMode),
+                  value: ThemeModeOption.fromMode(
+                    widget.themeService.themeMode,
+                  ),
                   items: ThemeModeOption.values,
                   onChanged: (ThemeModeOption? newValue) {
                     if (newValue != null) {
@@ -238,9 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -262,11 +259,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundImage: (user.photoUrl != null && user.photoUrl!.isNotEmpty)
-                    ? NetworkImage(user.photoUrl!) 
+                backgroundImage:
+                    (user.photoUrl != null && user.photoUrl!.isNotEmpty)
+                    ? NetworkImage(user.photoUrl!)
                     : null,
                 child: (user.photoUrl == null || user.photoUrl!.isEmpty)
-                    ? const Icon(Icons.person) 
+                    ? const Icon(Icons.person)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -328,10 +326,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (iconColor ?? const Color(0xFF141316)).withValues(alpha: 0.1),
+                color: (iconColor ?? const Color(0xFF141316)).withValues(
+                  alpha: 0.1,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: iconColor ?? const Color(0xFF141316), size: 24),
+              child: Icon(
+                icon,
+                color: iconColor ?? const Color(0xFF141316),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -391,47 +395,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             activeThumbColor: const Color(0xFF6751a4),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNavigationItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            _buildIconContainer(icon),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: safeGoogleFont(
-                  'IBM Plex Sans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF141316),
-                ),
-              ),
-            ),
-            Text(
-              subtitle,
-              style: safeGoogleFont(
-                'IBM Plex Sans',
-                fontSize: 16,
-                color: const Color(0xFF141316).withValues(alpha: 0.6),
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: Color(0xFFCAC4D0)),
-          ],
-        ),
       ),
     );
   }
@@ -501,9 +464,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isSignedIn 
-                        ? 'Back up your diary entries to Google Drive automatically.'
-                        : 'Sign in to back up your entries to Google Drive.',
+                      isSignedIn
+                          ? 'Back up your diary entries to Google Drive automatically.'
+                          : 'Sign in to back up your entries to Google Drive.',
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 14,
@@ -515,9 +478,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Switch(
                 value: _autoBackup && isSignedIn,
-                onChanged: isSignedIn 
-                  ? (val) => setState(() => _autoBackup = val)
-                  : null,
+                onChanged: isSignedIn
+                    ? (val) => setState(() => _autoBackup = val)
+                    : null,
                 activeThumbColor: const Color(0xFF6751a4),
               ),
             ],
@@ -565,8 +528,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: (isSignedIn && !_isBackingUp && !_isRestoring) 
-                      ? _runManualBackup 
+                  onPressed: (isSignedIn && !_isBackingUp && !_isRestoring)
+                      ? _runManualBackup
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -576,7 +539,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(9999),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -592,7 +558,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         )
                       else
-                        const Icon(Icons.backup, size: 20, color: Color(0xFF4285F4)),
+                        const Icon(
+                          Icons.backup,
+                          size: 20,
+                          color: Color(0xFF4285F4),
+                        ),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
@@ -612,8 +582,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: (isSignedIn && !_isBackingUp && !_isRestoring) 
-                      ? _runRestore 
+                  onPressed: (isSignedIn && !_isBackingUp && !_isRestoring)
+                      ? _runRestore
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -623,7 +593,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(9999),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -639,7 +612,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         )
                       else
-                        const Icon(Icons.download, size: 20, color: Color(0xFF34A853)),
+                        const Icon(
+                          Icons.download,
+                          size: 20,
+                          color: Color(0xFF34A853),
+                        ),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
@@ -751,7 +728,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Restore successful! Please restart the app to see changes.'),
+            content: Text(
+              'Restore successful! Please restart the app to see changes.',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );

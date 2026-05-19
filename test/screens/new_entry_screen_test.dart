@@ -119,16 +119,12 @@ void main() {
     expect(savedEntry!.content, 'Updated body');
   });
 
-  testWidgets('Delete icon is not present', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('Delete icon is not present', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: NewEntryScreen()));
     expect(find.byIcon(Icons.delete_outline), findsNothing);
   });
 
-  testWidgets('Editing screen title is empty', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('Editing screen title is empty', (WidgetTester tester) async {
     final existingEntry = DiaryEntry(
       id: 'entry-1',
       date: DateTime(2026, 4, 24, 10),

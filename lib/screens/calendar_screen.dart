@@ -125,7 +125,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ? Center(
                     child: Text(
                       'No entries for this day',
-                      style: safeGoogleFont('Inter', color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                      style: safeGoogleFont(
+                        'Inter',
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
                     ),
                   )
                 : ListView.builder(

@@ -1,6 +1,9 @@
 # Diary App
 
-A Flutter-based personal diary application.
+A Flutter-based personal diary app for writing, reviewing, and reflecting on entries.
+
+[![Flutter CI](https://github.com/Shir0o/diary/actions/workflows/flutter.yml/badge.svg)](https://github.com/Shir0o/diary/actions/workflows/flutter.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Features
 
@@ -56,3 +59,15 @@ The UI is based on the "Diary" project from Stitch.
 - **Primary Color:** #6751a4
 - **Typography:** Inter (via Google Fonts)
 - **Shapes:** Rounded corners (8px/12px)
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, local checks, and PR conventions. Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Security
+
+To report a vulnerability, please follow the process in [SECURITY.md](SECURITY.md). Do not file public issues for security reports.
+
+## License
+
+Released under the [MIT License](LICENSE).

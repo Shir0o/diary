@@ -100,7 +100,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   const SizedBox(height: AppTheme.spacingExtraSmall),
                   InkWell(
                     onTap: _pickDateTime,
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
+                    borderRadius: BorderRadius.circular(
+                      AppTheme.borderRadiusSmall,
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Wrap(
@@ -113,20 +115,28 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             style: safeGoogleFont(
                               'IBM Plex Sans',
                               fontSize: 18,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             '•',
-                            style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                            style: TextStyle(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
                           ),
                           Text(
                             DateFormat('EEEE').format(_entryDate),
                             style: safeGoogleFont(
                               'IBM Plex Sans',
                               fontSize: 18,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                               fontWeight: FontWeight.w500,
                             ),
                           ),

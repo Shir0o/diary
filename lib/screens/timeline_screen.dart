@@ -124,7 +124,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             style: safeGoogleFont(
                               'Inter',
                               fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                               fontSize: 14,
                             ),
                           ),
@@ -142,18 +144,28 @@ class _TimelineScreenState extends State<TimelineScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             decoration: BoxDecoration(
                               color: Colors.amber,
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusMedium,
+                              ),
                             ),
-                            child: const Icon(Icons.archive, color: Colors.white),
+                            child: const Icon(
+                              Icons.archive,
+                              color: Colors.white,
+                            ),
                           ),
                           secondaryBackground: Container(
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             decoration: BoxDecoration(
                               color: Colors.red,
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusMedium,
+                              ),
                             ),
-                            child: const Icon(Icons.delete, color: Colors.white),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
                           ),
                           onDismissed: (direction) {
                             if (direction == DismissDirection.endToStart) {
@@ -165,10 +177,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
                           child: EntryCard(
                             entry: entry,
                             margin: EdgeInsets.zero,
-                            onTap:
-                                widget.onEditEntry == null
-                                    ? null
-                                    : () => widget.onEditEntry!(entry),
+                            onTap: widget.onEditEntry == null
+                                ? null
+                                : () => widget.onEditEntry!(entry),
                           ),
                         ),
                       ),

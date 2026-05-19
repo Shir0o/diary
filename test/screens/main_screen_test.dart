@@ -11,8 +11,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+
 class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
+
 class MockSecurityService extends Mock implements SecurityService {}
+
 class MockThemeService extends Mock implements ThemeService {}
 
 void main() {
@@ -27,21 +30,21 @@ void main() {
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    
-    authService = AuthService(
-      googleSignIn: mockGoogleSignIn,
-    );
 
-    when(() => mockGoogleSignIn.onCurrentUserChanged)
-        .thenAnswer((_) => currentUserController.stream);
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
+
+    when(
+      () => mockGoogleSignIn.onCurrentUserChanged,
+    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockGoogleSignIn.currentUser).thenReturn(null);
-    when(() => mockGoogleSignIn.signInSilently())
-        .thenAnswer((_) async => null);
+    when(() => mockGoogleSignIn.signInSilently()).thenAnswer((_) async => null);
 
-    when(() => mockSecurityService.isBiometricLockEnabled)
-        .thenAnswer((_) async => false);
-    when(() => mockSecurityService.authenticate())
-        .thenAnswer((_) async => true);
+    when(
+      () => mockSecurityService.isBiometricLockEnabled,
+    ).thenAnswer((_) async => false);
+    when(
+      () => mockSecurityService.authenticate(),
+    ).thenAnswer((_) async => true);
 
     when(() => mockThemeService.themeMode).thenReturn(ThemeMode.system);
     when(() => mockThemeService.addListener(any())).thenReturn(null);
