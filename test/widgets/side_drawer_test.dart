@@ -7,6 +7,7 @@ import 'package:diary/widgets/side_drawer.dart';
 import 'package:diary/services/auth_service.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+
 class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
 
 void main() {
@@ -19,13 +20,12 @@ void main() {
     mockGoogleSignIn = MockGoogleSignIn();
     mockAccount = MockGoogleSignInAccount();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    
-    authService = AuthService(
-      googleSignIn: mockGoogleSignIn,
-    );
 
-    when(() => mockGoogleSignIn.onCurrentUserChanged)
-        .thenAnswer((_) => currentUserController.stream);
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
+
+    when(
+      () => mockGoogleSignIn.onCurrentUserChanged,
+    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockAccount.email).thenReturn('bob@example.com');
     when(() => mockAccount.displayName).thenReturn('Bob');
     when(() => mockAccount.photoUrl).thenReturn('');
@@ -57,10 +57,9 @@ void main() {
   ) async {
     when(() => mockGoogleSignIn.currentUser).thenReturn(null);
 
-    await tester.pumpWidget(createWidgetUnderTest(
-      onItemSelected: (_) {},
-      authService: authService,
-    ));
+    await tester.pumpWidget(
+      createWidgetUnderTest(onItemSelected: (_) {}, authService: authService),
+    );
 
     // Open the drawer
     final ScaffoldState state = tester.firstState(find.byType(Scaffold));

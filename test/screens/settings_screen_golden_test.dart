@@ -20,12 +20,11 @@ void main() {
   setUp(() {
     mockGoogleSignIn = MockGoogleSignIn();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    authService = AuthService(
-      googleSignIn: mockGoogleSignIn,
-    );
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
 
-    when(() => mockGoogleSignIn.onCurrentUserChanged)
-        .thenAnswer((_) => currentUserController.stream);
+    when(
+      () => mockGoogleSignIn.onCurrentUserChanged,
+    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockGoogleSignIn.currentUser).thenReturn(null);
   });
 

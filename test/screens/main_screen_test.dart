@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+
 class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
 
 void main() {
@@ -19,16 +20,14 @@ void main() {
   setUp(() {
     mockGoogleSignIn = MockGoogleSignIn();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    
-    authService = AuthService(
-      googleSignIn: mockGoogleSignIn,
-    );
 
-    when(() => mockGoogleSignIn.onCurrentUserChanged)
-        .thenAnswer((_) => currentUserController.stream);
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
+
+    when(
+      () => mockGoogleSignIn.onCurrentUserChanged,
+    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockGoogleSignIn.currentUser).thenReturn(null);
-    when(() => mockGoogleSignIn.signInSilently())
-        .thenAnswer((_) async => null);
+    when(() => mockGoogleSignIn.signInSilently()).thenAnswer((_) async => null);
   });
 
   tearDown(() {

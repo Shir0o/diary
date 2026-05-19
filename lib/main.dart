@@ -19,10 +19,10 @@ import 'services/auth_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env', isOptional: true);
-  
+
   final authService = AuthService();
   await authService.silentSignIn();
-  
+
   runApp(DiaryApp(authService: authService));
 }
 
@@ -30,11 +30,7 @@ class DiaryApp extends StatelessWidget {
   final DiaryEntryStore? entryStore;
   final AuthService authService;
 
-  const DiaryApp({
-    super.key,
-    this.entryStore,
-    required this.authService,
-  });
+  const DiaryApp({super.key, this.entryStore, required this.authService});
 
   @override
   Widget build(BuildContext context) {
@@ -153,11 +149,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _editEntry(DiaryEntry entry) async {
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(
-        builder: (context) => NewEntryScreen(
-          entry: entry,
-        ),
-      ),
+      MaterialPageRoute(builder: (context) => NewEntryScreen(entry: entry)),
     );
     if (updatedEntry == null) return;
 
@@ -200,8 +192,10 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       final index = _entries.indexWhere((item) => item.id == id);
       if (index != -1) {
-        _entries[index] =
-            _entries[index].copyWith(isArchived: false, isDeleted: false);
+        _entries[index] = _entries[index].copyWith(
+          isArchived: false,
+          isDeleted: false,
+        );
       }
     });
   }
@@ -295,8 +289,9 @@ class _MainScreenState extends State<MainScreen> {
         onEditEntry: _editEntry,
       ),
       _MainScreen.archive => ArchiveScreen(
-        archivedEntries:
-            _entries.where((e) => e.isArchived && !e.isDeleted).toList(),
+        archivedEntries: _entries
+            .where((e) => e.isArchived && !e.isDeleted)
+            .toList(),
         deletedEntries: _entries.where((e) => e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
         onRestoreEntry: _restoreEntry,

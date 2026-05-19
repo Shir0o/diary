@@ -7,6 +7,7 @@ import 'package:diary/screens/settings_screen.dart';
 import 'package:diary/services/auth_service.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+
 class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
 
 void main() {
@@ -20,12 +21,11 @@ void main() {
     mockAccount = MockGoogleSignInAccount();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
 
-    authService = AuthService(
-      googleSignIn: mockGoogleSignIn,
-    );
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
 
-    when(() => mockGoogleSignIn.onCurrentUserChanged)
-        .thenAnswer((_) => currentUserController.stream);
+    when(
+      () => mockGoogleSignIn.onCurrentUserChanged,
+    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockAccount.email).thenReturn('bob@example.com');
     when(() => mockAccount.displayName).thenReturn('Bob');
     when(() => mockAccount.photoUrl).thenReturn('');
@@ -36,9 +36,7 @@ void main() {
   });
 
   Widget createWidgetUnderTest() {
-    return MaterialApp(
-      home: SettingsScreen(authService: authService),
-    );
+    return MaterialApp(home: SettingsScreen(authService: authService));
   }
 
   testWidgets('SettingsScreen should display all required sections and items', (

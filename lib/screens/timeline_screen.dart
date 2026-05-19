@@ -140,7 +140,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
                               color: Colors.amber,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.archive, color: Colors.white),
+                            child: const Icon(
+                              Icons.archive,
+                              color: Colors.white,
+                            ),
                           ),
                           secondaryBackground: Container(
                             alignment: Alignment.centerRight,
@@ -149,7 +152,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
                               color: Colors.red,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.delete, color: Colors.white),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
                           ),
                           onDismissed: (direction) {
                             if (direction == DismissDirection.endToStart) {
@@ -161,10 +167,9 @@ class _TimelineScreenState extends State<TimelineScreen> {
                           child: EntryCard(
                             entry: entry,
                             margin: EdgeInsets.zero,
-                            onTap:
-                                widget.onEditEntry == null
-                                    ? null
-                                    : () => widget.onEditEntry!(entry),
+                            onTap: widget.onEditEntry == null
+                                ? null
+                                : () => widget.onEditEntry!(entry),
                           ),
                         ),
                       ),

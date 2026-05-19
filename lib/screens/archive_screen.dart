@@ -127,7 +127,8 @@ class _EntryList extends StatelessWidget {
                     if (secondaryActionIcon != null &&
                         onSecondaryAction != null)
                       TextButton.icon(
-                        onPressed: () => _confirmPermanentDelete(context, entry),
+                        onPressed: () =>
+                            _confirmPermanentDelete(context, entry),
                         icon: Icon(
                           secondaryActionIcon,
                           size: 18,
@@ -149,7 +150,10 @@ class _EntryList extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmPermanentDelete(BuildContext context, DiaryEntry entry) async {
+  Future<void> _confirmPermanentDelete(
+    BuildContext context,
+    DiaryEntry entry,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {

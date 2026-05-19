@@ -22,7 +22,7 @@ class SideDrawer extends StatelessWidget {
       initialData: authService.currentUser,
       builder: (context, snapshot) {
         final user = snapshot.data;
-        
+
         return NavigationDrawer(
           onDestinationSelected: onItemSelected,
           selectedIndex: selectedIndex,
