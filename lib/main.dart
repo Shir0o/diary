@@ -411,6 +411,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         authService: widget.authService,
         securityService: widget.securityService,
         themeService: widget.themeService,
+        entryStore: widget.entryStore,
+        onSyncCompleted: _loadEntries,
       ),
       _MainScreen.help => InfoScreen.help(onMenuPressed: _openDrawer),
       _MainScreen.about => InfoScreen.about(onMenuPressed: _openDrawer),

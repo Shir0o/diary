@@ -8,12 +8,15 @@ import '../services/drive_service.dart';
 import '../services/security_service.dart';
 import '../services/theme_service.dart';
 import '../config/app_theme.dart';
+import '../data/diary_entry_store.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onMenuPressed;
   final AuthService authService;
   final SecurityService securityService;
   final ThemeService themeService;
+  final DiaryEntryStore entryStore;
+  final VoidCallback? onSyncCompleted;
 
   const SettingsScreen({
     super.key,
@@ -21,24 +24,37 @@ class SettingsScreen extends StatefulWidget {
     required this.authService,
     required this.securityService,
     required this.themeService,
+    required this.entryStore,
+    this.onSyncCompleted,
   });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProviderStateMixin {
   static const _lastSyncAtKey = 'last_sync_at';
 
   bool _biometricLock = false;
   bool _autoBackup = true;
   bool _isSyncing = false;
   DateTime? _lastSyncAt;
+  late AnimationController _syncAnimationController;
 
   @override
   void initState() {
     super.initState();
+    _syncAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _syncAnimationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -542,9 +558,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: (isSignedIn && !_isSyncing) ? _runSync : null,
+              onPressed: isSignedIn
+                  ? () {
+                      if (!_isSyncing) _runSync();
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
+                backgroundColor: _isSyncing
+                    ? colorScheme.primary.withValues(alpha: 0.8)
+                    : colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
                 disabledBackgroundColor: colorScheme.onSurface.withValues(
                   alpha: 0.12,
@@ -565,17 +587,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_isSyncing)
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: colorScheme.onPrimary,
-                      ),
-                    )
-                  else
-                    const Icon(Icons.sync, size: 20),
+                  RotationTransition(
+                    turns: _syncAnimationController,
+                    child: const Icon(Icons.sync, size: 20),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     _isSyncing ? 'Syncing…' : 'Sync now',
@@ -624,7 +639,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _runSync() async {
     setState(() => _isSyncing = true);
+    _syncAnimationController.repeat();
     try {
+      // Close the database connection before sync to allow downloading and overwriting the file safely
+      await widget.entryStore.close();
+
       final result = await widget.authService.driveService.sync();
       if (!mounted) return;
       final syncedAt = result.remoteModified ?? DateTime.now();
@@ -634,10 +653,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
       final message = switch (result.outcome) {
         SyncOutcome.uploaded => 'Synced — local changes uploaded.',
-        SyncOutcome.downloaded =>
-          'Synced — remote changes downloaded. Restart the app to see them.',
+        SyncOutcome.downloaded => 'Synced — remote changes downloaded.',
         SyncOutcome.alreadyInSync => 'Already up to date.',
       };
+
+      if (result.outcome == SyncOutcome.downloaded && widget.onSyncCompleted != null) {
+        widget.onSyncCompleted!();
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
@@ -652,6 +675,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       }
     } finally {
+      _syncAnimationController.stop();
       if (mounted) {
         setState(() => _isSyncing = false);
       }

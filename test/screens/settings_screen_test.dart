@@ -6,9 +6,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:diary/screens/settings_screen.dart';
 import 'package:diary/services/auth_service.dart';
 import 'package:diary/services/security_service.dart';
-
 import 'package:diary/services/theme_service.dart';
 import 'package:diary/config/app_theme.dart';
+import 'package:diary/data/diary_entry_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
 
@@ -18,19 +19,24 @@ class MockSecurityService extends Mock implements SecurityService {}
 
 class MockThemeService extends Mock implements ThemeService {}
 
+class MockDiaryEntryStore extends Mock implements DiaryEntryStore {}
+
 void main() {
   late MockGoogleSignIn mockGoogleSignIn;
   late MockGoogleSignInAccount mockAccount;
   late MockSecurityService mockSecurityService;
   late MockThemeService mockThemeService;
+  late MockDiaryEntryStore mockEntryStore;
   late AuthService authService;
   late StreamController<GoogleSignInAccount?> currentUserController;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockGoogleSignIn = MockGoogleSignIn();
     mockAccount = MockGoogleSignInAccount();
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();
+    mockEntryStore = MockDiaryEntryStore();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
 
     authService = AuthService(googleSignIn: mockGoogleSignIn);
@@ -58,6 +64,7 @@ void main() {
     when(() => mockThemeService.themeMode).thenReturn(ThemeMode.system);
     when(() => mockThemeService.addListener(any())).thenReturn(null);
     when(() => mockThemeService.removeListener(any())).thenReturn(null);
+    when(() => mockEntryStore.close()).thenAnswer((_) async => {});
   });
 
   tearDown(() {
@@ -70,6 +77,7 @@ void main() {
         authService: authService,
         securityService: mockSecurityService,
         themeService: mockThemeService,
+        entryStore: mockEntryStore,
       ),
     );
   }
