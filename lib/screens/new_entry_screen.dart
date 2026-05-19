@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../helpers/font_helper.dart';
 import '../models/diary_entry.dart';
+import '../config/app_theme.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
@@ -36,20 +37,23 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFEF7FF),
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.entry == null ? 'New Entry' : '',
           style: safeGoogleFont(
             'IBM Plex Sans',
-            color: Colors.black,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
@@ -63,8 +67,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 Navigator.of(context).pop(_buildEntry());
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6750A4),
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -83,20 +87,20 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.spacingMedium),
                   Text(
                     DateFormat('MMM dd, yyyy').format(_entryDate),
                     style: safeGoogleFont(
                       'IBM Plex Sans',
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppTheme.spacingExtraSmall),
                   InkWell(
                     onTap: _pickDateTime,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusSmall),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Wrap(
@@ -109,40 +113,40 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             style: safeGoogleFont(
                               'IBM Plex Sans',
                               fontSize: 18,
-                              color: const Color(0xFF79747E),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const Text(
+                          Text(
                             '•',
-                            style: TextStyle(color: Color(0xFF79747E)),
+                            style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
                           ),
                           Text(
                             DateFormat('EEEE').format(_entryDate),
                             style: safeGoogleFont(
                               'IBM Plex Sans',
                               fontSize: 18,
-                              color: const Color(0xFF79747E),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.edit_calendar_outlined,
                             size: 18,
-                            color: Color(0xFF79747E),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ],
                       ),
                     ),
                   ),
                   if (_locationController.text.trim().isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppTheme.spacingSmall),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.location_on_outlined,
                           size: 18,
-                          color: Color(0xFF6750A4),
+                          color: colorScheme.primary,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -151,7 +155,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             style: safeGoogleFont(
                               'IBM Plex Sans',
                               fontSize: 14,
-                              color: const Color(0xFF6750A4),
+                              color: colorScheme.primary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -159,7 +163,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       ],
                     ),
                   ],
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppTheme.spacingLarge),
                   TextField(
                     controller: _controller,
                     maxLines: null,
@@ -169,13 +173,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       hintStyle: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 18,
-                        color: const Color(0xFF79747E).withValues(alpha: 0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                       border: InputBorder.none,
                     ),
                     style: safeGoogleFont(
                       'IBM Plex Sans',
                       fontSize: 18,
+                      color: colorScheme.onSurface,
                       height: 1.6,
                     ),
                   ),
@@ -191,10 +196,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFFEF7FF).withValues(alpha: 0.9),
+              color: colorScheme.background.withValues(alpha: 0.9),
               border: Border(
                 top: BorderSide(
-                  color: const Color(0xFF79747E).withValues(alpha: 0.1),
+                  color: colorScheme.onSurface.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -211,37 +216,37 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         onTap: () => _showUnavailableMessage(
                           'Image attachments are not available yet.',
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.image_outlined,
-                          color: Color(0xFF6750A4),
+                          color: colorScheme.primary,
                         ),
                       ),
                       InkWell(
                         onTap: () => _showUnavailableMessage(
                           'Tags are not available yet.',
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.label_outlined,
-                          color: Color(0xFF6750A4),
+                          color: colorScheme.primary,
                         ),
                       ),
                       InkWell(
                         onTap: _pickMood,
-                        child: const Icon(
+                        child: Icon(
                           Icons.mood_outlined,
-                          color: Color(0xFF6750A4),
+                          color: colorScheme.primary,
                         ),
                       ),
                       Container(
                         width: 1,
                         height: 24,
-                        color: const Color(0xFF79747E).withValues(alpha: 0.2),
+                        color: colorScheme.onSurface.withValues(alpha: 0.2),
                       ),
                       InkWell(
                         onTap: _editLocation,
-                        child: const Icon(
+                        child: Icon(
                           Icons.location_on_outlined,
-                          color: Color(0xFF79747E),
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -249,10 +254,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 ),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.check_circle_outline,
                       size: 16,
-                      color: Color(0xFF79747E),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -261,7 +266,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         fontSize: 12,
-                        color: const Color(0xFF79747E),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),

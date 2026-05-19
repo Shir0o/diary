@@ -73,49 +73,59 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
           'Calendar',
           style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.background,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
+            icon: Icon(Icons.menu, color: colorScheme.onSurface),
             onPressed:
                 widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+            icon: Icon(Icons.search, color: colorScheme.onSurface),
             onPressed: widget.onSearchEntries,
           ),
         ],
       ),
       body: Column(
         children: [
-          CalendarDatePicker(
-            initialDate: _selectedDate,
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2030),
-            onDateChanged: (date) {
-              setState(() {
-                _selectedDate = date;
-              });
-            },
+          Theme(
+            data: theme.copyWith(
+              colorScheme: colorScheme.copyWith(
+                onSurface: colorScheme.onSurface,
+              ),
+            ),
+            child: CalendarDatePicker(
+              initialDate: _selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+              onDateChanged: (date) {
+                setState(() {
+                  _selectedDate = date;
+                });
+              },
+            ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: colorScheme.outline.withValues(alpha: 0.2)),
           Expanded(
             child: _filteredEntries.isEmpty
                 ? Center(
                     child: Text(
                       'No entries for this day',
-                      style: safeGoogleFont('Inter', color: Colors.grey),
+                      style: safeGoogleFont('Inter', color: colorScheme.onSurface.withValues(alpha: 0.6)),
                     ),
                   )
                 : ListView.builder(

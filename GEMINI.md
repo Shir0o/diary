@@ -21,6 +21,11 @@
 - Use tools like integration tests or manual runs to facilitate this process.
 - This ensures the final product meets the required standards and provides visual proof of functionality.
 
+### 4. Design System & Theming
+- **NO HARD-CODED STYLES:** All colors, spacing, and typography must be sourced from a centralized design system (e.g., `AppTheme` or `DesignSystem` class).
+- **Theme Support:** Maintain full support for Light, Dark, and System Default themes.
+- **Visual Consistency:** Use defined theme tokens to ensure a cohesive look and feel across all screens.
+
 ## Progress Tracker
 
 - [x] Initial Project Setup
@@ -34,6 +39,9 @@
     - [x] Screen Widget Implementation
     - [x] Golden Tests
     - [x] Navigation from Bottom Bar
+    - [x] Biometric Lock Implementation
+    - [x] Dropdown-based Theme Selection
+    - [x] Standardized Design System Integration
 - [x] Implement Calendar Navigation Screen (TDD)
     - [x] Screen Widget Implementation
     - [x] Golden Tests

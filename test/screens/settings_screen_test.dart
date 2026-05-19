@@ -5,19 +5,29 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:diary/screens/settings_screen.dart';
 import 'package:diary/services/auth_service.dart';
+import 'package:diary/services/security_service.dart';
+
+import 'package:diary/services/theme_service.dart';
+import 'package:diary/config/app_theme.dart';
 
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
 class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
+class MockSecurityService extends Mock implements SecurityService {}
+class MockThemeService extends Mock implements ThemeService {}
 
 void main() {
   late MockGoogleSignIn mockGoogleSignIn;
   late MockGoogleSignInAccount mockAccount;
+  late MockSecurityService mockSecurityService;
+  late MockThemeService mockThemeService;
   late AuthService authService;
   late StreamController<GoogleSignInAccount?> currentUserController;
 
   setUp(() {
     mockGoogleSignIn = MockGoogleSignIn();
     mockAccount = MockGoogleSignInAccount();
+    mockSecurityService = MockSecurityService();
+    mockThemeService = MockThemeService();
     currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
 
     authService = AuthService(
@@ -29,6 +39,19 @@ void main() {
     when(() => mockAccount.email).thenReturn('bob@example.com');
     when(() => mockAccount.displayName).thenReturn('Bob');
     when(() => mockAccount.photoUrl).thenReturn('');
+
+    when(() => mockSecurityService.isBiometricLockEnabled)
+        .thenAnswer((_) async => false);
+    when(() => mockSecurityService.canAuthenticate())
+        .thenAnswer((_) async => true);
+    when(() => mockSecurityService.authenticate())
+        .thenAnswer((_) async => true);
+    when(() => mockSecurityService.setBiometricLockEnabled(any()))
+        .thenAnswer((_) async => {});
+
+    when(() => mockThemeService.themeMode).thenReturn(ThemeMode.system);
+    when(() => mockThemeService.addListener(any())).thenReturn(null);
+    when(() => mockThemeService.removeListener(any())).thenReturn(null);
   });
 
   tearDown(() {
@@ -37,7 +60,11 @@ void main() {
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: SettingsScreen(authService: authService),
+      home: SettingsScreen(
+        authService: authService,
+        securityService: mockSecurityService,
+        themeService: mockThemeService,
+      ),
     );
   }
 
@@ -86,7 +113,7 @@ void main() {
     expect(find.text('Sign in with Google'), findsNothing);
   });
 
-  testWidgets('Toggling switches should update state (UI check)', (
+  testWidgets('Toggling switches and dropdown should update state (UI check)', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1200);
@@ -108,5 +135,8 @@ void main() {
     // Toggle auto-backup
     await tester.tap(switches.last);
     await tester.pump();
+
+    // Check for Theme dropdown
+    expect(find.byType(DropdownButton<ThemeModeOption>), findsOneWidget);
   });
 }

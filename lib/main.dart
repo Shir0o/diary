@@ -15,6 +15,9 @@ import 'screens/archive_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
 import 'services/auth_service.dart';
+import 'services/security_service.dart';
+import 'services/theme_service.dart';
+import 'config/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,32 +26,49 @@ Future<void> main() async {
   final authService = AuthService();
   await authService.silentSignIn();
   
-  runApp(DiaryApp(authService: authService));
+  final securityService = SecurityService();
+  final themeService = ThemeService();
+  
+  runApp(DiaryApp(
+    authService: authService,
+    securityService: securityService,
+    themeService: themeService,
+  ));
 }
 
 class DiaryApp extends StatelessWidget {
   final DiaryEntryStore? entryStore;
   final AuthService authService;
+  final SecurityService securityService;
+  final ThemeService themeService;
 
   const DiaryApp({
     super.key,
     this.entryStore,
     required this.authService,
+    required this.securityService,
+    required this.themeService,
   });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Diary',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
-        useMaterial3: true,
-      ),
-      home: MainScreen(
-        entryStore: entryStore ?? SqliteDiaryEntryStore(),
-        authService: authService,
-      ),
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Diary',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeService.themeMode,
+          home: MainScreen(
+            entryStore: entryStore ?? SqliteDiaryEntryStore(),
+            authService: authService,
+            securityService: securityService,
+            themeService: themeService,
+          ),
+        );
+      },
     );
   }
 }
@@ -56,19 +76,26 @@ class DiaryApp extends StatelessWidget {
 class MainScreen extends StatefulWidget {
   final DiaryEntryStore entryStore;
   final AuthService authService;
+  final SecurityService securityService;
+  final ThemeService themeService;
 
   const MainScreen({
     super.key,
     required this.entryStore,
     required this.authService,
+    required this.securityService,
+    required this.themeService,
   });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isAuthenticated = false;
+  bool _isAuthenticating = false;
+
   static const List<_MainDestination> _destinations = [
     _MainDestination(drawerIndex: 0, screen: _MainScreen.timeline),
     _MainDestination(drawerIndex: 1, screen: _MainScreen.calendar),
@@ -113,13 +140,52 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkAuthentication();
     _loadEntries();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.entryStore.close();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAuthentication();
+    } else if (state == AppLifecycleState.paused) {
+      setState(() {
+        _isAuthenticated = false;
+      });
+    }
+  }
+
+  Future<void> _checkAuthentication() async {
+    final isLocked = await widget.securityService.isBiometricLockEnabled;
+    if (!isLocked) {
+      setState(() {
+        _isAuthenticated = true;
+      });
+      return;
+    }
+
+    if (_isAuthenticated || _isAuthenticating) return;
+
+    setState(() {
+      _isAuthenticating = true;
+    });
+
+    final authenticated = await widget.securityService.authenticate();
+
+    if (mounted) {
+      setState(() {
+        _isAuthenticated = authenticated;
+        _isAuthenticating = false;
+      });
+    }
   }
 
   Future<void> _loadEntries() async {
@@ -261,6 +327,30 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isAuthenticated) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline, size: 64, color: Color(0xFF6751a4)),
+              const SizedBox(height: 24),
+              const Text(
+                'Diary is Locked',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _checkAuthentication,
+                icon: const Icon(Icons.fingerprint),
+                label: const Text('Unlock with Biometrics'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: SideDrawer(
@@ -313,6 +403,8 @@ class _MainScreenState extends State<MainScreen> {
       _MainScreen.settings => SettingsScreen(
         onMenuPressed: _openDrawer,
         authService: widget.authService,
+        securityService: widget.securityService,
+        themeService: widget.themeService,
       ),
       _MainScreen.help => InfoScreen.help(onMenuPressed: _openDrawer),
       _MainScreen.about => InfoScreen.about(onMenuPressed: _openDrawer),

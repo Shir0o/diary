@@ -4,15 +4,25 @@ import 'package:intl/intl.dart';
 import '../config/app_config.dart';
 import '../helpers/font_helper.dart';
 import '../services/auth_service.dart';
+import '../services/security_service.dart';
+
+import '../services/auth_service.dart';
+import '../services/security_service.dart';
+import '../services/theme_service.dart';
+import '../config/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onMenuPressed;
   final AuthService authService;
+  final SecurityService securityService;
+  final ThemeService themeService;
 
   const SettingsScreen({
     super.key,
     this.onMenuPressed,
     required this.authService,
+    required this.securityService,
+    required this.themeService,
   });
 
   @override
@@ -24,19 +34,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoBackup = true;
   bool _isBackingUp = false;
   bool _isRestoring = false;
-  String _themeLabel = 'System Default';
   DateTime? _lastBackupAt;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final enabled = await widget.securityService.isBiometricLockEnabled;
+    if (mounted) {
+      setState(() {
+        _biometricLock = enabled;
+      });
+    }
+  }
+
+  Future<void> _toggleBiometricLock(bool enabled) async {
+    if (enabled) {
+      // If enabling, verify we can authenticate first
+      final canAuth = await widget.securityService.canAuthenticate();
+      if (!canAuth) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Biometric authentication is not available')),
+          );
+        }
+        return;
+      }
+
+      final authenticated = await widget.securityService.authenticate();
+      if (!authenticated) return;
+    }
+
+    await widget.securityService.setBiometricLockEnabled(enabled);
+    if (mounted) {
+      setState(() {
+        _biometricLock = enabled;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFEF7FF),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFEF7FF).withValues(alpha: 0.95),
+        backgroundColor: colorScheme.background.withValues(alpha: 0.95),
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFF141316)),
+            icon: Icon(Icons.menu, color: colorScheme.onSurface),
             onPressed:
                 widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
           ),
@@ -45,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Settings',
           style: safeGoogleFont(
             'IBM Plex Sans',
-            color: const Color(0xFF141316),
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -61,7 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           return ListView(
             padding: const EdgeInsets.only(bottom: 24),
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: AppTheme.spacingSmall),
               _buildSectionHeader('ACCOUNT'),
               _buildSettingsCard([
                 if (user == null)
@@ -75,27 +128,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 else
                   _buildAccountItem(user),
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacingMedium),
               _buildSectionHeader('SECURITY & APPEARANCE'),
               _buildSettingsCard([
                 _buildToggleItem(
                   icon: Icons.fingerprint,
                   title: 'Biometric Lock',
                   value: _biometricLock,
-                  onChanged: (val) => setState(() => _biometricLock = val),
+                  onChanged: _toggleBiometricLock,
                   showBorder: true,
                 ),
-                _buildNavigationItem(
+                _buildDropdownItem(
                   icon: Icons.palette_outlined,
                   title: 'Theme',
-                  subtitle: _themeLabel,
-                  onTap: _pickTheme,
+                  value: ThemeModeOption.fromMode(widget.themeService.themeMode),
+                  items: ThemeModeOption.values,
+                  onChanged: (ThemeModeOption? newValue) {
+                    if (newValue != null) {
+                      widget.themeService.setThemeMode(newValue.mode);
+                    }
+                  },
                 ),
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.spacingMedium),
               _buildSectionHeader('CLOUD BACKUP'),
               _buildCloudBackupCard(user != null),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppTheme.spacingExtraLarge),
               _buildFooter(),
             ],
           );
@@ -104,7 +162,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildDropdownItem({
+    required IconData icon,
+    required String title,
+    required ThemeModeOption value,
+    required List<ThemeModeOption> items,
+    required ValueChanged<ThemeModeOption?> onChanged,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: colorScheme.onSurface),
+          const SizedBox(width: AppTheme.spacingMedium),
+          Expanded(
+            child: Text(
+              title,
+              style: safeGoogleFont(
+                'IBM Plex Sans',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<ThemeModeOption>(
+              value: value,
+              onChanged: onChanged,
+              icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
+              dropdownColor: colorScheme.surface,
+              items: items.map((option) {
+                return DropdownMenuItem<ThemeModeOption>(
+                  value: option,
+                  child: Text(
+                    option.label,
+                    style: safeGoogleFont(
+                      'IBM Plex Sans',
+                      fontSize: 14,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Text(
@@ -113,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'IBM Plex Sans',
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: const Color(0xFF141316).withValues(alpha: 0.7),
+          color: colorScheme.onSurface.withValues(alpha: 0.7),
           letterSpacing: 1.2,
         ),
       ),
@@ -121,13 +232,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
         border: Border.all(
-          color: const Color(0xFFCAC4D0).withValues(alpha: 0.4),
+          color: colorScheme.outline.withValues(alpha: 0.4),
         ),
         boxShadow: [
           BoxShadow(
@@ -576,28 +688,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ],
     );
-  }
-
-  Future<void> _pickTheme() async {
-    final selectedTheme = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: const Text('Theme'),
-          children: [
-            for (final theme in const ['System Default', 'Light', 'Dark'])
-              SimpleDialogOption(
-                onPressed: () => Navigator.of(context).pop(theme),
-                child: Text(theme),
-              ),
-          ],
-        );
-      },
-    );
-    if (selectedTheme == null) return;
-    setState(() {
-      _themeLabel = selectedTheme;
-    });
   }
 
   Future<void> _runManualBackup() async {
