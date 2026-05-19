@@ -436,7 +436,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _emptyTrash() async {
-    final deletedIds = _entries.where((e) => e.isDeleted).map((e) => e.id).toList();
+    final deletedIds = _entries
+        .where((e) => e.isDeleted)
+        .map((e) => e.id)
+        .toList();
     if (deletedIds.isEmpty) return;
 
     for (final id in deletedIds) {

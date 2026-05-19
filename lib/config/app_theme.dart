@@ -20,6 +20,11 @@ class AppTheme {
   static const Color darkOutline = Color(0xFF49454F);
   static const Color darkIconBg = Color(0xFF2A282E);
 
+  // Semantic colors
+  static const Color successColor = Color(0xFF388E3C);
+  static const Color warningColor = Color(0xFFF57C00);
+  static const Color errorColor = Color(0xFFD32F2F);
+
   // Spacing
   static const double spacingExtraSmall = 4.0;
   static const double spacingSmall = 8.0;

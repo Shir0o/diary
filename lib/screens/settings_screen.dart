@@ -204,8 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   },
                   showBorder: _autoDeleteTrash,
                 ),
-                if (_autoDeleteTrash)
-                  _buildRetentionPeriodItem(),
+                if (_autoDeleteTrash) _buildRetentionPeriodItem(),
               ]),
               const SizedBox(height: AppTheme.spacingMedium),
               _buildSectionHeader('CLOUD SYNC'),
@@ -255,18 +254,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
               dropdownColor: colorScheme.surface,
               items: const [
-                DropdownMenuItem<int>(
-                  value: 7,
-                  child: Text('7 days'),
-                ),
-                DropdownMenuItem<int>(
-                  value: 30,
-                  child: Text('30 days'),
-                ),
-                DropdownMenuItem<int>(
-                  value: 90,
-                  child: Text('90 days'),
-                ),
+                DropdownMenuItem<int>(value: 7, child: Text('7 days')),
+                DropdownMenuItem<int>(value: 30, child: Text('30 days')),
+                DropdownMenuItem<int>(value: 90, child: Text('90 days')),
               ],
             ),
           ),

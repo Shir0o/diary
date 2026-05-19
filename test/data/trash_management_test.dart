@@ -76,7 +76,7 @@ void main() {
 
     test('purges only entries deleted before the cutoff', () async {
       final now = DateTime.now().toUtc();
-      
+
       final e1 = DiaryEntry(
         id: 'deleted-old',
         date: now.subtract(const Duration(days: 40)),

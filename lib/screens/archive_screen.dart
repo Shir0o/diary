@@ -60,10 +60,7 @@ class ArchiveScreen extends StatelessWidget {
           ),
         ),
         body: TabBarView(
-          children: [
-            _buildArchivedTab(context),
-            _buildTrashTab(context),
-          ],
+          children: [_buildArchivedTab(context), _buildTrashTab(context)],
         ),
       ),
     );
@@ -108,8 +105,16 @@ class ArchiveScreen extends StatelessWidget {
           actionButton: deletedEntries.isNotEmpty
               ? TextButton.icon(
                   onPressed: () => _confirmEmptyTrash(context),
-                  icon: const Icon(Icons.delete_sweep, color: Colors.red),
-                  label: const Text('Empty', style: TextStyle(color: Colors.red)),
+                  icon: Icon(
+                    Icons.delete_sweep,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  label: Text(
+                    'Empty',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 )
               : null,
         ),
@@ -180,10 +185,7 @@ class ArchiveScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (actionButton != null) ...[
-            const SizedBox(width: 8),
-            actionButton,
-          ],
+          if (actionButton != null) ...[const SizedBox(width: 8), actionButton],
         ],
       ),
     );
@@ -205,9 +207,9 @@ class ArchiveScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
+              child: Text(
                 'Empty Trash',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ],
@@ -239,9 +241,9 @@ class ArchiveScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
+              child: Text(
                 'Delete Forever',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ],
@@ -302,18 +304,26 @@ class _EntryList extends StatelessWidget {
           child: Dismissible(
             key: Key('archive_dismissible_${entry.id}'),
             direction: DismissDirection.horizontal,
-            background: _buildDismissBackground(actionLeftToRight, true),
-            secondaryBackground: _buildDismissBackground(actionRightToLeft, false),
+            background: _buildDismissBackground(
+              context,
+              actionLeftToRight,
+              true,
+            ),
+            secondaryBackground: _buildDismissBackground(
+              context,
+              actionRightToLeft,
+              false,
+            ),
             confirmDismiss: (direction) async {
               final action = direction == DismissDirection.startToEnd
                   ? actionLeftToRight
                   : actionRightToLeft;
-              
+
               if (action == _ListAction.deleteForever) {
                 onAction(entry.id, action);
                 return false;
               }
-              
+
               onAction(entry.id, action);
               return true;
             },
@@ -334,15 +344,16 @@ class _EntryList extends StatelessWidget {
   Widget _buildDaysRemainingBadge(BuildContext context, DiaryEntry entry) {
     final deleteDate = entry.updatedAt.add(Duration(days: retentionDays));
     final daysLeft = deleteDate.difference(DateTime.now()).inDays;
-    
+
     final String text = daysLeft <= 0 ? 'Deletes today' : '$daysLeft days left';
-    
+    final errorColor = Theme.of(context).colorScheme.error;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.1),
+        color: errorColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+        border: Border.all(color: errorColor.withValues(alpha: 0.3)),
       ),
       child: Text(
         text,
@@ -350,30 +361,34 @@ class _EntryList extends StatelessWidget {
           'Inter',
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: Colors.red.shade700,
+          color: errorColor,
         ),
       ),
     );
   }
 
-  Widget _buildDismissBackground(_ListAction action, bool isLeft) {
+  Widget _buildDismissBackground(
+    BuildContext context,
+    _ListAction action,
+    bool isLeft,
+  ) {
     Color bgColor;
     IconData iconData;
     String label;
 
     switch (action) {
       case _ListAction.restore:
-        bgColor = Colors.green.shade600;
+        bgColor = AppTheme.successColor;
         iconData = Icons.unarchive;
         label = 'Restore';
         break;
       case _ListAction.delete:
-        bgColor = Colors.amber.shade700;
+        bgColor = AppTheme.warningColor;
         iconData = Icons.delete;
         label = 'Trash';
         break;
       case _ListAction.deleteForever:
-        bgColor = Colors.red.shade600;
+        bgColor = Theme.of(context).colorScheme.error;
         iconData = Icons.delete_forever;
         label = 'Delete';
         break;
