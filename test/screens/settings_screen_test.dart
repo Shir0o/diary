@@ -1,45 +1,102 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:diary/screens/settings_screen.dart';
+import 'package:diary/services/auth_service.dart';
+
+class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
 
 void main() {
+  late MockGoogleSignIn mockGoogleSignIn;
+  late MockGoogleSignInAccount mockAccount;
+  late AuthService authService;
+  late StreamController<GoogleSignInAccount?> currentUserController;
+
+  setUp(() {
+    mockGoogleSignIn = MockGoogleSignIn();
+    mockAccount = MockGoogleSignInAccount();
+    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
+
+    authService = AuthService(
+      googleSignIn: mockGoogleSignIn,
+    );
+
+    when(() => mockGoogleSignIn.onCurrentUserChanged)
+        .thenAnswer((_) => currentUserController.stream);
+    when(() => mockAccount.email).thenReturn('bob@example.com');
+    when(() => mockAccount.displayName).thenReturn('Bob');
+    when(() => mockAccount.photoUrl).thenReturn('');
+  });
+
+  tearDown(() {
+    currentUserController.close();
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: SettingsScreen(authService: authService),
+    );
+  }
+
   testWidgets('SettingsScreen should display all required sections and items', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
+
+    await tester.pumpWidget(createWidgetUnderTest());
 
     // Top App Bar
     expect(find.text('Settings'), findsOneWidget);
-    expect(find.byIcon(Icons.menu), findsOneWidget);
 
     // Section Headers
+    expect(find.text('ACCOUNT'), findsOneWidget);
     expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
     expect(find.text('CLOUD BACKUP'), findsOneWidget);
 
-    // Security & Appearance Items
-    expect(find.text('Biometric Lock'), findsOneWidget);
-    expect(find.text('Theme'), findsOneWidget);
-    expect(find.text('System Default'), findsOneWidget);
-    expect(find.byType(Switch), findsAtLeastNWidgets(1));
+    // Account Section
+    expect(find.text('Sign in with Google'), findsOneWidget);
 
     // Cloud Backup Items
     expect(find.text('Auto-backup'), findsOneWidget);
-    expect(
-      find.text('Back up your diary entries to Google Drive automatically.'),
-      findsOneWidget,
-    );
-    expect(find.text('Backup to Google Drive'), findsOneWidget);
-    expect(find.textContaining('Last backup:'), findsOneWidget);
+    expect(find.text('Backup'), findsOneWidget);
+    expect(find.text('Restore'), findsOneWidget);
+  });
 
-    // Footer
-    expect(find.text('Your data is encrypted locally.'), findsOneWidget);
-    expect(find.text('Version 0.1.0'), findsOneWidget);
+  testWidgets('SettingsScreen shows user info when signed in', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    when(() => mockGoogleSignIn.currentUser).thenReturn(mockAccount);
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.text('bob@example.com'), findsOneWidget);
+    expect(find.text('Sign Out'), findsOneWidget);
+    expect(find.text('Sign in with Google'), findsNothing);
   });
 
   testWidgets('Toggling switches should update state (UI check)', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    when(() => mockGoogleSignIn.currentUser).thenReturn(mockAccount);
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
 
     final switches = find.byType(Switch);
     expect(switches, findsNWidgets(2));

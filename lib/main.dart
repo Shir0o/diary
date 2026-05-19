@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'data/diary_entry_store.dart';
 import 'data/sqlite_diary_entry_store.dart';
 import 'screens/timeline_screen.dart';
@@ -13,17 +14,27 @@ import 'screens/entry_search_delegate.dart';
 import 'screens/archive_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
+import 'services/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env', isOptional: true);
-  runApp(const DiaryApp());
+  
+  final authService = AuthService();
+  await authService.silentSignIn();
+  
+  runApp(DiaryApp(authService: authService));
 }
 
 class DiaryApp extends StatelessWidget {
   final DiaryEntryStore? entryStore;
+  final AuthService authService;
 
-  const DiaryApp({super.key, this.entryStore});
+  const DiaryApp({
+    super.key,
+    this.entryStore,
+    required this.authService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +45,23 @@ class DiaryApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6751a4)),
         useMaterial3: true,
       ),
-      home: MainScreen(entryStore: entryStore ?? SqliteDiaryEntryStore()),
+      home: MainScreen(
+        entryStore: entryStore ?? SqliteDiaryEntryStore(),
+        authService: authService,
+      ),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
   final DiaryEntryStore entryStore;
+  final AuthService authService;
 
-  const MainScreen({super.key, required this.entryStore});
+  const MainScreen({
+    super.key,
+    required this.entryStore,
+    required this.authService,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -247,6 +266,7 @@ class _MainScreenState extends State<MainScreen> {
       drawer: SideDrawer(
         onItemSelected: _onItemSelected,
         selectedIndex: _selectedDrawerIndex,
+        authService: widget.authService,
       ),
       body: _buildCurrentScreen(),
     );
@@ -290,7 +310,10 @@ class _MainScreenState extends State<MainScreen> {
         entries: _entries.where((e) => !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
       ),
-      _MainScreen.settings => SettingsScreen(onMenuPressed: _openDrawer),
+      _MainScreen.settings => SettingsScreen(
+        onMenuPressed: _openDrawer,
+        authService: widget.authService,
+      ),
       _MainScreen.help => InfoScreen.help(onMenuPressed: _openDrawer),
       _MainScreen.about => InfoScreen.about(onMenuPressed: _openDrawer),
     };

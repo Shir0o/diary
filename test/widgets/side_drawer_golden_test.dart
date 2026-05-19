@@ -1,12 +1,38 @@
 @Tags(['golden'])
 library;
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:diary/widgets/side_drawer.dart';
+import 'package:diary/services/auth_service.dart';
+
+class MockGoogleSignIn extends Mock implements GoogleSignIn {}
 
 void main() {
+  late MockGoogleSignIn mockGoogleSignIn;
+  late AuthService authService;
+  late StreamController<GoogleSignInAccount?> currentUserController;
+
+  setUp(() {
+    mockGoogleSignIn = MockGoogleSignIn();
+    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
+    authService = AuthService(
+      googleSignIn: mockGoogleSignIn,
+    );
+
+    when(() => mockGoogleSignIn.onCurrentUserChanged)
+        .thenAnswer((_) => currentUserController.stream);
+    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
+  });
+
+  tearDown(() {
+    currentUserController.close();
+  });
+
   group('SideDrawer Golden Tests', () {
     testGoldens('SideDrawer - appearance', (WidgetTester tester) async {
       final builder = GoldenBuilder.column()
@@ -16,7 +42,11 @@ void main() {
             height: 844,
             width: 390,
             child: Scaffold(
-              drawer: SideDrawer(onItemSelected: (_) {}, selectedIndex: 0),
+              drawer: SideDrawer(
+                onItemSelected: (_) {},
+                selectedIndex: 0,
+                authService: authService,
+              ),
               body: const Center(child: Text('Body')),
             ),
           ),
