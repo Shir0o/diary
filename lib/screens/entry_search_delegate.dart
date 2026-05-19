@@ -50,11 +50,14 @@ class EntrySearchDelegate extends SearchDelegate<DiaryEntry?> {
                 entry.mood.contains(query.trim());
           }).toList();
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final subtleColor = colorScheme.onSurface.withValues(alpha: 0.6);
+
     if (results.isEmpty) {
       return Center(
         child: Text(
           'No matching entries',
-          style: safeGoogleFont('Inter', color: const Color(0xFF79747E)),
+          style: safeGoogleFont('Inter', color: subtleColor),
         ),
       );
     }
@@ -70,13 +73,17 @@ class EntrySearchDelegate extends SearchDelegate<DiaryEntry?> {
             entry.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: safeGoogleFont('Inter', fontWeight: FontWeight.w600),
+            style: safeGoogleFont(
+              'Inter',
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
           subtitle: Text(
             '${DateFormat('MMM d, yyyy h:mm a').format(entry.date)}  ${entry.content}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: safeGoogleFont('Inter', color: const Color(0xFF79747E)),
+            style: safeGoogleFont('Inter', color: subtleColor),
           ),
           onTap: () => close(context, entry),
         );

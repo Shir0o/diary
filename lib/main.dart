@@ -328,20 +328,21 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_isAuthenticated) {
+      final colorScheme = Theme.of(context).colorScheme;
       return Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.lock_outline,
-                size: 64,
-                color: Color(0xFF6751a4),
-              ),
+              Icon(Icons.lock_outline, size: 64, color: colorScheme.primary),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Diary is Locked',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
