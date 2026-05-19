@@ -15,6 +15,7 @@ class TimelineScreen extends StatefulWidget {
   final ValueChanged<String>? onDeleteEntry;
   final ValueChanged<String>? onArchiveEntry;
   final List<DiaryEntry>? entries;
+  final Future<void> Function()? onRefresh;
 
   const TimelineScreen({
     super.key,
@@ -26,6 +27,7 @@ class TimelineScreen extends StatefulWidget {
     this.onDeleteEntry,
     this.onArchiveEntry,
     this.entries,
+    this.onRefresh,
   });
 
   @override
@@ -96,100 +98,107 @@ class _TimelineScreenState extends State<TimelineScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _entries.length,
-        itemBuilder: (context, index) {
-          final entry = _entries[index];
-          final isFirst = index == 0;
-          final isLast = index == _entries.length - 1;
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh ?? () async {},
+        child: ListView.builder(
+          itemCount: _entries.length,
+          itemBuilder: (context, index) {
+            final entry = _entries[index];
+            final isFirst = index == 0;
+            final isLast = index == _entries.length - 1;
 
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TimelineNode(isFirst: isFirst, isLast: isLast),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isFirst || _isNewDay(index))
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TimelineNode(isFirst: isFirst, isLast: isLast),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (isFirst || _isNewDay(index))
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              top: 16,
+                              bottom: 8,
+                            ),
+                            child: Text(
+                              _formatDate(entry.date),
+                              style: safeGoogleFont(
+                                'Inter',
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
                         Padding(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            top: 16,
-                            bottom: 8,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
                           ),
-                          child: Text(
-                            _formatDate(entry.date),
-                            style: safeGoogleFont(
-                              'Inter',
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
+                          child: Dismissible(
+                            key: Key(entry.id),
+                            direction: DismissDirection.horizontal,
+                            background: Container(
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
                               ),
-                              fontSize: 14,
+                              decoration: BoxDecoration(
+                                color: Colors.amber,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.borderRadiusMedium,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.archive,
+                                color: Colors.white,
+                              ),
+                            ),
+                            secondaryBackground: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.borderRadiusMedium,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            onDismissed: (direction) {
+                              if (direction == DismissDirection.endToStart) {
+                                widget.onDeleteEntry?.call(entry.id);
+                              } else {
+                                widget.onArchiveEntry?.call(entry.id);
+                              }
+                            },
+                            child: EntryCard(
+                              entry: entry,
+                              margin: EdgeInsets.zero,
+                              onTap: widget.onEditEntry == null
+                                  ? null
+                                  : () => widget.onEditEntry!(entry),
                             ),
                           ),
                         ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 16,
-                        ),
-                        child: Dismissible(
-                          key: Key(entry.id),
-                          direction: DismissDirection.horizontal,
-                          background: Container(
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            decoration: BoxDecoration(
-                              color: Colors.amber,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.borderRadiusMedium,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.archive,
-                              color: Colors.white,
-                            ),
-                          ),
-                          secondaryBackground: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.borderRadiusMedium,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.white,
-                            ),
-                          ),
-                          onDismissed: (direction) {
-                            if (direction == DismissDirection.endToStart) {
-                              widget.onDeleteEntry?.call(entry.id);
-                            } else {
-                              widget.onArchiveEntry?.call(entry.id);
-                            }
-                          },
-                          child: EntryCard(
-                            entry: entry,
-                            margin: EdgeInsets.zero,
-                            onTap: widget.onEditEntry == null
-                                ? null
-                                : () => widget.onEditEntry!(entry),
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: widget.onAddEntry ?? _openNewEntry,

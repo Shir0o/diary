@@ -13,6 +13,7 @@ void main() {
         content: 'Beautiful morning at the park.',
         mood: '😊',
         location: 'Central Park',
+        updatedAt: testDate,
       );
 
       expect(entry.id, '1');
@@ -21,6 +22,7 @@ void main() {
       expect(entry.content, 'Beautiful morning at the park.');
       expect(entry.mood, '😊');
       expect(entry.location, 'Central Park');
+      expect(entry.updatedAt, testDate);
     });
 
     test('should serialize to JSON map', () {
@@ -30,6 +32,7 @@ void main() {
         title: 'Morning Walk',
         content: 'Beautiful morning at the park.',
         mood: '😊',
+        updatedAt: testDate,
       );
 
       final json = entry.toJson();
@@ -39,6 +42,7 @@ void main() {
       expect(json['title'], 'Morning Walk');
       expect(json['content'], 'Beautiful morning at the park.');
       expect(json['mood'], '😊');
+      expect(json['updatedAt'], testDate.toIso8601String());
     });
 
     test('should deserialize from JSON map', () {
@@ -59,6 +63,7 @@ void main() {
       expect(entry.content, 'Beautiful morning at the park.');
       expect(entry.mood, '😊');
       expect(entry.location, 'Central Park');
+      expect(entry.updatedAt, testDate); // fallback to date
     });
   });
 }

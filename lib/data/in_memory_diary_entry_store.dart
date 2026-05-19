@@ -31,7 +31,10 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   Future<void> trashEntry(String id, bool isDeleted) async {
     final index = _entries.indexWhere((entry) => entry.id == id);
     if (index != -1) {
-      _entries[index] = _entries[index].copyWith(isDeleted: isDeleted);
+      _entries[index] = _entries[index].copyWith(
+        isDeleted: isDeleted,
+        updatedAt: DateTime.now(),
+      );
     }
   }
 
@@ -44,7 +47,10 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   Future<void> archiveEntry(String id, bool isArchived) async {
     final index = _entries.indexWhere((entry) => entry.id == id);
     if (index != -1) {
-      _entries[index] = _entries[index].copyWith(isArchived: isArchived);
+      _entries[index] = _entries[index].copyWith(
+        isArchived: isArchived,
+        updatedAt: DateTime.now(),
+      );
     }
   }
 
@@ -52,6 +58,13 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   Future<void> seedEntriesIfEmpty(List<DiaryEntry> entries) async {
     if (_entries.isNotEmpty) return;
     _entries.addAll(entries);
+  }
+
+  @override
+  Future<void> saveEntries(List<DiaryEntry> entries) async {
+    for (final entry in entries) {
+      await upsertEntry(entry);
+    }
   }
 
   @override

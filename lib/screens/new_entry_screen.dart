@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import '../helpers/font_helper.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
@@ -295,13 +296,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final existingEntry = widget.entry;
 
     return DiaryEntry(
-      id: existingEntry?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: existingEntry?.id ?? const Uuid().v4(),
       date: _entryDate,
       title: _titleFromContent(content),
       content: content,
       mood: _mood,
       location: _emptyToNull(_locationController.text),
       imageUrls: existingEntry?.imageUrls ?? const [],
+      updatedAt: DateTime.now(),
     );
   }
 

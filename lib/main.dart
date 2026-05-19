@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'data/diary_entry_store.dart';
 import 'data/sqlite_diary_entry_store.dart';
 import 'screens/timeline_screen.dart';
@@ -111,6 +113,38 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   _MainScreen _currentScreen = _MainScreen.timeline;
   List<DiaryEntry> _entries = [];
   bool _isLoadingEntries = true;
+  Timer? _autoSyncTimer;
+
+  void _triggerAutoSync() {
+    _autoSyncTimer?.cancel();
+    _autoSyncTimer = Timer(const Duration(seconds: 5), () async {
+      final prefs = await SharedPreferences.getInstance();
+      final autoSync = prefs.getBool('auto_sync') ?? true;
+      final isSignedIn = widget.authService.currentUser != null;
+      if (autoSync && isSignedIn) {
+        try {
+          await widget.authService.driveService.sync(widget.entryStore);
+          await _loadEntries();
+        } catch (e) {
+          debugPrint('Auto-sync failed: $e');
+        }
+      }
+    });
+  }
+
+  Future<void> _triggerImmediateSync() async {
+    final prefs = await SharedPreferences.getInstance();
+    final autoSync = prefs.getBool('auto_sync') ?? true;
+    final isSignedIn = widget.authService.currentUser != null;
+    if (autoSync && isSignedIn) {
+      try {
+        await widget.authService.driveService.sync(widget.entryStore);
+        await _loadEntries();
+      } catch (e) {
+        debugPrint('Immediate sync failed: $e');
+      }
+    }
+  }
 
   static final List<DiaryEntry> _defaultEntries = [
     DiaryEntry(
@@ -149,6 +183,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _autoSyncTimer?.cancel();
     widget.entryStore.close();
     super.dispose();
   }
@@ -157,6 +192,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkAuthentication();
+      _triggerImmediateSync();
     } else if (state == AppLifecycleState.paused) {
       if (_isAuthenticating) return;
       setState(() {
@@ -217,6 +253,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _entries.insert(0, entry);
       _sortEntries();
     });
+    _triggerAutoSync();
   }
 
   Future<void> _editEntry(DiaryEntry entry) async {
@@ -233,6 +270,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _entries[index] = updatedEntry;
       _sortEntries();
     });
+    _triggerAutoSync();
   }
 
   Future<void> _deleteEntry(String id) async {
@@ -244,6 +282,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _entries[index] = _entries[index].copyWith(isDeleted: true);
       }
     });
+    _triggerAutoSync();
   }
 
   Future<void> _archiveEntry(String id, bool archived) async {
@@ -255,6 +294,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _entries[index] = _entries[index].copyWith(isArchived: archived);
       }
     });
+    _triggerAutoSync();
   }
 
   Future<void> _restoreEntry(String id) async {
@@ -270,6 +310,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         );
       }
     });
+    _triggerAutoSync();
   }
 
   Future<void> _permanentlyDeleteEntry(String id) async {
@@ -278,6 +319,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     setState(() {
       _entries.removeWhere((item) => item.id == id);
     });
+    _triggerAutoSync();
   }
 
   void _sortEntries() {
@@ -382,6 +424,24 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         onEditEntry: _editEntry,
         onDeleteEntry: _deleteEntry,
         onArchiveEntry: (id) => _archiveEntry(id, true),
+        onRefresh: () async {
+          final isSignedIn = widget.authService.currentUser != null;
+          if (isSignedIn) {
+            try {
+              await widget.authService.driveService.sync(widget.entryStore);
+              await _loadEntries();
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Sync failed: $e'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          }
+        },
       ),
       _MainScreen.calendar => CalendarScreen(
         entries: _entries.where((e) => !e.isDeleted).toList(),
