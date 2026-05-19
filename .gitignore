@@ -2,6 +2,7 @@
 .atom/
 .build/
 .buildlog/
+.claude/
 .dart_tool/
 .DS_Store
 .flutter-plugins-dependencies

@@ -158,6 +158,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _checkAuthentication();
     } else if (state == AppLifecycleState.paused) {
+      if (_isAuthenticating) return;
       setState(() {
         _isAuthenticated = false;
       });
