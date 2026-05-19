@@ -263,10 +263,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final existingTags = _entries.expand((e) => e.tags).toSet().toList();
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
       MaterialPageRoute(
-        builder: (context) => NewEntryScreen(
-          entry: entry,
-          existingTags: existingTags,
-        ),
+        builder: (context) =>
+            NewEntryScreen(entry: entry, existingTags: existingTags),
       ),
     );
     if (updatedEntry == null) return;

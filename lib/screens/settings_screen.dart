@@ -32,7 +32,8 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProviderStateMixin {
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
   static const _lastSyncAtKey = 'last_sync_at';
 
   bool _biometricLock = false;
@@ -649,7 +650,9 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
     setState(() => _isSyncing = true);
     _syncAnimationController.repeat();
     try {
-      final result = await widget.authService.driveService.sync(widget.entryStore);
+      final result = await widget.authService.driveService.sync(
+        widget.entryStore,
+      );
       if (!mounted) return;
       final syncedAt = result.remoteModified ?? DateTime.now();
       await _saveLastSyncAt(syncedAt);
@@ -662,7 +665,8 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
         SyncOutcome.alreadyInSync => 'Already up to date.',
       };
 
-      if (result.outcome == SyncOutcome.downloaded && widget.onSyncCompleted != null) {
+      if (result.outcome == SyncOutcome.downloaded &&
+          widget.onSyncCompleted != null) {
         widget.onSyncCompleted!();
       }
 

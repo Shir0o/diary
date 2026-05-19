@@ -9,11 +9,7 @@ class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
   final List<String> existingTags;
 
-  const NewEntryScreen({
-    super.key,
-    this.entry,
-    this.existingTags = const [],
-  });
+  const NewEntryScreen({super.key, this.entry, this.existingTags = const []});
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
@@ -193,10 +189,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         return InputChip(
                           label: Text(
                             tag,
-                            style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle()).copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
+                            style:
+                                (Theme.of(context).textTheme.labelMedium ??
+                                        const TextStyle())
+                                    .copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
                           ),
                           backgroundColor: colorScheme.primaryContainer,
                           deleteIcon: Icon(
@@ -210,11 +209,16 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             });
                           },
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusLarge,
+                            ),
                             side: BorderSide.none,
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingExtraSmall),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacingExtraSmall,
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         );
                       }).toList(),
                     ),
@@ -460,7 +464,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   Future<void> _editTags() async {
     _tagInputController.clear();
-    
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -471,7 +475,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           builder: (context, setSheetState) {
             final theme = Theme.of(context);
             final colorScheme = theme.colorScheme;
-            
+
             final suggestedTags = widget.existingTags
                 .where((tag) => !_tags.contains(tag))
                 .toList();
@@ -492,7 +496,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 left: AppTheme.spacingLarge,
                 right: AppTheme.spacingLarge,
                 top: AppTheme.spacingSmall,
-                bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spacingLarge,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    AppTheme.spacingLarge,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -500,10 +506,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 children: [
                   Text(
                     'Add Tags',
-                    style: (theme.textTheme.titleLarge ?? const TextStyle()).copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
+                    style: (theme.textTheme.titleLarge ?? const TextStyle())
+                        .copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
                   ),
                   const SizedBox(height: AppTheme.spacingMedium),
                   Row(
@@ -513,15 +520,24 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                           controller: _tagInputController,
                           decoration: InputDecoration(
                             hintText: 'Enter tag name...',
-                            hintStyle: (theme.textTheme.bodyMedium ?? const TextStyle()).copyWith(
-                              color: colorScheme.onSurface.withValues(alpha: 0.4),
-                            ),
+                            hintStyle:
+                                (theme.textTheme.bodyMedium ??
+                                        const TextStyle())
+                                    .copyWith(
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusMedium,
+                              ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: AppTheme.spacingMedium,
-                              vertical: AppTheme.spacingSmall + AppTheme.spacingExtraSmall,
+                              vertical:
+                                  AppTheme.spacingSmall +
+                                  AppTheme.spacingExtraSmall,
                             ),
                           ),
                           onSubmitted: addTag,
@@ -534,11 +550,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusMedium,
+                            ),
                           ),
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacingMedium,
-                            vertical: AppTheme.spacingSmall + AppTheme.spacingExtraSmall,
+                            vertical:
+                                AppTheme.spacingSmall +
+                                AppTheme.spacingExtraSmall,
                           ),
                         ),
                         child: const Text('Add'),
@@ -549,10 +569,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   if (_tags.isNotEmpty) ...[
                     Text(
                       'Selected Tags',
-                      style: (theme.textTheme.titleSmall ?? const TextStyle()).copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
+                      style: (theme.textTheme.titleSmall ?? const TextStyle())
+                          .copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
                     ),
                     const SizedBox(height: AppTheme.spacingSmall),
                     Wrap(
@@ -568,12 +589,16 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             setSheetState(() {});
                           },
                           backgroundColor: colorScheme.primaryContainer,
-                          labelStyle: (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                          ),
+                          labelStyle:
+                              (theme.textTheme.labelMedium ?? const TextStyle())
+                                  .copyWith(
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
                           deleteIconColor: colorScheme.onPrimaryContainer,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusLarge,
+                            ),
                             side: BorderSide.none,
                           ),
                         );
@@ -584,10 +609,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   if (suggestedTags.isNotEmpty) ...[
                     Text(
                       'Suggested Tags',
-                      style: (theme.textTheme.titleSmall ?? const TextStyle()).copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
+                      style: (theme.textTheme.titleSmall ?? const TextStyle())
+                          .copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
                     ),
                     const SizedBox(height: AppTheme.spacingSmall),
                     Wrap(
@@ -603,11 +629,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             setSheetState(() {});
                           },
                           backgroundColor: colorScheme.surfaceVariant,
-                          labelStyle: (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          labelStyle:
+                              (theme.textTheme.labelMedium ?? const TextStyle())
+                                  .copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.borderRadiusLarge,
+                            ),
                             side: BorderSide.none,
                           ),
                         );
@@ -622,10 +652,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         onPressed: () => Navigator.of(context).pop(),
                         child: Text(
                           'Done',
-                          style: (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
+                          style:
+                              (theme.textTheme.labelLarge ?? const TextStyle())
+                                  .copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
                         ),
                       ),
                     ],

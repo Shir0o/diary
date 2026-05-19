@@ -29,11 +29,17 @@ abstract class DiaryEntryStore {
     return jsonlContent
         .split('\n')
         .where((line) => line.trim().isNotEmpty)
-        .map((line) => DiaryEntry.fromJson(jsonDecode(line) as Map<String, dynamic>))
+        .map(
+          (line) =>
+              DiaryEntry.fromJson(jsonDecode(line) as Map<String, dynamic>),
+        )
         .toList();
   }
 
-  static List<DiaryEntry> merge(List<DiaryEntry> local, List<DiaryEntry> remote) {
+  static List<DiaryEntry> merge(
+    List<DiaryEntry> local,
+    List<DiaryEntry> remote,
+  ) {
     final Map<String, DiaryEntry> merged = {};
 
     for (final entry in local) {

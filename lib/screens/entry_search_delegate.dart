@@ -48,7 +48,9 @@ class EntrySearchDelegate extends SearchDelegate<DiaryEntry?> {
                 (entry.location?.toLowerCase().contains(normalizedQuery) ??
                     false) ||
                 entry.mood.contains(query.trim()) ||
-                entry.tags.any((tag) => tag.toLowerCase().contains(normalizedQuery));
+                entry.tags.any(
+                  (tag) => tag.toLowerCase().contains(normalizedQuery),
+                );
           }).toList();
 
     final colorScheme = Theme.of(context).colorScheme;

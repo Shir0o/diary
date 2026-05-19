@@ -83,9 +83,7 @@ class DiaryEntry {
               .toList() ??
           [],
       tags:
-          (json['tags'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           [],
       isArchived: json['isArchived'] as bool? ?? false,
       isDeleted: json['isDeleted'] as bool? ?? false,

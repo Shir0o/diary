@@ -83,15 +83,22 @@ class EntryCard extends StatelessWidget {
                         vertical: AppTheme.spacingExtraSmall / 2,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                        color: colorScheme.primaryContainer.withValues(
+                          alpha: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.borderRadiusMedium,
+                        ),
                       ),
                       child: Text(
                         '#$tag',
-                        style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: colorScheme.onPrimaryContainer,
-                        ),
+                        style:
+                            (Theme.of(context).textTheme.labelSmall ??
+                                    const TextStyle())
+                                .copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
                       ),
                     );
                   }).toList(),
