@@ -29,7 +29,8 @@ class EtagClient extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    if (_etag != null && (request.method == 'PATCH' || request.method == 'PUT')) {
+    if (_etag != null &&
+        (request.method == 'PATCH' || request.method == 'PUT')) {
       request.headers['If-Match'] = _etag!;
     }
     final response = await _inner.send(request);
@@ -50,9 +51,12 @@ class DriveService {
 
   Future<SyncResult>? _inFlight;
 
-  DriveService(this._googleSignIn, {http.Client? testClient, String preferencePrefix = ''})
-      : _testClient = testClient,
-        _prefPrefix = preferencePrefix;
+  DriveService(
+    this._googleSignIn, {
+    http.Client? testClient,
+    String preferencePrefix = '',
+  }) : _testClient = testClient,
+       _prefPrefix = preferencePrefix;
 
   Future<SyncResult> sync(DiaryEntryStore entryStore) {
     if (_inFlight != null) {
@@ -66,11 +70,15 @@ class DriveService {
 
   Future<SyncResult> _runSyncWithRetry(DiaryEntryStore entryStore) async {
     int attempts = 0;
+    Object? lastError;
+    StackTrace? lastStackTrace;
     while (attempts < 3) {
       attempts++;
       try {
         return await _runSync(entryStore);
-      } catch (e) {
+      } catch (e, stackTrace) {
+        lastError = e;
+        lastStackTrace = stackTrace;
         if (e is drive.DetailedApiRequestError && e.status == 412) {
           // Conflict / concurrency error: retry
           await Future.delayed(const Duration(milliseconds: 500));
@@ -79,10 +87,17 @@ class DriveService {
         rethrow;
       }
     }
+    if (lastError != null) {
+      Error.throwWithStackTrace(
+        lastError,
+        lastStackTrace ?? StackTrace.current,
+      );
+    }
     throw Exception('Sync failed after retries');
   }
 
   Future<SyncResult> _runSync(DiaryEntryStore entryStore) async {
+    final syncStartTime = DateTime.now().toUtc();
     final rawClient = await _getAuthenticatedClient();
     final prefs = await SharedPreferences.getInstance();
     final lastRemoteEtag = prefs.getString('${_prefPrefix}last_remote_etag');
@@ -90,7 +105,9 @@ class DriveService {
     final driveApi = drive.DriveApi(client);
 
     final lastSyncedIso = prefs.getString('${_prefPrefix}last_synced_at');
-    final lastRemoteVersion = prefs.getString('${_prefPrefix}last_remote_version');
+    final lastRemoteVersion = prefs.getString(
+      '${_prefPrefix}last_remote_version',
+    );
     final lastSyncedAt = lastSyncedIso != null
         ? DateTime.parse(lastSyncedIso)
         : DateTime.fromMillisecondsSinceEpoch(0);
@@ -114,23 +131,29 @@ class DriveService {
         $fields: 'files(id,modifiedTime)',
       );
 
-      final hasLegacy = legacyList.files != null && legacyList.files!.isNotEmpty;
+      final hasLegacy =
+          legacyList.files != null && legacyList.files!.isNotEmpty;
 
       if (hasLegacy) {
         // Migration flow: download legacy, load entries, merge with local, save, and upload jsonl
         final legacyFile = legacyList.files!.first;
         final legacyFileId = legacyFile.id!;
 
-        final tempPath = p.join(await sqflite.getDatabasesPath(), 'temp_import.db');
+        final tempPath = p.join(
+          await sqflite.getDatabasesPath(),
+          'temp_import.db',
+        );
         final tempFile = File(tempPath);
         if (await tempFile.exists()) {
           await tempFile.delete();
         }
 
-        final drive.Media downloadMedia = await driveApi.files.get(
-          legacyFileId,
-          downloadOptions: drive.DownloadOptions.fullMedia,
-        ) as drive.Media;
+        final drive.Media downloadMedia =
+            await driveApi.files.get(
+                  legacyFileId,
+                  downloadOptions: drive.DownloadOptions.fullMedia,
+                )
+                as drive.Media;
 
         final IOSink sink = tempFile.openWrite();
         await sink.addStream(downloadMedia.stream);
@@ -149,19 +172,31 @@ class DriveService {
 
         // Merge with local
         final localEntries = await entryStore.loadEntries();
-        final mergedEntries = DiaryEntryStore.merge(localEntries, importedEntries);
+        final mergedEntries = DiaryEntryStore.merge(
+          localEntries,
+          importedEntries,
+        );
         await entryStore.saveEntries(mergedEntries);
 
         // Upload merged entries to new diary.jsonl file
         final result = await _uploadNewFile(client, mergedEntries);
 
         // Update sync state
-        await prefs.setString('${_prefPrefix}last_synced_at', DateTime.now().toUtc().toIso8601String());
+        await prefs.setString(
+          '${_prefPrefix}last_synced_at',
+          syncStartTime.toIso8601String(),
+        );
         if (client.responseEtag != null) {
-          await prefs.setString('${_prefPrefix}last_remote_etag', client.responseEtag!);
+          await prefs.setString(
+            '${_prefPrefix}last_remote_etag',
+            client.responseEtag!,
+          );
         }
         if (result.version != null) {
-          await prefs.setString('${_prefPrefix}last_remote_version', result.version!);
+          await prefs.setString(
+            '${_prefPrefix}last_remote_version',
+            result.version!,
+          );
         }
         return SyncResult(SyncOutcome.uploaded, result.modifiedTime);
       } else {
@@ -169,12 +204,21 @@ class DriveService {
         final localEntries = await entryStore.loadEntries();
         final result = await _uploadNewFile(client, localEntries);
 
-        await prefs.setString('${_prefPrefix}last_synced_at', DateTime.now().toUtc().toIso8601String());
+        await prefs.setString(
+          '${_prefPrefix}last_synced_at',
+          syncStartTime.toIso8601String(),
+        );
         if (client.responseEtag != null) {
-          await prefs.setString('${_prefPrefix}last_remote_etag', client.responseEtag!);
+          await prefs.setString(
+            '${_prefPrefix}last_remote_etag',
+            client.responseEtag!,
+          );
         }
         if (result.version != null) {
-          await prefs.setString('${_prefPrefix}last_remote_version', result.version!);
+          await prefs.setString(
+            '${_prefPrefix}last_remote_version',
+            result.version!,
+          );
         }
         return SyncResult(SyncOutcome.uploaded, result.modifiedTime);
       }
@@ -189,8 +233,9 @@ class DriveService {
       // Remote unchanged since last sync.
       // Check if we have local changes: entries with updatedAt > lastSyncedAt
       final localEntries = await entryStore.loadEntries();
-      final hasLocalChanges =
-          localEntries.any((entry) => entry.updatedAt.isAfter(lastSyncedAt));
+      final hasLocalChanges = localEntries.any(
+        (entry) => entry.updatedAt.isAfter(lastSyncedAt),
+      );
 
       if (!hasLocalChanges) {
         return SyncResult(SyncOutcome.alreadyInSync, remoteModified);
@@ -203,21 +248,32 @@ class DriveService {
         lastRemoteEtag ?? '',
         localEntries,
       );
-      await prefs.setString('${_prefPrefix}last_synced_at', DateTime.now().toUtc().toIso8601String());
+      await prefs.setString(
+        '${_prefPrefix}last_synced_at',
+        syncStartTime.toIso8601String(),
+      );
       if (client.responseEtag != null) {
-        await prefs.setString('${_prefPrefix}last_remote_etag', client.responseEtag!);
+        await prefs.setString(
+          '${_prefPrefix}last_remote_etag',
+          client.responseEtag!,
+        );
       }
       if (result.version != null) {
-        await prefs.setString('${_prefPrefix}last_remote_version', result.version!);
+        await prefs.setString(
+          '${_prefPrefix}last_remote_version',
+          result.version!,
+        );
       }
       return SyncResult(SyncOutcome.uploaded, result.modifiedTime);
     }
 
     // Remote has changed! We must download, merge, write, and upload.
-    final remoteMedia = await driveApi.files.get(
-      remoteFileId,
-      downloadOptions: drive.DownloadOptions.fullMedia,
-    ) as drive.Media;
+    final remoteMedia =
+        await driveApi.files.get(
+              remoteFileId,
+              downloadOptions: drive.DownloadOptions.fullMedia,
+            )
+            as drive.Media;
 
     final remoteContent = await utf8.decodeStream(remoteMedia.stream);
     final remoteEntries = DiaryEntryStore.fromJSONL(remoteContent);
@@ -236,12 +292,21 @@ class DriveService {
       mergedEntries,
     );
 
-    await prefs.setString('${_prefPrefix}last_synced_at', DateTime.now().toUtc().toIso8601String());
+    await prefs.setString(
+      '${_prefPrefix}last_synced_at',
+      syncStartTime.toIso8601String(),
+    );
     if (client.responseEtag != null) {
-      await prefs.setString('${_prefPrefix}last_remote_etag', client.responseEtag!);
+      await prefs.setString(
+        '${_prefPrefix}last_remote_etag',
+        client.responseEtag!,
+      );
     }
     if (result.version != null) {
-      await prefs.setString('${_prefPrefix}last_remote_version', result.version!);
+      await prefs.setString(
+        '${_prefPrefix}last_remote_version',
+        result.version!,
+      );
     }
     return SyncResult(SyncOutcome.uploaded, result.modifiedTime);
   }

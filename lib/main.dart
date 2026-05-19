@@ -435,7 +435,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Sync failed: $e'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: Theme.of(context).colorScheme.error,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );

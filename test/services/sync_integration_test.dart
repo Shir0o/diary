@@ -36,8 +36,10 @@ void main() {
 
       final startOfContent = body.indexOf('\r\n\r\n', markerIndex);
       final isCRLF = startOfContent != -1;
-      final bodyStartIndex = isCRLF ? startOfContent + 4 : body.indexOf('\n\n', markerIndex) + 2;
-      
+      final bodyStartIndex = isCRLF
+          ? startOfContent + 4
+          : body.indexOf('\n\n', markerIndex) + 2;
+
       if (bodyStartIndex < 2) return body;
 
       final contentPart = body.substring(bodyStartIndex);
@@ -45,7 +47,7 @@ void main() {
       if (boundaryIndex == -1) {
         return utf8.decode(base64.decode(contentPart.trim()));
       }
-      
+
       final base64Content = contentPart.substring(0, boundaryIndex).trim();
       return utf8.decode(base64.decode(base64Content));
     }
@@ -80,24 +82,25 @@ void main() {
                       'mimeType': 'text/plain',
                       'version': remoteVersion,
                       'modifiedTime': remoteModifiedTime.toIso8601String(),
-                    }
-                  ]
+                    },
+                  ],
                 }),
                 200,
                 headers: {'content-type': 'application/json; charset=utf-8'},
               );
             } else {
               return http.Response(
-                json.encode({
-                  'kind': 'drive#fileList',
-                  'files': []
-                }),
+                json.encode({'kind': 'drive#fileList', 'files': []}),
                 200,
                 headers: {'content-type': 'application/json; charset=utf-8'},
               );
             }
           }
-          return http.Response('{"files":[]}', 200, headers: {'content-type': 'application/json'});
+          return http.Response(
+            '{"files":[]}',
+            200,
+            headers: {'content-type': 'application/json'},
+          );
         }
 
         if (method == 'GET' && path == '/drive/v3/files/file-jsonl-id') {
@@ -148,7 +151,8 @@ void main() {
           );
         }
 
-        if (method == 'PATCH' && path == '/upload/drive/v3/files/file-jsonl-id') {
+        if (method == 'PATCH' &&
+            path == '/upload/drive/v3/files/file-jsonl-id') {
           if (inject412Count > 0) {
             inject412Count--;
             return http.Response('Precondition Failed', 412);
@@ -185,8 +189,16 @@ void main() {
       final storeA = InMemoryDiaryEntryStore();
       final storeB = InMemoryDiaryEntryStore();
 
-      final serviceA = DriveService(mockGoogleSignIn, testClient: mockClient, preferencePrefix: 'a_');
-      final serviceB = DriveService(mockGoogleSignIn, testClient: mockClient, preferencePrefix: 'b_');
+      final serviceA = DriveService(
+        mockGoogleSignIn,
+        testClient: mockClient,
+        preferencePrefix: 'a_',
+      );
+      final serviceB = DriveService(
+        mockGoogleSignIn,
+        testClient: mockClient,
+        preferencePrefix: 'b_',
+      );
 
       // --- Time T0: Device A writes Entry 1 ---
       final entry1 = DiaryEntry(
@@ -211,7 +223,10 @@ void main() {
       // --- Time T1: Device B syncs ---
       // Sync B -> Downloads Entry 1
       final resB1 = await serviceB.sync(storeB);
-      expect(resB1.outcome, SyncOutcome.uploaded); // Initial upload of B's empty store merged with remote
+      expect(
+        resB1.outcome,
+        SyncOutcome.uploaded,
+      ); // Initial upload of B's empty store merged with remote
       final entriesB1 = await storeB.loadEntries();
       expect(entriesB1.length, 1);
       expect(entriesB1.first.title, 'Entry 1 - A');
@@ -249,8 +264,14 @@ void main() {
 
       final entriesA2 = await storeA.loadEntries();
       expect(entriesA2.length, 2);
-      expect(entriesA2.firstWhere((e) => e.id == 'entry-1').title, 'Entry 1 - A (Edited)');
-      expect(entriesA2.firstWhere((e) => e.id == 'entry-2').title, 'Entry 2 - B');
+      expect(
+        entriesA2.firstWhere((e) => e.id == 'entry-1').title,
+        'Entry 1 - A (Edited)',
+      );
+      expect(
+        entriesA2.firstWhere((e) => e.id == 'entry-2').title,
+        'Entry 2 - B',
+      );
 
       await Future.delayed(const Duration(milliseconds: 2));
 
@@ -260,8 +281,14 @@ void main() {
 
       final entriesB3 = await storeB.loadEntries();
       expect(entriesB3.length, 2);
-      expect(entriesB3.firstWhere((e) => e.id == 'entry-1').title, 'Entry 1 - A (Edited)');
-      expect(entriesB3.firstWhere((e) => e.id == 'entry-2').title, 'Entry 2 - B');
+      expect(
+        entriesB3.firstWhere((e) => e.id == 'entry-1').title,
+        'Entry 1 - A (Edited)',
+      );
+      expect(
+        entriesB3.firstWhere((e) => e.id == 'entry-2').title,
+        'Entry 2 - B',
+      );
     });
 
     test('optimistic concurrency failure should retry and succeed', () async {
@@ -284,7 +311,10 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 2));
 
       // Make a local change
-      final updated = entry.copyWith(title: 'Updated', updatedAt: DateTime.now().toUtc());
+      final updated = entry.copyWith(
+        title: 'Updated',
+        updatedAt: DateTime.now().toUtc(),
+      );
       await store.upsertEntry(updated);
 
       // Force 1 retry during the update call
@@ -293,7 +323,10 @@ void main() {
       // Sync should succeed eventually due to retry loop
       final res = await service.sync(store);
       expect(res.outcome, SyncOutcome.uploaded);
-      expect(inject412Count, 0); // verify the failure was injected and caught/retried
+      expect(
+        inject412Count,
+        0,
+      ); // verify the failure was injected and caught/retried
     });
   });
 }

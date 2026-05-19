@@ -21,7 +21,7 @@ class DiaryEntry {
     this.isArchived = false,
     this.isDeleted = false,
     DateTime? updatedAt,
-  }) : updatedAt = updatedAt ?? DateTime.now();
+  }) : updatedAt = updatedAt ?? DateTime.now().toUtc();
 
   DiaryEntry copyWith({
     String? id,

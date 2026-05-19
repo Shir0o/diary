@@ -186,38 +186,41 @@ void main() {
       expect(result.first.title, 'Edited Title (Newer)');
     });
 
-    test('identical updatedAt: tie-break by comparing serialized JSON lexically', () {
-      // Local has title 'A', Remote has title 'B'
-      // 'B' (remoteJson) vs 'A' (localJson) -> remoteJson is lexically larger/different and wins
-      final local = [
-        DiaryEntry(
-          id: '1',
-          date: baseTime,
-          title: 'A',
-          content: 'Content',
-          mood: '😊',
-          updatedAt: baseTime,
-        ),
-      ];
-      final remote = [
-        DiaryEntry(
-          id: '1',
-          date: baseTime,
-          title: 'B',
-          content: 'Content',
-          mood: '😊',
-          updatedAt: baseTime,
-        ),
-      ];
+    test(
+      'identical updatedAt: tie-break by comparing serialized JSON lexically',
+      () {
+        // Local has title 'A', Remote has title 'B'
+        // 'B' (remoteJson) vs 'A' (localJson) -> remoteJson is lexically larger/different and wins
+        final local = [
+          DiaryEntry(
+            id: '1',
+            date: baseTime,
+            title: 'A',
+            content: 'Content',
+            mood: '😊',
+            updatedAt: baseTime,
+          ),
+        ];
+        final remote = [
+          DiaryEntry(
+            id: '1',
+            date: baseTime,
+            title: 'B',
+            content: 'Content',
+            mood: '😊',
+            updatedAt: baseTime,
+          ),
+        ];
 
-      final result = DiaryEntryStore.merge(local, remote);
-      expect(result.length, 1);
-      // We expect the one with larger lexically serialized JSON to win.
-      // Let's print local and remote json:
-      // local: {"id":"1","date":"...","title":"A",...}
-      // remote: {"id":"1","date":"...","title":"B",...}
-      // Since title "B" is lexically greater than "A", remote json is lexically greater and wins.
-      expect(result.first.title, 'B');
-    });
+        final result = DiaryEntryStore.merge(local, remote);
+        expect(result.length, 1);
+        // We expect the one with larger lexically serialized JSON to win.
+        // Let's print local and remote json:
+        // local: {"id":"1","date":"...","title":"A",...}
+        // remote: {"id":"1","date":"...","title":"B",...}
+        // Since title "B" is lexically greater than "A", remote json is lexically greater and wins.
+        expect(result.first.title, 'B');
+      },
+    );
   });
 }
