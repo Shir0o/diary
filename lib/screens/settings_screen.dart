@@ -491,10 +491,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          Divider(
-            color: colorScheme.outline.withValues(alpha: 0.3),
-            height: 1,
-          ),
+          Divider(color: colorScheme.outline.withValues(alpha: 0.3), height: 1),
           const SizedBox(height: 20),
           Row(
             children: [
@@ -627,10 +624,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SyncOutcome.alreadyInSync => 'Already up to date.',
       };
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     } catch (e) {
       if (mounted) {

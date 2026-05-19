@@ -52,17 +52,17 @@ class DriveService {
 
     final localModified = (await localFile.lastModified()).toUtc();
     if (remoteModified != null &&
-        remoteModified.toUtc().isAfter(localModified.add(
-              const Duration(seconds: 2),
-            ))) {
+        remoteModified.toUtc().isAfter(
+          localModified.add(const Duration(seconds: 2)),
+        )) {
       await downloadBackup();
       return SyncResult(SyncOutcome.downloaded, remoteModified);
     }
 
     if (remoteModified != null &&
-        localModified.isAfter(remoteModified.toUtc().add(
-              const Duration(seconds: 2),
-            ))) {
+        localModified.isAfter(
+          remoteModified.toUtc().add(const Duration(seconds: 2)),
+        )) {
       await uploadBackup();
       return SyncResult(SyncOutcome.uploaded, DateTime.now().toUtc());
     }

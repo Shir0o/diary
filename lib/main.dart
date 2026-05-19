@@ -333,11 +333,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.lock_outline,
-                size: 64,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.lock_outline, size: 64, color: colorScheme.primary),
               const SizedBox(height: 24),
               Text(
                 'Diary is Locked',
