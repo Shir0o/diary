@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
@@ -36,11 +37,11 @@ class DriveService {
         existingFileId,
         uploadMedia: media,
       );
-      print('Backup updated on Google Drive');
+      debugPrint('Backup updated on Google Drive');
     } else {
       // Create new file
       await driveApi.files.create(driveFile, uploadMedia: media);
-      print('New backup created on Google Drive');
+      debugPrint('New backup created on Google Drive');
     }
   }
 
@@ -61,14 +62,6 @@ class DriveService {
     final fileId = fileList.files!.first.id!;
 
     // 2. Download the file
-    final media =
-        await driveApi.files.get(
-              fileId,
-              downloadOptions: drive.DownloadOptions.metadata,
-            )
-            as drive.Media;
-    // Wait, get returns File if not download. For download, use get with downloadOptions.
-    // Actually in googleapis 13.x, it's often better to use:
     final drive.Media downloadMedia =
         await driveApi.files.get(
               fileId,
@@ -83,6 +76,6 @@ class DriveService {
     await sink.addStream(downloadMedia.stream);
     await sink.close();
 
-    print('Backup downloaded and restored');
+    debugPrint('Backup downloaded and restored');
   }
 }

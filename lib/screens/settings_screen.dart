@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
-import '../config/app_config.dart';
 import '../helpers/font_helper.dart';
 import '../services/auth_service.dart';
 

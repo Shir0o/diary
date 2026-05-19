@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'drive_service.dart';
@@ -28,7 +29,7 @@ class AuthService {
     try {
       return await _googleSignIn.signIn();
     } catch (e) {
-      print('Error signing in with Google: $e');
+      debugPrint('Error signing in with Google: $e');
       return null;
     }
   }
@@ -37,7 +38,7 @@ class AuthService {
     try {
       return await _googleSignIn.signInSilently();
     } catch (e) {
-      print('Error silent signing in: $e');
+      debugPrint('Error silent signing in: $e');
       return null;
     }
   }
@@ -46,7 +47,7 @@ class AuthService {
     try {
       await _googleSignIn.signOut();
     } catch (e) {
-      print('Error signing out: $e');
+      debugPrint('Error signing out: $e');
     }
   }
 }
