@@ -49,12 +49,20 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
         ? const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF141316), Color(0xFF1B181E), Color(0xFF221A2C)],
+            colors: [
+              AppTheme.darkGradientStart,
+              AppTheme.darkGradientMiddle,
+              AppTheme.darkGradientEnd,
+            ],
           )
         : const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFEF7FF), Color(0xFFF6F0FC), Color(0xFFEDE4F9)],
+            colors: [
+              AppTheme.lightGradientStart,
+              AppTheme.lightGradientMiddle,
+              AppTheme.lightGradientEnd,
+            ],
           );
 
     return Scaffold(
@@ -151,10 +159,14 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                               ? SizedBox(
                                   height: 48,
                                   child: Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        colorScheme.primary,
+                                    child: Semantics(
+                                      label: 'Authenticating',
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              colorScheme.primary,
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -316,6 +328,18 @@ class _PulsingBiometricIconState extends State<PulsingBiometricIcon>
   }
 
   @override
+  void didUpdateWidget(PulsingBiometricIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animate != oldWidget.animate) {
+      if (widget.animate) {
+        _controller.repeat();
+      } else {
+        _controller.stop();
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -325,90 +349,95 @@ class _PulsingBiometricIconState extends State<PulsingBiometricIcon>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: Center(
-        child: SizedBox(
-          width: 160,
-          height: 160,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Ripple 1 Animation
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _ring1Scale.value,
-                    child: Opacity(
-                      opacity: _ring1Opacity.value,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colorScheme.primary.withValues(alpha: 0.4),
+    return Semantics(
+      button: true,
+      label: 'Unlock with biometrics',
+      enabled: widget.onTap != null,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Center(
+          child: SizedBox(
+            width: 160,
+            height: 160,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Ripple 1 Animation
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _ring1Scale.value,
+                      child: Opacity(
+                        opacity: _ring1Opacity.value,
+                        child: Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.primary.withValues(alpha: 0.4),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-              // Ripple 2 Animation
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _ring2Scale.value,
-                    child: Opacity(
-                      opacity: _ring2Opacity.value,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colorScheme.primary.withValues(alpha: 0.6),
+                    );
+                  },
+                ),
+                // Ripple 2 Animation
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _ring2Scale.value,
+                      child: Opacity(
+                        opacity: _ring2Opacity.value,
+                        child: Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.primary.withValues(alpha: 0.6),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-              // Center button with shadow
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: widget.isAuthenticating ? 0.95 : _iconScale.value,
-                    child: child,
-                  );
-                },
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.25),
-                        blurRadius: 15,
-                        offset: const Offset(0, 4),
+                    );
+                  },
+                ),
+                // Center button with shadow
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: widget.isAuthenticating ? 0.95 : _iconScale.value,
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.25),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.15),
+                        width: 2,
                       ),
-                    ],
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.15),
-                      width: 2,
                     ),
-                  ),
-                  child: Icon(
-                    Icons.fingerprint_rounded,
-                    color: colorScheme.primary,
-                    size: 44,
+                    child: Icon(
+                      Icons.fingerprint_rounded,
+                      color: colorScheme.primary,
+                      size: 44,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
