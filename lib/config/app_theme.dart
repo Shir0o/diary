@@ -25,6 +25,15 @@ class AppTheme {
   static const Color warningColor = Color(0xFFF57C00);
   static const Color errorColor = Color(0xFFD32F2F);
 
+  // Gradient Colors
+  static const Color lightGradientStart = Color(0xFFFEF7FF);
+  static const Color lightGradientMiddle = Color(0xFFF6F0FC);
+  static const Color lightGradientEnd = Color(0xFFEDE4F9);
+
+  static const Color darkGradientStart = Color(0xFF141316);
+  static const Color darkGradientMiddle = Color(0xFF1B181E);
+  static const Color darkGradientEnd = Color(0xFF221A2C);
+
   // Spacing
   static const double spacingExtraSmall = 4.0;
   static const double spacingSmall = 8.0;
