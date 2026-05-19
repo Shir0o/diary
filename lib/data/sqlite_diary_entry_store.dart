@@ -170,9 +170,7 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
       );
     }
     if (oldVersion < 4) {
-      await db.execute(
-        'ALTER TABLE $_entriesTable ADD COLUMN updated_at TEXT',
-      );
+      await db.execute('ALTER TABLE $_entriesTable ADD COLUMN updated_at TEXT');
       await db.execute(
         'UPDATE $_entriesTable SET updated_at = date WHERE updated_at IS NULL',
       );
@@ -209,7 +207,9 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
           .toList(),
       isArchived: (row['is_archived'] as int? ?? 0) == 1,
       isDeleted: (row['is_deleted'] as int? ?? 0) == 1,
-      updatedAt: updatedAtStr != null ? DateTime.parse(updatedAtStr) : DateTime.parse(dateStr),
+      updatedAt: updatedAtStr != null
+          ? DateTime.parse(updatedAtStr)
+          : DateTime.parse(dateStr),
     );
   }
 }

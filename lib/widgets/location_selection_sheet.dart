@@ -63,7 +63,9 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
       });
 
       try {
-        final results = await widget.locationService.getAddressSuggestions(query);
+        final results = await widget.locationService.getAddressSuggestions(
+          query,
+        );
         if (mounted) {
           setState(() {
             _suggestions = results;
@@ -164,7 +166,9 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
               hintText: 'Search or enter address...',
               hintStyle: safeGoogleFont(
                 'IBM Plex Sans',
-                color: colorScheme.onSurface.withValues(alpha: 0.4),
+                color: colorScheme.onSurface.withValues(
+                  alpha: AppTheme.opacityHint,
+                ),
               ),
               prefixIcon: Icon(Icons.search, color: colorScheme.primary),
               suffixIcon: _searchController.text.isNotEmpty
@@ -183,11 +187,15 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                 vertical: AppTheme.spacingSmall,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                borderRadius: BorderRadius.circular(
+                  AppTheme.borderRadiusMedium,
+                ),
                 borderSide: BorderSide(color: colorScheme.outline),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                borderRadius: BorderRadius.circular(
+                  AppTheme.borderRadiusMedium,
+                ),
                 borderSide: BorderSide(color: colorScheme.primary, width: 2),
               ),
             ),
@@ -241,7 +249,9 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                   const SizedBox(width: AppTheme.spacingSmall),
                   Expanded(
                     child: Text(
-                      _isDetecting ? 'Detecting location...' : 'Use current location',
+                      _isDetecting
+                          ? 'Detecting location...'
+                          : 'Use current location',
                       style: safeGoogleFont(
                         'IBM Plex Sans',
                         color: colorScheme.primary,
@@ -271,53 +281,58 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                     ),
                   )
                 : _suggestions.isEmpty
-                    ? (widget.initialLocation.isEmpty && _searchController.text.trim().isEmpty
-                        ? const SizedBox.shrink()
-                        : Padding(
-                            padding: const EdgeInsets.all(AppTheme.spacingSmall),
-                            child: Text(
-                              _searchController.text.isEmpty
-                                  ? 'Type to search for location suggestions'
-                                  : 'No suggestions found. Press Save to use typed address.',
-                              style: safeGoogleFont(
-                                'IBM Plex Sans',
-                                fontSize: 13,
-                                color: colorScheme.onSurface.withValues(alpha: 0.5),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ))
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: _suggestions.length,
-                        itemBuilder: (context, index) {
-                          final suggestion = _suggestions[index];
-                          return ListTile(
-                            leading: Icon(
-                              Icons.location_on_outlined,
-                              color: colorScheme.onSurface.withValues(alpha: 0.6),
-                              size: 18,
-                            ),
-                            title: Text(
-                              suggestion,
-                              style: safeGoogleFont(
-                                'IBM Plex Sans',
-                                fontSize: 14,
-                                color: colorScheme.onSurface,
+                ? (widget.initialLocation.isEmpty &&
+                          _searchController.text.trim().isEmpty
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.all(AppTheme.spacingSmall),
+                          child: Text(
+                            _searchController.text.isEmpty
+                                ? 'Type to search for location suggestions'
+                                : 'No suggestions found. Press Save to use typed address.',
+                            style: safeGoogleFont(
+                              'IBM Plex Sans',
+                              fontSize: 13,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: AppTheme.opacitySubtle,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.spacingSmall,
-                            ),
-                            onTap: () {
-                              setState(() {
-                                _searchController.text = suggestion;
-                                _suggestions = const [];
-                              });
-                            },
-                          );
+                            textAlign: TextAlign.center,
+                          ),
+                        ))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _suggestions.length,
+                    itemBuilder: (context, index) {
+                      final suggestion = _suggestions[index];
+                      return ListTile(
+                        leading: Icon(
+                          Icons.location_on_outlined,
+                          color: colorScheme.onSurface.withValues(
+                            alpha: AppTheme.opacityMedium,
+                          ),
+                          size: 18,
+                        ),
+                        title: Text(
+                          suggestion,
+                          style: safeGoogleFont(
+                            'IBM Plex Sans',
+                            fontSize: 14,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacingSmall,
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _searchController.text = suggestion;
+                            _suggestions = const [];
+                          });
                         },
-                      ),
+                      );
+                    },
+                  ),
           ),
           const SizedBox(height: AppTheme.spacingMedium),
 

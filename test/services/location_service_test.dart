@@ -5,8 +5,11 @@ import 'package:mocktail/mocktail.dart';
 import 'package:diary/services/location_service.dart';
 
 class MockHttpClient extends Mock implements HttpClient {}
+
 class MockHttpClientRequest extends Mock implements HttpClientRequest {}
+
 class MockHttpHeaders extends Mock implements HttpHeaders {}
+
 class MockHttpClientResponse extends Mock implements HttpClientResponse {}
 
 void main() {
@@ -32,40 +35,41 @@ void main() {
   });
 
   group('GeolocatorLocationService - reverseGeocode', () {
-    test('returns formatted location string on success (road and city)', () async {
-      final jsonResponse = jsonEncode({
-        'display_name': '123 Main St, Seattle, WA, USA',
-        'address': {
-          'road': 'Main St',
-          'city': 'Seattle',
-        }
-      });
+    test(
+      'returns formatted location string on success (road and city)',
+      () async {
+        final jsonResponse = jsonEncode({
+          'display_name': '123 Main St, Seattle, WA, USA',
+          'address': {'road': 'Main St', 'city': 'Seattle'},
+        });
 
-      when(() => mockHttpClient.getUrl(any())).thenAnswer((_) async => mockRequest);
-      when(() => mockResponse.statusCode).thenReturn(200);
-      when(() => mockResponse.transform(utf8.decoder)).thenAnswer(
-        (_) => Stream.value(jsonResponse),
-      );
+        when(
+          () => mockHttpClient.getUrl(any()),
+        ).thenAnswer((_) async => mockRequest);
+        when(() => mockResponse.statusCode).thenReturn(200);
+        when(
+          () => mockResponse.transform(utf8.decoder),
+        ).thenAnswer((_) => Stream.value(jsonResponse));
 
-      final result = await locationService.reverseGeocode(47.6062, -122.3321);
+        final result = await locationService.reverseGeocode(47.6062, -122.3321);
 
-      expect(result, 'Main St, Seattle');
-    });
+        expect(result, 'Main St, Seattle');
+      },
+    );
 
     test('returns landmark on success when road is missing', () async {
       final jsonResponse = jsonEncode({
         'display_name': 'Space Needle, Seattle, WA, USA',
-        'address': {
-          'tourism': 'Space Needle',
-          'city': 'Seattle',
-        }
+        'address': {'tourism': 'Space Needle', 'city': 'Seattle'},
       });
 
-      when(() => mockHttpClient.getUrl(any())).thenAnswer((_) async => mockRequest);
+      when(
+        () => mockHttpClient.getUrl(any()),
+      ).thenAnswer((_) async => mockRequest);
       when(() => mockResponse.statusCode).thenReturn(200);
-      when(() => mockResponse.transform(utf8.decoder)).thenAnswer(
-        (_) => Stream.value(jsonResponse),
-      );
+      when(
+        () => mockResponse.transform(utf8.decoder),
+      ).thenAnswer((_) => Stream.value(jsonResponse));
 
       final result = await locationService.reverseGeocode(47.6205, -122.3493);
 
@@ -73,7 +77,9 @@ void main() {
     });
 
     test('falls back to coordinates string on HTTP error', () async {
-      when(() => mockHttpClient.getUrl(any())).thenAnswer((_) async => mockRequest);
+      when(
+        () => mockHttpClient.getUrl(any()),
+      ).thenAnswer((_) async => mockRequest);
       when(() => mockResponse.statusCode).thenReturn(500);
 
       final result = await locationService.reverseGeocode(47.6062, -122.3321);
@@ -82,7 +88,9 @@ void main() {
     });
 
     test('falls back to coordinates string on exception', () async {
-      when(() => mockHttpClient.getUrl(any())).thenThrow(const SocketException('No Internet'));
+      when(
+        () => mockHttpClient.getUrl(any()),
+      ).thenThrow(const SocketException('No Internet'));
 
       final result = await locationService.reverseGeocode(47.6062, -122.3321);
 
@@ -97,11 +105,13 @@ void main() {
         {'display_name': 'Portland, OR, USA'},
       ]);
 
-      when(() => mockHttpClient.getUrl(any())).thenAnswer((_) async => mockRequest);
+      when(
+        () => mockHttpClient.getUrl(any()),
+      ).thenAnswer((_) async => mockRequest);
       when(() => mockResponse.statusCode).thenReturn(200);
-      when(() => mockResponse.transform(utf8.decoder)).thenAnswer(
-        (_) => Stream.value(jsonResponse),
-      );
+      when(
+        () => mockResponse.transform(utf8.decoder),
+      ).thenAnswer((_) => Stream.value(jsonResponse));
 
       final result = await locationService.getAddressSuggestions('Seattle');
 
@@ -115,7 +125,9 @@ void main() {
     });
 
     test('returns empty list on API error', () async {
-      when(() => mockHttpClient.getUrl(any())).thenAnswer((_) async => mockRequest);
+      when(
+        () => mockHttpClient.getUrl(any()),
+      ).thenAnswer((_) async => mockRequest);
       when(() => mockResponse.statusCode).thenReturn(400);
 
       final result = await locationService.getAddressSuggestions('Seattle');

@@ -184,65 +184,71 @@ void main() {
     expect(savedEntry!.content, isEmpty);
   });
 
-  testWidgets('Selecting location from bottom sheet updates the location field', (
-    WidgetTester tester,
-  ) async {
-    final mockLocationService = MockLocationService();
-    when(() => mockLocationService.getAddressSuggestions(any())).thenAnswer((_) async => []);
+  testWidgets(
+    'Selecting location from bottom sheet updates the location field',
+    (WidgetTester tester) async {
+      final mockLocationService = MockLocationService();
+      when(
+        () => mockLocationService.getAddressSuggestions(any()),
+      ).thenAnswer((_) async => []);
 
-    DiaryEntry? savedEntry;
+      DiaryEntry? savedEntry;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            return TextButton(
-              onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(locationService: mockLocationService),
-                  ),
-                );
-              },
-              child: const Text('Open'),
-            );
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  savedEntry = await Navigator.of(context).push<DiaryEntry>(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          NewEntryScreen(locationService: mockLocationService),
+                    ),
+                  );
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
-    // The entry location pin icon is in the bottom toolbar
-    await tester.tap(find.byIcon(Icons.location_on_outlined).last);
-    await tester.pumpAndSettle();
+      // The entry location pin icon is in the bottom toolbar
+      await tester.tap(find.byIcon(Icons.location_on_outlined).last);
+      await tester.pumpAndSettle();
 
-    // Verify the bottom sheet opened
-    expect(find.text('Add Location'), findsOneWidget);
+      // Verify the bottom sheet opened
+      expect(find.text('Add Location'), findsOneWidget);
 
-    // Enter some address manually
-    await tester.enterText(find.byType(TextField).last, 'My Custom Address');
-    await tester.tap(find.text('Save').last);
-    await tester.pumpAndSettle();
+      // Enter some address manually
+      await tester.enterText(find.byType(TextField).last, 'My Custom Address');
+      await tester.tap(find.text('Save').last);
+      await tester.pumpAndSettle();
 
-    // The location should be displayed inline on the screen
-    expect(find.text('My Custom Address'), findsOneWidget);
+      // The location should be displayed inline on the screen
+      expect(find.text('My Custom Address'), findsOneWidget);
 
-    // Save the entire entry
-    await tester.enterText(find.byType(TextField).first, 'Body content');
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
+      // Save the entire entry
+      await tester.enterText(find.byType(TextField).first, 'Body content');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
 
-    expect(savedEntry, isNotNull);
-    expect(savedEntry!.location, 'My Custom Address');
-  });
+      expect(savedEntry, isNotNull);
+      expect(savedEntry!.location, 'My Custom Address');
+    },
+  );
 
   testWidgets('Clearing location from bottom sheet removes location field', (
     WidgetTester tester,
   ) async {
     final mockLocationService = MockLocationService();
-    when(() => mockLocationService.getAddressSuggestions(any())).thenAnswer((_) async => []);
+    when(
+      () => mockLocationService.getAddressSuggestions(any()),
+    ).thenAnswer((_) async => []);
 
     final existingEntry = DiaryEntry(
       id: 'entry-1',

@@ -15,7 +15,7 @@ class GeolocatorLocationService implements LocationService {
   final HttpClient _httpClient;
 
   GeolocatorLocationService({HttpClient? httpClient})
-      : _httpClient = httpClient ?? HttpClient();
+    : _httpClient = httpClient ?? HttpClient();
 
   @override
   Future<bool> isPermissionGranted() async {
@@ -86,12 +86,22 @@ class GeolocatorLocationService implements LocationService {
         if (displayName != null) {
           final address = data['address'] as Map<String, dynamic>?;
           if (address != null) {
-            final city = address['city'] ?? address['town'] ?? address['village'] ?? address['suburb'] ?? address['county'];
+            final city =
+                address['city'] ??
+                address['town'] ??
+                address['village'] ??
+                address['suburb'] ??
+                address['county'];
             final road = address['road'];
             if (road != null && city != null) {
               return '$road, $city';
             }
-            final landmark = address['amenity'] ?? address['building'] ?? address['shop'] ?? address['tourism'] ?? address['historic'];
+            final landmark =
+                address['amenity'] ??
+                address['building'] ??
+                address['shop'] ??
+                address['tourism'] ??
+                address['historic'];
             if (landmark != null && city != null) {
               return '$landmark, $city';
             }

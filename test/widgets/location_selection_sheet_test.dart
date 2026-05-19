@@ -12,15 +12,13 @@ void main() {
 
   setUp(() {
     mockLocationService = MockLocationService();
-    when(() => mockLocationService.getAddressSuggestions(any())).thenAnswer((_) async => []);
+    when(
+      () => mockLocationService.getAddressSuggestions(any()),
+    ).thenAnswer((_) async => []);
   });
 
   Widget buildTestableWidget(Widget child) {
-    return MaterialApp(
-      home: Scaffold(
-        body: child,
-      ),
-    );
+    return MaterialApp(home: Scaffold(body: child));
   }
 
   testWidgets('renders all initial UI elements', (WidgetTester tester) async {
@@ -41,7 +39,9 @@ void main() {
     expect(find.text('Save'), findsOneWidget);
   });
 
-  testWidgets('initial location is filled in the search field', (WidgetTester tester) async {
+  testWidgets('initial location is filled in the search field', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       buildTestableWidget(
         LocationSelectionSheet(
@@ -55,9 +55,12 @@ void main() {
     expect(find.text('My Office'), findsOneWidget);
   });
 
-  testWidgets('typing in the search field displays suggestions', (WidgetTester tester) async {
-    when(() => mockLocationService.getAddressSuggestions('Seatt'))
-        .thenAnswer((_) async => ['Seattle, WA, USA', 'Seattle Tacoma Airport']);
+  testWidgets('typing in the search field displays suggestions', (
+    WidgetTester tester,
+  ) async {
+    when(
+      () => mockLocationService.getAddressSuggestions('Seatt'),
+    ).thenAnswer((_) async => ['Seattle, WA, USA', 'Seattle Tacoma Airport']);
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -77,9 +80,12 @@ void main() {
     expect(find.text('Seattle Tacoma Airport'), findsOneWidget);
   });
 
-  testWidgets('tapping a suggestion updates the text field', (WidgetTester tester) async {
-    when(() => mockLocationService.getAddressSuggestions('Seatt'))
-        .thenAnswer((_) async => ['Seattle, WA, USA']);
+  testWidgets('tapping a suggestion updates the text field', (
+    WidgetTester tester,
+  ) async {
+    when(
+      () => mockLocationService.getAddressSuggestions('Seatt'),
+    ).thenAnswer((_) async => ['Seattle, WA, USA']);
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -102,10 +108,13 @@ void main() {
     expect(textField.controller?.text, 'Seattle, WA, USA');
   });
 
-  testWidgets('tapping Use Current Location triggers GPS fetch', (WidgetTester tester) async {
+  testWidgets('tapping Use Current Location triggers GPS fetch', (
+    WidgetTester tester,
+  ) async {
     final completer = Completer<String?>();
-    when(() => mockLocationService.getCurrentLocationName())
-        .thenAnswer((_) => completer.future);
+    when(
+      () => mockLocationService.getCurrentLocationName(),
+    ).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(
       buildTestableWidget(
@@ -129,7 +138,9 @@ void main() {
     expect(textField.controller?.text, 'Detected City');
   });
 
-  testWidgets('tapping Save emits location and pops', (WidgetTester tester) async {
+  testWidgets('tapping Save emits location and pops', (
+    WidgetTester tester,
+  ) async {
     String? selectedLocation = 'not-called';
     bool popped = false;
 
@@ -170,7 +181,9 @@ void main() {
     expect(popped, isTrue);
   });
 
-  testWidgets('tapping Clear emits null location and pops', (WidgetTester tester) async {
+  testWidgets('tapping Clear emits null location and pops', (
+    WidgetTester tester,
+  ) async {
     String? selectedLocation = 'not-called';
     bool popped = false;
 
