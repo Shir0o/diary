@@ -61,7 +61,7 @@ class InfoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           title,
@@ -72,7 +72,7 @@ class InfoScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.menu, color: colorScheme.onSurface),

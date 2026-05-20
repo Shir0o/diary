@@ -33,14 +33,14 @@ class AnalyticsScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Analytics',
           style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
@@ -188,7 +188,7 @@ class AnalyticsScreen extends StatelessWidget {
                       children: [
                         LinearProgressIndicator(
                           value: percentage,
-                          backgroundColor: colorScheme.surfaceVariant,
+                          backgroundColor: colorScheme.surfaceContainerHighest,
                           color: colorScheme.primary,
                           borderRadius: BorderRadius.circular(4),
                           minHeight: 8,
@@ -288,7 +288,7 @@ class AnalyticsScreen extends StatelessWidget {
                     flex: 5,
                     child: LinearProgressIndicator(
                       value: percentage,
-                      backgroundColor: colorScheme.surfaceVariant,
+                      backgroundColor: colorScheme.surfaceContainerHighest,
                       color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(4),
                       minHeight: 8,
@@ -347,7 +347,7 @@ class AnalyticsScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: day.count > 0
                           ? colorScheme.primary
-                          : colorScheme.surfaceVariant,
+                          : colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),

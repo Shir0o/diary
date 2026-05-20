@@ -71,14 +71,14 @@ class _TimelineScreenState extends State<TimelineScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Diary',
           style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(

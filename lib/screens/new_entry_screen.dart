@@ -467,7 +467,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -626,7 +626,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             });
                             setSheetState(() {});
                           },
-                          backgroundColor: colorScheme.surfaceVariant,
+                          backgroundColor: colorScheme.surfaceContainerHighest,
                           labelStyle:
                               (theme.textTheme.labelMedium ?? const TextStyle())
                                   .copyWith(
