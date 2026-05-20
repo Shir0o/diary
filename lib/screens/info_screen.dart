@@ -6,21 +6,21 @@ class InfoScreen extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<InfoSection> sections;
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
 
   const InfoScreen({
     super.key,
     required this.title,
     required this.icon,
     required this.sections,
-    this.onMenuPressed,
+    required this.onBackPressed,
   });
 
-  factory InfoScreen.help({VoidCallback? onMenuPressed}) {
+  factory InfoScreen.help({required VoidCallback onBackPressed}) {
     return InfoScreen(
       title: 'Help',
       icon: Icons.help_outline,
-      onMenuPressed: onMenuPressed,
+      onBackPressed: onBackPressed,
       sections: const [
         InfoSection(
           title: 'Writing entries',
@@ -41,11 +41,11 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
-  factory InfoScreen.about({VoidCallback? onMenuPressed}) {
+  factory InfoScreen.about({required VoidCallback onBackPressed}) {
     return InfoScreen(
       title: 'About',
       icon: Icons.info_outline,
-      onMenuPressed: onMenuPressed,
+      onBackPressed: onBackPressed,
       sections: const [
         InfoSection(
           title: 'Diary',
@@ -75,8 +75,8 @@ class InfoScreen extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.menu, color: colorScheme.onSurface),
-          onPressed: onMenuPressed,
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: onBackPressed,
         ),
       ),
       body: ListView(

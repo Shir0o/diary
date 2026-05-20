@@ -11,7 +11,7 @@ import '../config/app_theme.dart';
 import '../data/diary_entry_store.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
   final AuthService authService;
   final SecurityService securityService;
   final ThemeService themeService;
@@ -20,7 +20,7 @@ class SettingsScreen extends StatefulWidget {
 
   const SettingsScreen({
     super.key,
-    this.onMenuPressed,
+    required this.onBackPressed,
     required this.authService,
     required this.securityService,
     required this.themeService,
@@ -116,12 +116,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       appBar: AppBar(
         backgroundColor: colorScheme.surface.withValues(alpha: 0.95),
         elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: colorScheme.onSurface),
-            onPressed:
-                widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: widget.onBackPressed,
         ),
         title: Text(
           'Settings',
