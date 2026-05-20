@@ -6,7 +6,7 @@ import '../helpers/font_helper.dart';
 class ArchiveScreen extends StatelessWidget {
   final List<DiaryEntry> archivedEntries;
   final List<DiaryEntry> deletedEntries;
-  final VoidCallback onMenuPressed;
+  final VoidCallback onBackPressed;
   final ValueChanged<String> onRestoreEntry;
   final ValueChanged<String> onPermanentlyDeleteEntry;
 
@@ -14,7 +14,7 @@ class ArchiveScreen extends StatelessWidget {
     super.key,
     required this.archivedEntries,
     required this.deletedEntries,
-    required this.onMenuPressed,
+    required this.onBackPressed,
     required this.onRestoreEntry,
     required this.onPermanentlyDeleteEntry,
   });
@@ -37,8 +37,8 @@ class ArchiveScreen extends StatelessWidget {
           backgroundColor: colorScheme.surface,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.menu, color: colorScheme.onSurface),
-            onPressed: onMenuPressed,
+            icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+            onPressed: onBackPressed,
           ),
           bottom: TabBar(
             tabs: const [

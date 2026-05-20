@@ -5,7 +5,7 @@ import '../helpers/font_helper.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? initialDate;
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
   final VoidCallback? onSearchEntries;
   final ValueChanged<DiaryEntry>? onEditEntry;
   final List<DiaryEntry>? entries;
@@ -13,7 +13,7 @@ class CalendarScreen extends StatefulWidget {
   const CalendarScreen({
     super.key,
     this.initialDate,
-    this.onMenuPressed,
+    required this.onBackPressed,
     this.onSearchEntries,
     this.onEditEntry,
     this.entries,
@@ -86,12 +86,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
         centerTitle: true,
         backgroundColor: colorScheme.surface,
         elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: colorScheme.onSurface),
-            onPressed:
-                widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: widget.onBackPressed,
         ),
         actions: [
           IconButton(

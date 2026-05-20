@@ -5,9 +5,13 @@ import '../models/diary_entry.dart';
 
 class MediaScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
 
-  const MediaScreen({super.key, required this.entries, this.onMenuPressed});
+  const MediaScreen({
+    super.key,
+    required this.entries,
+    required this.onBackPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +37,8 @@ class MediaScreen extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.menu, color: colorScheme.onSurface),
-          onPressed: onMenuPressed,
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: onBackPressed,
         ),
       ),
       body: mediaItems.isEmpty

@@ -10,7 +10,7 @@ void main() {
   testGoldens('CalendarScreen - appearance', (tester) async {
     final testDate = DateTime(2026, 4, 24);
     await tester.pumpWidgetBuilder(
-      CalendarScreen(initialDate: testDate),
+      CalendarScreen(initialDate: testDate, onBackPressed: () {}),
       wrapper: (child) => MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(

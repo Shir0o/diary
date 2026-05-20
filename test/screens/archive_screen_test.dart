@@ -33,7 +33,7 @@ void main() {
           home: ArchiveScreen(
             archivedEntries: [archivedEntry],
             deletedEntries: [deletedEntry],
-            onMenuPressed: () {},
+            onBackPressed: () {},
             onRestoreEntry: (id) => restoredId = id,
             onPermanentlyDeleteEntry: (id) => deletedId = id,
           ),

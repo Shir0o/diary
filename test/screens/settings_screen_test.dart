@@ -74,6 +74,7 @@ void main() {
   Widget createWidgetUnderTest() {
     return MaterialApp(
       home: SettingsScreen(
+        onBackPressed: () {},
         authService: authService,
         securityService: mockSecurityService,
         themeService: mockThemeService,

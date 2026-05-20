@@ -375,6 +375,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         .drawerIndex;
   }
 
+  void _goBackToTimeline() {
+    setState(() {
+      _currentScreen = _MainScreen.timeline;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isAuthenticated) {
@@ -384,14 +390,33 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       );
     }
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: SideDrawer(
-        onItemSelected: _onItemSelected,
-        selectedIndex: _selectedDrawerIndex,
-        authService: widget.authService,
+    return PopScope(
+      canPop: _currentScreen == _MainScreen.timeline,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _goBackToTimeline();
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: SideDrawer(
+          onItemSelected: _onItemSelected,
+          selectedIndex: _selectedDrawerIndex,
+          authService: widget.authService,
+        ),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey<int>(_currentScreen.index),
+            child: _buildCurrentScreen(),
+          ),
+        ),
       ),
-      body: _buildCurrentScreen(),
     );
   }
 
@@ -431,7 +456,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       ),
       _MainScreen.calendar => CalendarScreen(
         entries: _entries.where((e) => !e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
         onSearchEntries: _searchEntries,
         onEditEntry: _editEntry,
       ),
@@ -440,28 +465,28 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             .where((e) => e.isArchived && !e.isDeleted)
             .toList(),
         deletedEntries: _entries.where((e) => e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
         onRestoreEntry: _restoreEntry,
         onPermanentlyDeleteEntry: _permanentlyDeleteEntry,
       ),
       _MainScreen.media => MediaScreen(
         entries: _entries.where((e) => !e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.analytics => AnalyticsScreen(
         entries: _entries.where((e) => !e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.settings => SettingsScreen(
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
         authService: widget.authService,
         securityService: widget.securityService,
         themeService: widget.themeService,
         entryStore: widget.entryStore,
         onSyncCompleted: _loadEntries,
       ),
-      _MainScreen.help => InfoScreen.help(onMenuPressed: _openDrawer),
-      _MainScreen.about => InfoScreen.about(onMenuPressed: _openDrawer),
+      _MainScreen.help => InfoScreen.help(onBackPressed: _goBackToTimeline),
+      _MainScreen.about => InfoScreen.about(onBackPressed: _goBackToTimeline),
     };
   }
 }

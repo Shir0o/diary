@@ -6,13 +6,13 @@ import '../helpers/font_helper.dart';
 class AnalyticsScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
   final DateTime? referenceDate;
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
 
   const AnalyticsScreen({
     super.key,
     required this.entries,
     this.referenceDate,
-    this.onMenuPressed,
+    required this.onBackPressed,
   });
 
   @override
@@ -42,11 +42,9 @@ class AnalyticsScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: colorScheme.surface,
         elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: colorScheme.onSurface),
-            onPressed: onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: onBackPressed,
         ),
       ),
       body: ListView(
