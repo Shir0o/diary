@@ -27,14 +27,14 @@ class ArchiveScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: Text(
             'Archive & Trash',
             style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: colorScheme.background,
+          backgroundColor: colorScheme.surface,
           elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.menu, color: colorScheme.onSurface),

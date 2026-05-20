@@ -112,9 +112,9 @@ class _SettingsScreenState extends State<SettingsScreen>
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.background.withValues(alpha: 0.95),
+        backgroundColor: colorScheme.surface.withValues(alpha: 0.95),
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
@@ -656,6 +656,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       if (!mounted) return;
       final syncedAt = result.remoteModified ?? DateTime.now();
       await _saveLastSyncAt(syncedAt);
+      if (!mounted) return;
       setState(() {
         _lastSyncAt = syncedAt;
       });
