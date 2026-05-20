@@ -128,11 +128,11 @@ class _EntryList extends StatelessWidget {
                           icon: Icon(
                             secondaryActionIcon,
                             size: 18,
-                            color: Colors.red,
+                            color: colorScheme.error,
                           ),
                           label: Text(
                             secondaryActionLabel!,
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(color: colorScheme.error),
                           ),
                         ),
                     ],
@@ -166,9 +166,9 @@ class _EntryList extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
+              child: Text(
                 'Delete Forever',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ],
