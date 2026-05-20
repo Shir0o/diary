@@ -5,18 +5,14 @@ import '../helpers/font_helper.dart';
 
 class ArchiveScreen extends StatelessWidget {
   final List<DiaryEntry> archivedEntries;
-  final List<DiaryEntry> deletedEntries;
   final VoidCallback onBackPressed;
-  final ValueChanged<String> onRestoreEntry;
-  final ValueChanged<String> onPermanentlyDeleteEntry;
+  final ValueChanged<String> onUnarchiveEntry;
 
   const ArchiveScreen({
     super.key,
     required this.archivedEntries,
-    required this.deletedEntries,
     required this.onBackPressed,
-    required this.onRestoreEntry,
-    required this.onPermanentlyDeleteEntry,
+    required this.onUnarchiveEntry,
   });
 
   @override
@@ -24,53 +20,27 @@ class ArchiveScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Archive',
+          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
         backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          title: Text(
-            'Archive & Trash',
-            style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: colorScheme.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-            onPressed: onBackPressed,
-          ),
-          bottom: TabBar(
-            tabs: const [
-              Tab(text: 'Archived'),
-              Tab(text: 'Trash'),
-            ],
-            labelColor: colorScheme.primary,
-            indicatorColor: colorScheme.primary,
-            unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: onBackPressed,
         ),
-        body: TabBarView(
-          children: [
-            _EntryList(
-              entries: archivedEntries,
-              emptyMessage: 'No archived entries',
-              actionIcon: Icons.unarchive,
-              actionLabel: 'Restore',
-              onAction: onRestoreEntry,
-            ),
-            _EntryList(
-              entries: deletedEntries,
-              emptyMessage: 'Trash is empty',
-              actionIcon: Icons.restore_from_trash,
-              actionLabel: 'Restore',
-              onAction: onRestoreEntry,
-              secondaryActionIcon: Icons.delete_forever,
-              secondaryActionLabel: 'Delete Forever',
-              onSecondaryAction: onPermanentlyDeleteEntry,
-            ),
-          ],
-        ),
+      ),
+      body: _EntryList(
+        entries: archivedEntries,
+        emptyMessage: 'No archived entries',
+        actionIcon: Icons.unarchive,
+        actionLabel: 'Unarchive',
+        onAction: onUnarchiveEntry,
       ),
     );
   }
@@ -82,9 +52,6 @@ class _EntryList extends StatelessWidget {
   final IconData actionIcon;
   final String actionLabel;
   final ValueChanged<String> onAction;
-  final IconData? secondaryActionIcon;
-  final String? secondaryActionLabel;
-  final ValueChanged<String>? onSecondaryAction;
 
   const _EntryList({
     required this.entries,
@@ -92,9 +59,6 @@ class _EntryList extends StatelessWidget {
     required this.actionIcon,
     required this.actionLabel,
     required this.onAction,
-    this.secondaryActionIcon,
-    this.secondaryActionLabel,
-    this.onSecondaryAction,
   });
 
   @override
@@ -140,21 +104,6 @@ class _EntryList extends StatelessWidget {
                         style: TextStyle(color: colorScheme.primary),
                       ),
                     ),
-                    if (secondaryActionIcon != null &&
-                        onSecondaryAction != null)
-                      TextButton.icon(
-                        onPressed: () =>
-                            _confirmPermanentDelete(context, entry),
-                        icon: Icon(
-                          secondaryActionIcon,
-                          size: 18,
-                          color: Colors.red,
-                        ),
-                        label: Text(
-                          secondaryActionLabel!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -164,39 +113,5 @@ class _EntryList extends StatelessWidget {
         );
       },
     );
-  }
-
-  Future<void> _confirmPermanentDelete(
-    BuildContext context,
-    DiaryEntry entry,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete permanently?'),
-          content: const Text(
-            'This action cannot be undone. The entry will be gone forever.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
-                'Delete Forever',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      onSecondaryAction?.call(entry.id);
-    }
   }
 }

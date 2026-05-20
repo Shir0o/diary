@@ -13,6 +13,7 @@ import 'screens/media_screen.dart';
 import 'screens/info_screen.dart';
 import 'screens/entry_search_delegate.dart';
 import 'screens/archive_screen.dart';
+import 'screens/trash_screen.dart';
 import 'screens/biometric_lock_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
@@ -104,11 +105,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     _MainDestination(drawerIndex: 0, screen: _MainScreen.timeline),
     _MainDestination(drawerIndex: 1, screen: _MainScreen.calendar),
     _MainDestination(drawerIndex: 2, screen: _MainScreen.archive),
-    _MainDestination(drawerIndex: 3, screen: _MainScreen.media),
-    _MainDestination(drawerIndex: 4, screen: _MainScreen.analytics),
-    _MainDestination(drawerIndex: 5, screen: _MainScreen.settings),
-    _MainDestination(drawerIndex: 6, screen: _MainScreen.help),
-    _MainDestination(drawerIndex: 7, screen: _MainScreen.about),
+    _MainDestination(drawerIndex: 3, screen: _MainScreen.trash),
+    _MainDestination(drawerIndex: 4, screen: _MainScreen.media),
+    _MainDestination(drawerIndex: 5, screen: _MainScreen.analytics),
+    _MainDestination(drawerIndex: 6, screen: _MainScreen.settings),
+    _MainDestination(drawerIndex: 7, screen: _MainScreen.help),
+    _MainDestination(drawerIndex: 8, screen: _MainScreen.about),
   ];
 
   _MainScreen _currentScreen = _MainScreen.timeline;
@@ -464,6 +466,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         archivedEntries: _entries
             .where((e) => e.isArchived && !e.isDeleted)
             .toList(),
+        onBackPressed: _goBackToTimeline,
+        onUnarchiveEntry: _restoreEntry,
+      ),
+      _MainScreen.trash => TrashScreen(
         deletedEntries: _entries.where((e) => e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
         onRestoreEntry: _restoreEntry,
@@ -502,6 +508,7 @@ enum _MainScreen {
   timeline,
   calendar,
   archive,
+  trash,
   media,
   analytics,
   settings,

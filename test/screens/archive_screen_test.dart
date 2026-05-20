@@ -13,54 +13,28 @@ void main() {
     isArchived: true,
   );
 
-  final deletedEntry = DiaryEntry(
-    id: 'deleted',
-    date: DateTime.now(),
-    title: 'Deleted Entry',
-    content: 'Content',
-    mood: '🗑️',
-    isDeleted: true,
-  );
-
   testWidgets(
-    'ArchiveScreen should display archived and deleted entries in tabs',
+    'ArchiveScreen should display archived entries and allow unarchiving them',
     (WidgetTester tester) async {
-      String? restoredId;
-      String? deletedId;
+      String? unarchivedId;
 
       await tester.pumpWidget(
         MaterialApp(
           home: ArchiveScreen(
             archivedEntries: [archivedEntry],
-            deletedEntries: [deletedEntry],
             onBackPressed: () {},
-            onRestoreEntry: (id) => restoredId = id,
-            onPermanentlyDeleteEntry: (id) => deletedId = id,
+            onUnarchiveEntry: (id) => unarchivedId = id,
           ),
         ),
       );
 
       expect(find.text('Archived Entry'), findsOneWidget);
-      expect(find.text('Restore'), findsOneWidget);
+      expect(find.text('Unarchive'), findsOneWidget);
 
-      // Switch to Trash tab
-      await tester.tap(find.text('Trash'));
+      await tester.tap(find.text('Unarchive'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Deleted Entry'), findsOneWidget);
-      expect(find.text('Restore'), findsOneWidget);
-      expect(find.text('Delete Forever'), findsOneWidget);
-
-      // Test restore from Trash
-      await tester.tap(find.text('Restore'));
-      expect(restoredId, 'deleted');
-
-      // Test delete forever
-      await tester.tap(find.widgetWithText(TextButton, 'Delete Forever').first);
-      await tester.pumpAndSettle();
-      expect(find.text('Delete permanently?'), findsOneWidget);
-      await tester.tap(find.widgetWithText(TextButton, 'Delete Forever').last);
-      expect(deletedId, 'deleted');
+      expect(unarchivedId, 'archived');
     },
   );
 }

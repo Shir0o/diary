@@ -55,6 +55,11 @@ class SideDrawer extends StatelessWidget {
               label: Text('Archive'),
             ),
             const NavigationDrawerDestination(
+              icon: Icon(Icons.delete_outline),
+              selectedIcon: Icon(Icons.delete),
+              label: Text('Trash'),
+            ),
+            const NavigationDrawerDestination(
               icon: Icon(Icons.photo_library_outlined),
               selectedIcon: Icon(Icons.photo_library),
               label: Text('Media'),
