@@ -35,7 +35,12 @@ class InfoScreen extends StatelessWidget {
         InfoSection(
           title: 'Backup and privacy',
           body:
-              'Entries are stored locally on this device. Cloud backup controls are available in Settings.',
+              'All diary entries are stored locally on this device in a secure SQLite database. The developers have no server backend and zero access to your database or files. Cloud backup controls and Google Drive sync options can be managed in Settings.',
+        ),
+        InfoSection(
+          title: 'Security and biometrics',
+          body:
+              'To prevent unauthorized access, you can enable Biometric Lock in Settings. Authentication is handled entirely on-device by your operating system\'s secure biometric API (Face ID, Touch ID, or fingerprint lock), ensuring your data remains private and local.',
         ),
       ],
     );
@@ -53,6 +58,14 @@ class InfoScreen extends StatelessWidget {
               'A private journal for writing, reviewing, and reflecting on personal entries.',
         ),
         InfoSection(title: 'Version', body: '0.1.0'),
+        InfoSection(
+          title: 'Privacy Declaration',
+          body:
+              'We believe your thoughts should remain yours. The Diary app is built on privacy-first principles:\n\n'
+              '• No tracking, analytics, or external ads.\n'
+              '• Full offline functionality: no account is required and no remote servers are used.\n'
+              '• Google Drive synchronization is entirely optional, secure, and direct—meaning data is transferred directly between your device and your personal Google Drive app directory.',
+        ),
       ],
     );
   }
