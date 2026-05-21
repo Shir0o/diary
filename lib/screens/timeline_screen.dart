@@ -209,9 +209,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   void _openNewEntry() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const NewEntryScreen()));
+    Navigator.of(context).push(NewEntryScreen.route());
   }
 
   bool _isNewDay(int index) {

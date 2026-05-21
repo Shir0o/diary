@@ -246,11 +246,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _createEntry() async {
     final existingTags = _entries.expand((e) => e.tags).toSet().toList();
-    final entry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(
-        builder: (context) => NewEntryScreen(existingTags: existingTags),
-      ),
-    );
+    final entry = await Navigator.of(
+      context,
+    ).push<DiaryEntry>(NewEntryScreen.route(existingTags: existingTags));
     if (entry == null) return;
 
     await widget.entryStore.upsertEntry(entry);
@@ -265,10 +263,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _editEntry(DiaryEntry entry) async {
     final existingTags = _entries.expand((e) => e.tags).toSet().toList();
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(
-        builder: (context) =>
-            NewEntryScreen(entry: entry, existingTags: existingTags),
-      ),
+      NewEntryScreen.route(entry: entry, existingTags: existingTags),
     );
     if (updatedEntry == null) return;
 
@@ -406,11 +401,20 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           authService: widget.authService,
         ),
         body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: AppTheme.transitionDuration,
+          reverseDuration: AppTheme.reverseTransitionDuration,
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (Widget child, Animation<double> animation) {
             return FadeTransition(
-              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
-              child: child,
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(
+                  begin: AppTheme.scaleSwitcherTransition,
+                  end: 1.0,
+                ).animate(animation),
+                child: child,
+              ),
             );
           },
           child: KeyedSubtree(

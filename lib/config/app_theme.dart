@@ -46,6 +46,15 @@ class AppTheme {
   static const double opacitySubtle = 0.5;
   static const double opacityMedium = 0.6;
 
+  // Animation durations
+  static const Duration transitionDuration = Duration(milliseconds: 350);
+  static const Duration reverseTransitionDuration = Duration(milliseconds: 250);
+
+  // Animation scale & offset values
+  static const double scaleRouteTransition = 0.90;
+  static const double scaleSwitcherTransition = 0.96;
+  static const double parallaxSlideOffset = -0.3;
+
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
