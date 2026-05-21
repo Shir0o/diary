@@ -9,6 +9,7 @@ import '../services/security_service.dart';
 import '../services/theme_service.dart';
 import '../config/app_theme.dart';
 import '../data/diary_entry_store.dart';
+import '../widgets/skeleton_loader.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback onBackPressed;
@@ -17,6 +18,7 @@ class SettingsScreen extends StatefulWidget {
   final ThemeService themeService;
   final DiaryEntryStore entryStore;
   final VoidCallback? onSyncCompleted;
+  final bool isLoading;
 
   const SettingsScreen({
     super.key,
@@ -26,6 +28,7 @@ class SettingsScreen extends StatefulWidget {
     required this.themeService,
     required this.entryStore,
     this.onSyncCompleted,
+    this.isLoading = false,
   });
 
   @override
@@ -131,62 +134,64 @@ class _SettingsScreenState extends State<SettingsScreen>
         ),
         centerTitle: true,
       ),
-      body: StreamBuilder<GoogleSignInAccount?>(
-        stream: widget.authService.onCurrentUserChanged,
-        initialData: widget.authService.currentUser,
-        builder: (context, snapshot) {
-          final user = snapshot.data;
+      body: widget.isLoading
+          ? const SettingsScreenSkeleton()
+          : StreamBuilder<GoogleSignInAccount?>(
+              stream: widget.authService.onCurrentUserChanged,
+              initialData: widget.authService.currentUser,
+              builder: (context, snapshot) {
+                final user = snapshot.data;
 
-          return ListView(
-            padding: const EdgeInsets.only(bottom: 24),
-            children: [
-              const SizedBox(height: AppTheme.spacingSmall),
-              _buildSectionHeader('ACCOUNT'),
-              _buildSettingsCard([
-                if (user == null)
-                  _buildActionItem(
-                    icon: Icons.login,
-                    title: 'Sign in with Google',
-                    onTap: () async {
-                      await widget.authService.signIn();
-                    },
-                  )
-                else
-                  _buildAccountItem(user),
-              ]),
-              const SizedBox(height: AppTheme.spacingMedium),
-              _buildSectionHeader('SECURITY & APPEARANCE'),
-              _buildSettingsCard([
-                _buildToggleItem(
-                  icon: Icons.fingerprint,
-                  title: 'Biometric Lock',
-                  value: _biometricLock,
-                  onChanged: _toggleBiometricLock,
-                  showBorder: true,
-                ),
-                _buildDropdownItem(
-                  icon: Icons.palette_outlined,
-                  title: 'Theme',
-                  value: ThemeModeOption.fromMode(
-                    widget.themeService.themeMode,
-                  ),
-                  items: ThemeModeOption.values,
-                  onChanged: (ThemeModeOption? newValue) {
-                    if (newValue != null) {
-                      widget.themeService.setThemeMode(newValue.mode);
-                    }
-                  },
-                ),
-              ]),
-              const SizedBox(height: AppTheme.spacingMedium),
-              _buildSectionHeader('CLOUD SYNC'),
-              _buildCloudBackupCard(user != null),
-              const SizedBox(height: AppTheme.spacingExtraLarge),
-              _buildFooter(),
-            ],
-          );
-        },
-      ),
+                return ListView(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  children: [
+                    const SizedBox(height: AppTheme.spacingSmall),
+                    _buildSectionHeader('ACCOUNT'),
+                    _buildSettingsCard([
+                      if (user == null)
+                        _buildActionItem(
+                          icon: Icons.login,
+                          title: 'Sign in with Google',
+                          onTap: () async {
+                            await widget.authService.signIn();
+                          },
+                        )
+                      else
+                        _buildAccountItem(user),
+                    ]),
+                    const SizedBox(height: AppTheme.spacingMedium),
+                    _buildSectionHeader('SECURITY & APPEARANCE'),
+                    _buildSettingsCard([
+                      _buildToggleItem(
+                        icon: Icons.fingerprint,
+                        title: 'Biometric Lock',
+                        value: _biometricLock,
+                        onChanged: _toggleBiometricLock,
+                        showBorder: true,
+                      ),
+                      _buildDropdownItem(
+                        icon: Icons.palette_outlined,
+                        title: 'Theme',
+                        value: ThemeModeOption.fromMode(
+                          widget.themeService.themeMode,
+                        ),
+                        items: ThemeModeOption.values,
+                        onChanged: (ThemeModeOption? newValue) {
+                          if (newValue != null) {
+                            widget.themeService.setThemeMode(newValue.mode);
+                          }
+                        },
+                      ),
+                    ]),
+                    const SizedBox(height: AppTheme.spacingMedium),
+                    _buildSectionHeader('CLOUD SYNC'),
+                    _buildCloudBackupCard(user != null),
+                    const SizedBox(height: AppTheme.spacingExtraLarge),
+                    _buildFooter(),
+                  ],
+                );
+              },
+            ),
     );
   }
 

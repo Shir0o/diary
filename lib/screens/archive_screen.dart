@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import '../models/diary_entry.dart';
 import '../widgets/entry_card.dart';
 import '../helpers/font_helper.dart';
+import '../widgets/skeleton_loader.dart';
 
 class ArchiveScreen extends StatelessWidget {
   final List<DiaryEntry> archivedEntries;
   final VoidCallback onBackPressed;
   final ValueChanged<String> onUnarchiveEntry;
+  final bool isLoading;
 
   const ArchiveScreen({
     super.key,
     required this.archivedEntries,
     required this.onBackPressed,
     required this.onUnarchiveEntry,
+    this.isLoading = false,
   });
 
   @override
@@ -35,13 +38,15 @@ class ArchiveScreen extends StatelessWidget {
           onPressed: onBackPressed,
         ),
       ),
-      body: _EntryList(
-        entries: archivedEntries,
-        emptyMessage: 'No archived entries',
-        actionIcon: Icons.unarchive,
-        actionLabel: 'Unarchive',
-        onAction: onUnarchiveEntry,
-      ),
+      body: isLoading
+          ? const EntryListSkeleton()
+          : _EntryList(
+              entries: archivedEntries,
+              emptyMessage: 'No archived entries',
+              actionIcon: Icons.unarchive,
+              actionLabel: 'Unarchive',
+              onAction: onUnarchiveEntry,
+            ),
     );
   }
 }

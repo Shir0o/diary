@@ -427,12 +427,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildCurrentScreen() {
-    if (_isLoadingEntries) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    final isLoading = _isLoadingEntries;
 
     return switch (_currentScreen) {
       _MainScreen.timeline => TimelineScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isArchived && !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
         onAddEntry: _createEntry,
@@ -461,12 +460,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         },
       ),
       _MainScreen.calendar => CalendarScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
         onSearchEntries: _searchEntries,
         onEditEntry: _editEntry,
       ),
       _MainScreen.archive => ArchiveScreen(
+        isLoading: isLoading,
         archivedEntries: _entries
             .where((e) => e.isArchived && !e.isDeleted)
             .toList(),
@@ -474,20 +475,24 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         onUnarchiveEntry: _restoreEntry,
       ),
       _MainScreen.trash => TrashScreen(
+        isLoading: isLoading,
         deletedEntries: _entries.where((e) => e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
         onRestoreEntry: _restoreEntry,
         onPermanentlyDeleteEntry: _permanentlyDeleteEntry,
       ),
       _MainScreen.media => MediaScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.analytics => AnalyticsScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.settings => SettingsScreen(
+        isLoading: isLoading,
         onBackPressed: _goBackToTimeline,
         authService: widget.authService,
         securityService: widget.securityService,
@@ -495,8 +500,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         entryStore: widget.entryStore,
         onSyncCompleted: _loadEntries,
       ),
-      _MainScreen.help => InfoScreen.help(onBackPressed: _goBackToTimeline),
-      _MainScreen.about => InfoScreen.about(onBackPressed: _goBackToTimeline),
+      _MainScreen.help => InfoScreen.help(
+        isLoading: isLoading,
+        onBackPressed: _goBackToTimeline,
+      ),
+      _MainScreen.about => InfoScreen.about(
+        isLoading: isLoading,
+        onBackPressed: _goBackToTimeline,
+      ),
     };
   }
 }

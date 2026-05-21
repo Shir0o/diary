@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../helpers/font_helper.dart';
 import '../models/diary_entry.dart';
+import '../widgets/skeleton_loader.dart';
 
 class MediaScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
   final VoidCallback onBackPressed;
+  final bool isLoading;
 
   const MediaScreen({
     super.key,
     required this.entries,
     required this.onBackPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -41,7 +44,9 @@ class MediaScreen extends StatelessWidget {
           onPressed: onBackPressed,
         ),
       ),
-      body: mediaItems.isEmpty
+      body: isLoading
+          ? const MediaScreenSkeleton()
+          : mediaItems.isEmpty
           ? _EmptyMediaState(entryCount: entries.length)
           : GridView.builder(
               padding: const EdgeInsets.all(16),
