@@ -99,7 +99,9 @@ class SkeletonEntryCard extends StatelessWidget {
                 Skeleton(
                   width: 24,
                   height: 24,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(
+                    AppTheme.borderRadiusMedium,
+                  ),
                 ),
               ],
             ),
@@ -143,7 +145,7 @@ class SkeletonEntryCard extends StatelessWidget {
                   size: 14,
                   color: colorScheme.primary.withValues(alpha: 0.3),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppTheme.spacingExtraSmall),
                 const Skeleton(width: 90, height: 12),
               ],
             ),
@@ -183,7 +185,11 @@ class TimelineScreenSkeleton extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(left: 16, top: 16, bottom: 4),
+                      padding: EdgeInsets.only(
+                        left: AppTheme.spacingMedium,
+                        top: AppTheme.spacingMedium,
+                        bottom: AppTheme.spacingExtraSmall,
+                      ),
                       child: Skeleton(width: 80, height: 14),
                     ),
                     Expanded(
@@ -267,7 +273,7 @@ class CalendarScreenSkeleton extends StatelessWidget {
       children: [
         // Simulated Calendar view (large header box)
         Container(
-          margin: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(AppTheme.spacingMedium),
           height: 280,
           decoration: BoxDecoration(
             color: colorScheme.surface,
@@ -542,7 +548,7 @@ class AnalyticsScreenSkeleton extends StatelessWidget {
       elevation: 0,
       color: colorScheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
         side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.15)),
       ),
       child: Padding(padding: const EdgeInsets.all(16), child: child),

@@ -116,22 +116,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   _MainScreen _currentScreen = _MainScreen.timeline;
   List<DiaryEntry> _entries = [];
   bool _isLoadingEntries = true;
-  bool _isPageLoading = false;
   Timer? _autoSyncTimer;
-
-  void _navigateToScreen(_MainScreen screen) {
-    setState(() {
-      _currentScreen = screen;
-      _isPageLoading = true;
-    });
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) {
-        setState(() {
-          _isPageLoading = false;
-        });
-      }
-    });
-  }
 
   void _triggerAutoSync() {
     _autoSyncTimer?.cancel();
@@ -361,7 +346,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   void _showCalendar() {
-    _navigateToScreen(_MainScreen.calendar);
+    setState(() {
+      _currentScreen = _MainScreen.calendar;
+    });
   }
 
   void _onItemSelected(int index) {
@@ -371,7 +358,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       return;
     }
 
-    _navigateToScreen(destination.screen);
+    setState(() {
+      _currentScreen = destination.screen;
+    });
     Navigator.of(context).pop(); // Close drawer
   }
 
@@ -389,7 +378,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   void _goBackToTimeline() {
-    _navigateToScreen(_MainScreen.timeline);
+    setState(() {
+      _currentScreen = _MainScreen.timeline;
+    });
   }
 
   @override
@@ -432,7 +423,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildCurrentScreen() {
-    final isLoading = _isLoadingEntries || _isPageLoading;
+    final isLoading = _isLoadingEntries;
 
     return switch (_currentScreen) {
       _MainScreen.timeline => TimelineScreen(
