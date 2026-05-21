@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/diary_entry.dart';
 import '../widgets/entry_card.dart';
 import '../helpers/font_helper.dart';
+import '../widgets/skeleton_loader.dart';
 
 class CalendarScreen extends StatefulWidget {
   final DateTime? initialDate;
@@ -9,6 +10,7 @@ class CalendarScreen extends StatefulWidget {
   final VoidCallback? onSearchEntries;
   final ValueChanged<DiaryEntry>? onEditEntry;
   final List<DiaryEntry>? entries;
+  final bool isLoading;
 
   const CalendarScreen({
     super.key,
@@ -17,6 +19,7 @@ class CalendarScreen extends StatefulWidget {
     this.onSearchEntries,
     this.onEditEntry,
     this.entries,
+    this.isLoading = false,
   });
 
   @override
@@ -97,53 +100,60 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Theme(
-            data: theme.copyWith(
-              colorScheme: colorScheme.copyWith(
-                onSurface: colorScheme.onSurface,
-              ),
-            ),
-            child: CalendarDatePicker(
-              initialDate: _selectedDate,
-              firstDate: DateTime(2020),
-              lastDate: DateTime(2030),
-              onDateChanged: (date) {
-                setState(() {
-                  _selectedDate = date;
-                });
-              },
-            ),
-          ),
-          Divider(height: 1, color: colorScheme.outline.withValues(alpha: 0.2)),
-          Expanded(
-            child: _filteredEntries.isEmpty
-                ? Center(
-                    child: Text(
-                      'No entries for this day',
-                      style: safeGoogleFont(
-                        'Inter',
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
+      body: widget.isLoading
+          ? const CalendarScreenSkeleton()
+          : Column(
+              children: [
+                Theme(
+                  data: theme.copyWith(
+                    colorScheme: colorScheme.copyWith(
+                      onSurface: colorScheme.onSurface,
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _filteredEntries.length,
-                    itemBuilder: (context, index) {
-                      final entry = _filteredEntries[index];
-                      return EntryCard(
-                        entry: entry,
-                        onTap: widget.onEditEntry == null
-                            ? null
-                            : () => widget.onEditEntry!(entry),
-                      );
+                  ),
+                  child: CalendarDatePicker(
+                    initialDate: _selectedDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2030),
+                    onDateChanged: (date) {
+                      setState(() {
+                        _selectedDate = date;
+                      });
                     },
                   ),
-          ),
-        ],
-      ),
+                ),
+                Divider(
+                  height: 1,
+                  color: colorScheme.outline.withValues(alpha: 0.2),
+                ),
+                Expanded(
+                  child: _filteredEntries.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No entries for this day',
+                            style: safeGoogleFont(
+                              'Inter',
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: _filteredEntries.length,
+                          itemBuilder: (context, index) {
+                            final entry = _filteredEntries[index];
+                            return EntryCard(
+                              entry: entry,
+                              onTap: widget.onEditEntry == null
+                                  ? null
+                                  : () => widget.onEditEntry!(entry),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

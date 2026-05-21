@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
 import '../helpers/font_helper.dart';
 import '../services/location_service.dart';
+import 'skeleton_loader.dart';
 
 class LocationSelectionSheet extends StatefulWidget {
   final LocationService locationService;
@@ -274,16 +275,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200),
               child: _isLoadingSuggestions
-                  ? const Padding(
-                      padding: EdgeInsets.all(AppTheme.spacingMedium),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
-                        ),
-                      ),
-                    )
+                  ? const LocationSuggestionsSkeleton()
                   : _suggestions.isEmpty
                   ? (widget.initialLocation.isEmpty &&
                             _searchController.text.trim().isEmpty
