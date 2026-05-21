@@ -64,7 +64,7 @@ class InfoScreen extends StatelessWidget {
               'We believe your thoughts should remain yours. The Diary app is built on privacy-first principles:\n\n'
               '• No tracking, analytics, or external ads.\n'
               '• Full offline functionality: no account is required and no remote servers are used.\n'
-              '• Google Drive synchronization is entirely optional, secure, and peer-to-peer—meaning data is transferred directly between your device and your personal Google Drive app directory.',
+              '• Google Drive synchronization is entirely optional, secure, and direct—meaning data is transferred directly between your device and your personal Google Drive app directory.',
         ),
       ],
     );

@@ -7,16 +7,17 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:diary/screens/info_screen.dart';
 import 'package:diary/config/app_theme.dart';
 
+WidgetWrapper _themedWrapper(ThemeData theme) {
+  return (child) =>
+      MaterialApp(debugShowCheckedModeBanner: false, theme: theme, home: child);
+}
+
 void main() {
   group('InfoScreen Golden Tests', () {
     testGoldens('HelpScreen - light theme appearance', (tester) async {
       await tester.pumpWidgetBuilder(
         InfoScreen.help(onBackPressed: () {}),
-        wrapper: (child) => MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: child,
-        ),
+        wrapper: _themedWrapper(AppTheme.lightTheme),
         surfaceSize: const Size(390, 844),
       );
 
@@ -26,11 +27,7 @@ void main() {
     testGoldens('HelpScreen - dark theme appearance', (tester) async {
       await tester.pumpWidgetBuilder(
         InfoScreen.help(onBackPressed: () {}),
-        wrapper: (child) => MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          home: child,
-        ),
+        wrapper: _themedWrapper(AppTheme.darkTheme),
         surfaceSize: const Size(390, 844),
       );
 
@@ -40,11 +37,7 @@ void main() {
     testGoldens('AboutScreen - light theme appearance', (tester) async {
       await tester.pumpWidgetBuilder(
         InfoScreen.about(onBackPressed: () {}),
-        wrapper: (child) => MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: child,
-        ),
+        wrapper: _themedWrapper(AppTheme.lightTheme),
         surfaceSize: const Size(390, 844),
       );
 
@@ -54,11 +47,7 @@ void main() {
     testGoldens('AboutScreen - dark theme appearance', (tester) async {
       await tester.pumpWidgetBuilder(
         InfoScreen.about(onBackPressed: () {}),
-        wrapper: (child) => MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          home: child,
-        ),
+        wrapper: _themedWrapper(AppTheme.darkTheme),
         surfaceSize: const Size(390, 844),
       );
 

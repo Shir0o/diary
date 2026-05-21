@@ -17,7 +17,7 @@ void main() {
 
       // Verify basic app bar and title
       expect(find.text('Help'), findsOneWidget);
-      expect(find.byIcon(Icons.help_outline), findsWidgets);
+      expect(find.byIcon(Icons.help_outline), findsOneWidget);
 
       // Verify specific section titles and contents
       expect(find.text('Writing entries'), findsOneWidget);
@@ -47,7 +47,7 @@ void main() {
 
       // Verify basic app bar and title
       expect(find.text('About'), findsOneWidget);
-      expect(find.byIcon(Icons.info_outline), findsWidgets);
+      expect(find.byIcon(Icons.info_outline), findsOneWidget);
 
       // Verify specific section titles
       expect(find.text('Diary'), findsOneWidget);
