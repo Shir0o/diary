@@ -401,15 +401,18 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           authService: widget.authService,
         ),
         body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 400),
-          reverseDuration: const Duration(milliseconds: 300),
+          duration: AppTheme.transitionDuration,
+          reverseDuration: AppTheme.reverseTransitionDuration,
           switchInCurve: Curves.easeOutCubic,
           switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (Widget child, Animation<double> animation) {
             return FadeTransition(
               opacity: animation,
               child: ScaleTransition(
-                scale: Tween<double>(begin: 0.96, end: 1.0).animate(animation),
+                scale: Tween<double>(
+                  begin: AppTheme.scaleSwitcherTransition,
+                  end: 1.0,
+                ).animate(animation),
                 child: child,
               ),
             );

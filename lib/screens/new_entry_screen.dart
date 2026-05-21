@@ -20,6 +20,8 @@ class NewEntryScreen extends StatefulWidget {
     this.locationService,
   });
 
+  static const String routeName = '/new-entry';
+
   static Route<DiaryEntry> route({
     DiaryEntry? entry,
     List<String> existingTags = const [],
@@ -32,7 +34,7 @@ class NewEntryScreen extends StatefulWidget {
         locationService: locationService,
       ),
       direction: SlideDirection.bottomToTop,
-      settings: const RouteSettings(name: '/new-entry'),
+      settings: const RouteSettings(name: routeName),
     );
   }
 

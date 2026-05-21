@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../config/app_theme.dart';
+
 class SmoothPageRoute<T> extends PageRouteBuilder<T> {
   final Widget child;
   final SlideDirection direction;
@@ -11,24 +13,23 @@ class SmoothPageRoute<T> extends PageRouteBuilder<T> {
   }) : super(
          pageBuilder: (context, animation, secondaryAnimation) => child,
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           final curvedAnimation = CurvedAnimation(
+             parent: animation,
+             curve: Curves.easeOutCubic,
+             reverseCurve: Curves.easeInCubic,
+           );
+
            switch (direction) {
              case SlideDirection.rightToLeft:
-               final slideIn =
-                   Tween<Offset>(
-                     begin: const Offset(1.0, 0.0),
-                     end: Offset.zero,
-                   ).animate(
-                     CurvedAnimation(
-                       parent: animation,
-                       curve: Curves.easeOutCubic,
-                       reverseCurve: Curves.easeInCubic,
-                     ),
-                   );
+               final slideIn = Tween<Offset>(
+                 begin: const Offset(1.0, 0.0),
+                 end: Offset.zero,
+               ).animate(curvedAnimation);
 
                final slideOut =
                    Tween<Offset>(
                      begin: Offset.zero,
-                     end: const Offset(-0.3, 0.0),
+                     end: const Offset(AppTheme.parallaxSlideOffset, 0.0),
                    ).animate(
                      CurvedAnimation(
                        parent: secondaryAnimation,
@@ -43,25 +44,15 @@ class SmoothPageRoute<T> extends PageRouteBuilder<T> {
                );
 
              case SlideDirection.bottomToTop:
-               final slideIn =
-                   Tween<Offset>(
-                     begin: const Offset(0.0, 1.0),
-                     end: Offset.zero,
-                   ).animate(
-                     CurvedAnimation(
-                       parent: animation,
-                       curve: Curves.easeOutCubic,
-                       reverseCurve: Curves.easeInCubic,
-                     ),
-                   );
+               final slideIn = Tween<Offset>(
+                 begin: const Offset(0.0, 1.0),
+                 end: Offset.zero,
+               ).animate(curvedAnimation);
 
-               final fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-                 CurvedAnimation(
-                   parent: animation,
-                   curve: Curves.easeOutCubic,
-                   reverseCurve: Curves.easeInCubic,
-                 ),
-               );
+               final fade = Tween<double>(
+                 begin: 0.0,
+                 end: 1.0,
+               ).animate(curvedAnimation);
 
                return SlideTransition(
                  position: slideIn,
@@ -69,21 +60,15 @@ class SmoothPageRoute<T> extends PageRouteBuilder<T> {
                );
 
              case SlideDirection.fadeScale:
-               final scale = Tween<double>(begin: 0.90, end: 1.0).animate(
-                 CurvedAnimation(
-                   parent: animation,
-                   curve: Curves.easeOutCubic,
-                   reverseCurve: Curves.easeInCubic,
-                 ),
-               );
+               final scale = Tween<double>(
+                 begin: AppTheme.scaleRouteTransition,
+                 end: 1.0,
+               ).animate(curvedAnimation);
 
-               final fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-                 CurvedAnimation(
-                   parent: animation,
-                   curve: Curves.easeOutCubic,
-                   reverseCurve: Curves.easeInCubic,
-                 ),
-               );
+               final fade = Tween<double>(
+                 begin: 0.0,
+                 end: 1.0,
+               ).animate(curvedAnimation);
 
                return FadeTransition(
                  opacity: fade,
@@ -91,8 +76,8 @@ class SmoothPageRoute<T> extends PageRouteBuilder<T> {
                );
            }
          },
-         transitionDuration: const Duration(milliseconds: 350),
-         reverseTransitionDuration: const Duration(milliseconds: 250),
+         transitionDuration: AppTheme.transitionDuration,
+         reverseTransitionDuration: AppTheme.reverseTransitionDuration,
        );
 }
 
