@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
@@ -24,7 +25,12 @@ void main() {
     when(
       () => mockGoogleSignIn.authenticationEvents,
     ).thenAnswer((_) => authenticationEventsController.stream);
-    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+    when(
+      () => mockGoogleSignIn.initialize(
+        clientId: any(named: 'clientId'),
+        serverClientId: any(named: 'serverClientId'),
+      ),
+    ).thenAnswer((_) async {});
 
     authService = AuthService(googleSignIn: mockGoogleSignIn);
 
@@ -87,5 +93,24 @@ void main() {
         GoogleSignInAuthenticationEventSignOut(),
       );
     });
+
+    test(
+      'initialize configures GoogleSignIn with client IDs from dotenv',
+      () async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        addTearDown(() {
+          debugDefaultTargetPlatformOverride = null;
+        });
+
+        await authService.initialize();
+
+        verify(
+          () => mockGoogleSignIn.initialize(
+            clientId: 'test-android-client-id',
+            serverClientId: 'test-web-client-id',
+          ),
+        ).called(1);
+      },
+    );
   });
 }
