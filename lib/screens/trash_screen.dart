@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import '../models/diary_entry.dart';
 import '../widgets/entry_card.dart';
 import '../helpers/font_helper.dart';
+import '../widgets/skeleton_loader.dart';
 
 class TrashScreen extends StatelessWidget {
   final List<DiaryEntry> deletedEntries;
   final VoidCallback onBackPressed;
   final ValueChanged<String> onRestoreEntry;
   final ValueChanged<String> onPermanentlyDeleteEntry;
+  final bool isLoading;
 
   const TrashScreen({
     super.key,
@@ -15,6 +17,7 @@ class TrashScreen extends StatelessWidget {
     required this.onBackPressed,
     required this.onRestoreEntry,
     required this.onPermanentlyDeleteEntry,
+    this.isLoading = false,
   });
 
   @override
@@ -37,16 +40,18 @@ class TrashScreen extends StatelessWidget {
           onPressed: onBackPressed,
         ),
       ),
-      body: _EntryList(
-        entries: deletedEntries,
-        emptyMessage: 'Trash is empty',
-        actionIcon: Icons.restore_from_trash,
-        actionLabel: 'Restore',
-        onAction: onRestoreEntry,
-        secondaryActionIcon: Icons.delete_forever,
-        secondaryActionLabel: 'Delete Forever',
-        onSecondaryAction: onPermanentlyDeleteEntry,
-      ),
+      body: isLoading
+          ? const EntryListSkeleton()
+          : _EntryList(
+              entries: deletedEntries,
+              emptyMessage: 'Trash is empty',
+              actionIcon: Icons.restore_from_trash,
+              actionLabel: 'Restore',
+              onAction: onRestoreEntry,
+              secondaryActionIcon: Icons.delete_forever,
+              secondaryActionLabel: 'Delete Forever',
+              onSecondaryAction: onPermanentlyDeleteEntry,
+            ),
     );
   }
 }

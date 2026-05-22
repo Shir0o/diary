@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../helpers/font_helper.dart';
+import '../helpers/page_transitions.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
 import '../services/location_service.dart';
@@ -20,6 +21,24 @@ class NewEntryScreen extends StatefulWidget {
     this.locationService,
     this.initialDate,
   });
+
+  static const String routeName = '/new-entry';
+
+  static Route<DiaryEntry> route({
+    DiaryEntry? entry,
+    List<String> existingTags = const [],
+    LocationService? locationService,
+  }) {
+    return SmoothPageRoute<DiaryEntry>(
+      child: NewEntryScreen(
+        entry: entry,
+        existingTags: existingTags,
+        locationService: locationService,
+      ),
+      direction: SlideDirection.bottomToTop,
+      settings: const RouteSettings(name: routeName),
+    );
+  }
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();

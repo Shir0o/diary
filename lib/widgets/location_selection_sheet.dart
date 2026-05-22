@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
 import '../helpers/font_helper.dart';
 import '../services/location_service.dart';
+import 'skeleton_loader.dart';
 
 class LocationSelectionSheet extends StatefulWidget {
   final LocationService locationService;
@@ -276,16 +277,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
               child: SizedBox(
                 height: AppTheme.locationSheetSuggestionsHeight,
                 child: _isLoadingSuggestions
-                    ? const Center(
-                        child: SizedBox(
-                          width: AppTheme.progressIndicatorSizeMedium,
-                          height: AppTheme.progressIndicatorSizeMedium,
-                          child: CircularProgressIndicator(
-                            strokeWidth:
-                                AppTheme.progressIndicatorStrokeWidthMedium,
-                          ),
-                        ),
-                      )
+                    ? const LocationSuggestionsSkeleton()
                     : _suggestions.isEmpty
                     ? Center(
                         child: Text(

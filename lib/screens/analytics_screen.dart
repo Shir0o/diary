@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import '../models/diary_entry.dart';
 import '../helpers/analytics_helper.dart';
 import '../helpers/font_helper.dart';
+import '../widgets/skeleton_loader.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
   final DateTime? referenceDate;
   final VoidCallback onBackPressed;
+  final bool isLoading;
 
   const AnalyticsScreen({
     super.key,
     required this.entries,
     this.referenceDate,
     required this.onBackPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -47,48 +50,50 @@ class AnalyticsScreen extends StatelessWidget {
           onPressed: onBackPressed,
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  context,
-                  'Total Entries',
-                  totalEntries.toString(),
-                  Icons.book_outlined,
-                  colorScheme.primary,
+      body: isLoading
+          ? const AnalyticsScreenSkeleton()
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSummaryCard(
+                        context,
+                        'Total Entries',
+                        totalEntries.toString(),
+                        Icons.book_outlined,
+                        colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildSummaryCard(
+                        context,
+                        'Current Streak',
+                        '$streak days',
+                        Icons.local_fire_department_outlined,
+                        Colors.orange,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryCard(
-                  context,
-                  'Current Streak',
-                  '$streak days',
-                  Icons.local_fire_department_outlined,
-                  Colors.orange,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('Mood Distribution', context),
-          const SizedBox(height: 8),
-          _buildMoodDistribution(moodDist, context),
-          const SizedBox(height: 24),
-          _buildSectionHeader('Tag Distribution', context),
-          const SizedBox(height: 8),
-          _buildTagDistribution(tagDist, context),
-          const SizedBox(height: 24),
-          _buildSectionHeader('Weekly Activity', context),
-          const SizedBox(height: 8),
-          _buildActivityChart(weeklyActivity, context),
-          const SizedBox(height: 24),
-          _buildInsightsCard(context),
-        ],
-      ),
+                const SizedBox(height: 24),
+                _buildSectionHeader('Mood Distribution', context),
+                const SizedBox(height: 8),
+                _buildMoodDistribution(moodDist, context),
+                const SizedBox(height: 24),
+                _buildSectionHeader('Tag Distribution', context),
+                const SizedBox(height: 8),
+                _buildTagDistribution(tagDist, context),
+                const SizedBox(height: 24),
+                _buildSectionHeader('Weekly Activity', context),
+                const SizedBox(height: 8),
+                _buildActivityChart(weeklyActivity, context),
+                const SizedBox(height: 24),
+                _buildInsightsCard(context),
+              ],
+            ),
     );
   }
 

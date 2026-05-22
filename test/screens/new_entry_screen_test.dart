@@ -56,9 +56,9 @@ void main() {
           builder: (context) {
             return TextButton(
               onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(builder: (_) => const NewEntryScreen()),
-                );
+                savedEntry = await Navigator.of(
+                  context,
+                ).push<DiaryEntry>(NewEntryScreen.route());
               },
               child: const Text('Open'),
             );
@@ -96,11 +96,9 @@ void main() {
           builder: (context) {
             return TextButton(
               onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(entry: existingEntry),
-                  ),
-                );
+                savedEntry = await Navigator.of(
+                  context,
+                ).push<DiaryEntry>(NewEntryScreen.route(entry: existingEntry));
               },
               child: const Text('Open'),
             );
@@ -160,11 +158,9 @@ void main() {
           builder: (context) {
             return TextButton(
               onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(entry: existingEntry),
-                  ),
-                );
+                savedEntry = await Navigator.of(
+                  context,
+                ).push<DiaryEntry>(NewEntryScreen.route(entry: existingEntry));
               },
               child: const Text('Open'),
             );
@@ -196,10 +192,8 @@ void main() {
             return TextButton(
               onPressed: () async {
                 savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => const NewEntryScreen(
-                      existingTags: ['work', 'personal'],
-                    ),
+                  NewEntryScreen.route(
+                    existingTags: const ['work', 'personal'],
                   ),
                 );
               },
@@ -270,10 +264,7 @@ void main() {
               return TextButton(
                 onPressed: () async {
                   savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          NewEntryScreen(locationService: mockLocationService),
-                    ),
+                    NewEntryScreen.route(locationService: mockLocationService),
                   );
                 },
                 child: const Text('Open'),
@@ -336,11 +327,9 @@ void main() {
             return TextButton(
               onPressed: () async {
                 savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(
-                      entry: existingEntry,
-                      locationService: mockLocationService,
-                    ),
+                  NewEntryScreen.route(
+                    entry: existingEntry,
+                    locationService: mockLocationService,
                   ),
                 );
               },
