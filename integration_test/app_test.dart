@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:diary/main.dart' as app;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('end-to-end test', () {
+    setUp(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    });
+
     testWidgets('navigate to New Entry and back', (tester) async {
       await app.main();
       await tester.pumpAndSettle();
@@ -73,10 +79,8 @@ void main() {
       expect(find.text('Settings').first, findsOneWidget);
       expect(find.text('SECURITY & APPEARANCE'), findsOneWidget);
 
-      // Open the drawer and tap Timeline to go back.
-      await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Timeline').last);
+      // Tap back arrow to go back.
+      await tester.tap(find.byIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
 
       // Verify we are back on Timeline

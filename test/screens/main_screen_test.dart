@@ -113,6 +113,10 @@ void main() {
     expect(find.text('Calendar'), findsWidgets);
     expect(find.byType(CalendarDatePicker), findsOneWidget);
 
+    // Tap back arrow to return to Timeline, then navigate to Analytics via drawer
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Analytics').last);
@@ -156,4 +160,47 @@ void main() {
       verify(() => mockSecurityService.authenticate()).called(1);
     },
   );
+
+  testWidgets('system back button on non-timeline screen returns to timeline', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
+
+    // Navigate to Calendar
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Calendar').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar'), findsWidgets);
+
+    // Simulate system back button
+    final dynamic widgetsBinding = tester.binding;
+    await widgetsBinding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    // Verify back on Timeline
+    expect(find.text('Diary'), findsOneWidget);
+  });
+
+  testWidgets('tapping back arrow on non-timeline screen returns to timeline', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createApp());
+    await tester.pumpAndSettle();
+
+    // Navigate to Settings
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Settings'), findsWidgets);
+
+    // Tap back arrow
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    // Verify back on Timeline
+    expect(find.text('Diary'), findsOneWidget);
+  });
 }

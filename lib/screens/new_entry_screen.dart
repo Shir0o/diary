@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../helpers/font_helper.dart';
+import '../helpers/page_transitions.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
 import '../services/location_service.dart';
@@ -11,26 +12,50 @@ class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
   final List<String> existingTags;
   final LocationService? locationService;
+  final DateTime? initialDate;
 
   const NewEntryScreen({
     super.key,
     this.entry,
     this.existingTags = const [],
     this.locationService,
+    this.initialDate,
   });
+
+  static const String routeName = '/new-entry';
+
+  static Route<DiaryEntry> route({
+    DiaryEntry? entry,
+    List<String> existingTags = const [],
+    LocationService? locationService,
+  }) {
+    return SmoothPageRoute<DiaryEntry>(
+      child: NewEntryScreen(
+        entry: entry,
+        existingTags: existingTags,
+        locationService: locationService,
+      ),
+      direction: SlideDirection.bottomToTop,
+      settings: const RouteSettings(name: routeName),
+    );
+  }
 
   @override
   State<NewEntryScreen> createState() => _NewEntryScreenState();
 }
 
 class _NewEntryScreenState extends State<NewEntryScreen> {
+  static const String _defaultMood = '📝';
+
   late final TextEditingController _controller;
   late final TextEditingController _locationController;
   late final TextEditingController _tagInputController;
+  late final DateTime _initialEntryDate;
   late DateTime _entryDate;
   late String _mood;
   late List<String> _tags;
   late final LocationService _locationService;
+  bool _isSavingOrDiscarding = false;
 
   @override
   void initState() {
@@ -39,13 +64,24 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
     _tagInputController = TextEditingController();
-    _entryDate = widget.entry?.date ?? DateTime.now();
-    _mood = widget.entry?.mood ?? '📝';
+    _initialEntryDate =
+        widget.entry?.date ?? widget.initialDate ?? DateTime.now();
+    _entryDate = _initialEntryDate;
+    _mood = widget.entry?.mood ?? _defaultMood;
     _tags = List.from(widget.entry?.tags ?? []);
+
+    _controller.addListener(_onFieldChanged);
+    _locationController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onFieldChanged);
+    _locationController.removeListener(_onFieldChanged);
     _controller.dispose();
     _locationController.dispose();
     _tagInputController.dispose();
@@ -57,293 +93,311 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_hasUnsavedChanges(),
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldDiscard = await _showUnsavedChangesDialog();
+        if (shouldDiscard && context.mounted) {
+          setState(() {
+            _isSavingOrDiscarding = true;
+          });
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
         backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          widget.entry == null ? 'New Entry' : '',
-          style: safeGoogleFont(
-            'IBM Plex Sans',
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
+        appBar: AppBar(
+          backgroundColor: colorScheme.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(_buildEntry());
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 0,
-              ),
-              child: const Text('Save'),
+          title: Text(
+            widget.entry == null ? 'New Entry' : '',
+            style: safeGoogleFont(
+              'IBM Plex Sans',
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
             ),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppTheme.spacingMedium),
-                  Text(
-                    DateFormat('MMM dd, yyyy').format(_entryDate),
-                    style: safeGoogleFont(
-                      'IBM Plex Sans',
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
+          centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isSavingOrDiscarding = true;
+                  });
+                  Navigator.of(context).pop(_buildEntry());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(height: AppTheme.spacingExtraSmall),
-                  InkWell(
-                    onTap: _pickDateTime,
-                    borderRadius: BorderRadius.circular(
-                      AppTheme.borderRadiusSmall,
+                  elevation: 0,
+                ),
+                child: const Text('Save'),
+              ),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AppTheme.spacingMedium),
+                    Text(
+                      DateFormat('MMM dd, yyyy').format(_entryDate),
+                      style: safeGoogleFont(
+                        'IBM Plex Sans',
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                    const SizedBox(height: AppTheme.spacingExtraSmall),
+                    InkWell(
+                      onTap: _pickDateTime,
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.borderRadiusSmall,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              DateFormat('h:mm a').format(_entryDate),
+                              style: safeGoogleFont(
+                                'IBM Plex Sans',
+                                fontSize: 18,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              '•',
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              DateFormat('EEEE').format(_entryDate),
+                              style: safeGoogleFont(
+                                'IBM Plex Sans',
+                                fontSize: 18,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Icon(
+                              Icons.edit_calendar_outlined,
+                              size: 18,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_locationController.text.trim().isNotEmpty) ...[
+                      const SizedBox(height: AppTheme.spacingSmall),
+                      Row(
                         children: [
-                          Text(
-                            DateFormat('h:mm a').format(_entryDate),
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 18,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            '•',
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            DateFormat('EEEE').format(_entryDate),
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 18,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
                           Icon(
-                            Icons.edit_calendar_outlined,
+                            Icons.location_on_outlined,
                             size: 18,
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _locationController.text.trim(),
+                              style: safeGoogleFont(
+                                'IBM Plex Sans',
+                                fontSize: 14,
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  if (_locationController.text.trim().isNotEmpty) ...[
-                    const SizedBox(height: AppTheme.spacingSmall),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 18,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _locationController.text.trim(),
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 14,
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.w500,
+                    ],
+                    if (_tags.isNotEmpty) ...[
+                      const SizedBox(height: AppTheme.spacingSmall),
+                      Wrap(
+                        spacing: AppTheme.spacingSmall,
+                        runSpacing: AppTheme.spacingSmall,
+                        children: _tags.map((tag) {
+                          return InputChip(
+                            label: Text(
+                              tag,
+                              style:
+                                  (Theme.of(context).textTheme.labelMedium ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: colorScheme.onPrimaryContainer,
+                                      ),
                             ),
+                            backgroundColor: colorScheme.primaryContainer,
+                            deleteIcon: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                            onDeleted: () {
+                              setState(() {
+                                _tags.remove(tag);
+                              });
+                            },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.borderRadiusLarge,
+                              ),
+                              side: BorderSide.none,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacingExtraSmall,
+                            ),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    const SizedBox(height: AppTheme.spacingLarge),
+                    TextField(
+                      controller: _controller,
+                      maxLines: null,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: 'Write your heart out...',
+                        hintStyle: safeGoogleFont(
+                          'IBM Plex Sans',
+                          fontSize: 18,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
+                        border: InputBorder.none,
+                      ),
+                      style: safeGoogleFont(
+                        'IBM Plex Sans',
+                        fontSize: 18,
+                        color: colorScheme.onSurface,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 16,
+              ),
+              decoration: BoxDecoration(
+                color: colorScheme.surface.withValues(alpha: 0.9),
+                border: Border(
+                  top: BorderSide(
+                    color: colorScheme.onSurface.withValues(alpha: 0.1),
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        InkWell(
+                          onTap: () => _showUnavailableMessage(
+                            'Image attachments are not available yet.',
+                          ),
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _editTags,
+                          child: Icon(
+                            Icons.label_outlined,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        InkWell(
+                          onTap: _pickMood,
+                          child: Icon(
+                            Icons.mood_outlined,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 24,
+                          color: colorScheme.onSurface.withValues(alpha: 0.2),
+                        ),
+                        InkWell(
+                          onTap: _editLocation,
+                          child: Icon(
+                            Icons.location_on_outlined,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                  if (_tags.isNotEmpty) ...[
-                    const SizedBox(height: AppTheme.spacingSmall),
-                    Wrap(
-                      spacing: AppTheme.spacingSmall,
-                      runSpacing: AppTheme.spacingSmall,
-                      children: _tags.map((tag) {
-                        return InputChip(
-                          label: Text(
-                            tag,
-                            style:
-                                (Theme.of(context).textTheme.labelMedium ??
-                                        const TextStyle())
-                                    .copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: colorScheme.onPrimaryContainer,
-                                    ),
-                          ),
-                          backgroundColor: colorScheme.primaryContainer,
-                          deleteIcon: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
-                          onDeleted: () {
-                            setState(() {
-                              _tags.remove(tag);
-                            });
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.borderRadiusLarge,
-                            ),
-                            side: BorderSide.none,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.spacingExtraSmall,
-                          ),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                  const SizedBox(height: AppTheme.spacingLarge),
-                  TextField(
-                    controller: _controller,
-                    maxLines: null,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: 'Write your heart out...',
-                      hintStyle: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 18,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    style: safeGoogleFont(
-                      'IBM Plex Sans',
-                      fontSize: 18,
-                      color: colorScheme.onSurface,
-                      height: 1.6,
-                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.only(
-              left: 24,
-              right: 24,
-              top: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-            ),
-            decoration: BoxDecoration(
-              color: colorScheme.surface.withValues(alpha: 0.9),
-              border: Border(
-                top: BorderSide(
-                  color: colorScheme.onSurface.withValues(alpha: 0.1),
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  Row(
                     children: [
-                      InkWell(
-                        onTap: () => _showUnavailableMessage(
-                          'Image attachments are not available yet.',
-                        ),
-                        child: Icon(
-                          Icons.image_outlined,
-                          color: colorScheme.primary,
-                        ),
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 16,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
-                      InkWell(
-                        onTap: _editTags,
-                        child: Icon(
-                          Icons.label_outlined,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      InkWell(
-                        onTap: _pickMood,
-                        child: Icon(
-                          Icons.mood_outlined,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 24,
-                        color: colorScheme.onSurface.withValues(alpha: 0.2),
-                      ),
-                      InkWell(
-                        onTap: _editLocation,
-                        child: Icon(
-                          Icons.location_on_outlined,
+                      const SizedBox(width: 8),
+                      Text(
+                        'Saved locally',
+                        key: const ValueKey('entry-save-status'),
+                        style: safeGoogleFont(
+                          'IBM Plex Sans',
+                          fontSize: 12,
                           color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                ),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      size: 16,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Saved locally',
-                      key: const ValueKey('entry-save-status'),
-                      style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 12,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -467,7 +521,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -626,7 +680,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             });
                             setSheetState(() {});
                           },
-                          backgroundColor: colorScheme.surfaceVariant,
+                          backgroundColor: colorScheme.surfaceContainerHighest,
                           labelStyle:
                               (theme.textTheme.labelMedium ?? const TextStyle())
                                   .copyWith(
@@ -667,5 +721,108 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         );
       },
     );
+  }
+
+  bool _hasUnsavedChanges() {
+    if (_isSavingOrDiscarding) return false;
+    final currentContent = _controller.text;
+    final currentLocation = _locationController.text;
+    final currentMood = _mood;
+    final currentTags = _tags;
+    final currentDate = _entryDate;
+
+    if (widget.entry == null) {
+      final isDateChanged = !_isSameDateTime(currentDate, _initialEntryDate);
+      final isContentNotEmpty = currentContent.trim().isNotEmpty;
+      final isLocationNotEmpty = currentLocation.trim().isNotEmpty;
+      final isTagsNotEmpty = currentTags.isNotEmpty;
+      final isMoodChanged = currentMood != _defaultMood;
+
+      return isContentNotEmpty ||
+          isLocationNotEmpty ||
+          isTagsNotEmpty ||
+          isMoodChanged ||
+          isDateChanged;
+    } else {
+      final existingEntry = widget.entry!;
+      final isContentChanged =
+          currentContent.trim() != existingEntry.content.trim();
+      final existingLocation = existingEntry.location ?? '';
+      final isLocationChanged =
+          currentLocation.trim() != existingLocation.trim();
+      final isMoodChanged = currentMood != existingEntry.mood;
+      final isDateChanged = !_isSameDateTime(currentDate, existingEntry.date);
+      final isTagsChanged = !_areTagsEqual(currentTags, existingEntry.tags);
+
+      return isContentChanged ||
+          isLocationChanged ||
+          isMoodChanged ||
+          isDateChanged ||
+          isTagsChanged;
+    }
+  }
+
+  bool _areTagsEqual(List<String> list1, List<String> list2) {
+    final set1 = list1.toSet();
+    final set2 = list2.toSet();
+    return set1.length == set2.length && set1.containsAll(set2);
+  }
+
+  bool _isSameDateTime(DateTime dt1, DateTime dt2) {
+    return dt1.year == dt2.year &&
+        dt1.month == dt2.month &&
+        dt1.day == dt2.day &&
+        dt1.hour == dt2.hour &&
+        dt1.minute == dt2.minute;
+  }
+
+  Future<bool> _showUnsavedChangesDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+        final textTheme = theme.textTheme;
+
+        return AlertDialog(
+          title: Text(
+            'Unsaved Changes',
+            style: (textTheme.titleLarge ?? const TextStyle()).copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          content: Text(
+            'You have unsaved changes. Are you sure you want to discard them?',
+            style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+              color: colorScheme.onSurface,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Keep Editing',
+                style: (textTheme.labelLarge ?? const TextStyle()).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(
+                'Discard',
+                style: (textTheme.labelLarge ?? const TextStyle()).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.error,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
   }
 }

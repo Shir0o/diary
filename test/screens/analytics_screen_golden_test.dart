@@ -45,6 +45,7 @@ void main() {
         AnalyticsScreen(
           entries: mockEntries,
           referenceDate: DateTime(2026, 4, 24),
+          onBackPressed: () {},
         ),
         surfaceSize: const Size(390, 844),
       );

@@ -56,9 +56,9 @@ void main() {
           builder: (context) {
             return TextButton(
               onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(builder: (_) => const NewEntryScreen()),
-                );
+                savedEntry = await Navigator.of(
+                  context,
+                ).push<DiaryEntry>(NewEntryScreen.route());
               },
               child: const Text('Open'),
             );
@@ -96,11 +96,9 @@ void main() {
           builder: (context) {
             return TextButton(
               onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(entry: existingEntry),
-                  ),
-                );
+                savedEntry = await Navigator.of(
+                  context,
+                ).push<DiaryEntry>(NewEntryScreen.route(entry: existingEntry));
               },
               child: const Text('Open'),
             );
@@ -160,11 +158,9 @@ void main() {
           builder: (context) {
             return TextButton(
               onPressed: () async {
-                savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(entry: existingEntry),
-                  ),
-                );
+                savedEntry = await Navigator.of(
+                  context,
+                ).push<DiaryEntry>(NewEntryScreen.route(entry: existingEntry));
               },
               child: const Text('Open'),
             );
@@ -196,10 +192,8 @@ void main() {
             return TextButton(
               onPressed: () async {
                 savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => const NewEntryScreen(
-                      existingTags: ['work', 'personal'],
-                    ),
+                  NewEntryScreen.route(
+                    existingTags: const ['work', 'personal'],
                   ),
                 );
               },
@@ -270,10 +264,7 @@ void main() {
               return TextButton(
                 onPressed: () async {
                   savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          NewEntryScreen(locationService: mockLocationService),
-                    ),
+                    NewEntryScreen.route(locationService: mockLocationService),
                   );
                 },
                 child: const Text('Open'),
@@ -336,11 +327,9 @@ void main() {
             return TextButton(
               onPressed: () async {
                 savedEntry = await Navigator.of(context).push<DiaryEntry>(
-                  MaterialPageRoute(
-                    builder: (_) => NewEntryScreen(
-                      entry: existingEntry,
-                      locationService: mockLocationService,
-                    ),
+                  NewEntryScreen.route(
+                    entry: existingEntry,
+                    locationService: mockLocationService,
                   ),
                 );
               },
@@ -374,4 +363,285 @@ void main() {
     expect(savedEntry, isNotNull);
     expect(savedEntry!.location, isNull);
   });
+
+  testWidgets('Unsaved Changes Dialog - Empty new entry pops without warning', (
+    WidgetTester tester,
+  ) async {
+    bool popped = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return TextButton(
+              onPressed: () async {
+                await Navigator.of(context).push(NewEntryScreen.route());
+                popped = true;
+              },
+              child: const Text('Open'),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Find back arrow and tap it
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    // Should pop immediately without showing dialog
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(NewEntryScreen), findsNothing);
+    expect(popped, isTrue);
+  });
+
+  testWidgets(
+    'Unsaved Changes Dialog - New entry with content shows warning, keeps editing, or discards',
+    (WidgetTester tester) async {
+      bool popped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(NewEntryScreen.route());
+                  popped = true;
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Enter content
+      await tester.enterText(find.byType(TextField), 'Some content');
+      await tester.pumpAndSettle();
+
+      // Tap back arrow
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // Dialog should appear
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Unsaved Changes'), findsOneWidget);
+
+      // Tap Keep Editing
+      await tester.tap(find.text('Keep Editing'));
+      await tester.pumpAndSettle();
+
+      // Dialog should be gone, screen remains
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsOneWidget);
+      expect(popped, isFalse);
+
+      // Tap back arrow again
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // Dialog appears again
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      // Tap Discard
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+
+      // Dialog and screen both popped
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(popped, isTrue);
+    },
+  );
+
+  testWidgets(
+    'Unsaved Changes Dialog - Editing existing entry without changes pops without warning',
+    (WidgetTester tester) async {
+      final existingEntry = DiaryEntry(
+        id: 'entry-1',
+        date: DateTime(2026, 4, 24, 10),
+        title: 'Original title',
+        content: 'Original body',
+        mood: '🚀',
+      );
+      bool popped = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  await Navigator.of(
+                    context,
+                  ).push(NewEntryScreen.route(entry: existingEntry));
+                  popped = true;
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Tap back arrow without making changes
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // Should pop immediately without warning
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(popped, isTrue);
+    },
+  );
+
+  testWidgets(
+    'Unsaved Changes Dialog - Editing existing entry with changes shows warning, and reverts',
+    (WidgetTester tester) async {
+      final existingEntry = DiaryEntry(
+        id: 'entry-1',
+        date: DateTime(2026, 4, 24, 10),
+        title: 'Original title',
+        content: 'Original body',
+        mood: '🚀',
+      );
+      bool popped = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  await Navigator.of(
+                    context,
+                  ).push(NewEntryScreen.route(entry: existingEntry));
+                  popped = true;
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Make a change
+      await tester.enterText(find.byType(TextField), 'Modified body');
+      await tester.pumpAndSettle();
+
+      // Tap back arrow
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // Warning should show
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      // Tap Keep Editing
+      await tester.tap(find.text('Keep Editing'));
+      await tester.pumpAndSettle();
+
+      // Revert the changes back to original body
+      await tester.enterText(find.byType(TextField), 'Original body');
+      await tester.pumpAndSettle();
+
+      // Tap back arrow again
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // Should pop immediately because changes were manually reverted
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(popped, isTrue);
+    },
+  );
+
+  testWidgets(
+    'Unsaved Changes Dialog - Tapping Save pops without showing dialog',
+    (WidgetTester tester) async {
+      DiaryEntry? savedEntry;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  savedEntry = await Navigator.of(
+                    context,
+                  ).push<DiaryEntry>(NewEntryScreen.route());
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Enter content (unsaved changes exist)
+      await tester.enterText(find.byType(TextField), 'Some content');
+      await tester.pumpAndSettle();
+
+      // Tap Save
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      // Verify dialog never appeared, and screen popped with the entry
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(savedEntry, isNotNull);
+      expect(savedEntry!.content, 'Some content');
+    },
+  );
+
+  testWidgets(
+    'Unsaved Changes Dialog - DateTime difference in milliseconds is ignored',
+    (WidgetTester tester) async {
+      final initialDate = DateTime(2026, 5, 22, 10, 15, 30, 456);
+      bool popped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          NewEntryScreen(initialDate: initialDate),
+                    ),
+                  );
+                  popped = true;
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Tap back arrow without changes, should pop immediately
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(popped, isTrue);
+    },
+  );
 }

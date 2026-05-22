@@ -14,57 +14,29 @@ void main() {
     updatedAt: DateTime.now(),
   );
 
-  final deletedEntry = DiaryEntry(
-    id: 'deleted',
-    date: DateTime.now(),
-    title: 'Deleted Entry',
-    content: 'Content',
-    mood: '🗑️',
-    isDeleted: true,
-    updatedAt: DateTime.now(),
-  );
-
-  testWidgets('ArchiveScreen displays entries, headers, and badges correctly', (
+  testWidgets('ArchiveScreen displays entries and headers correctly', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: ArchiveScreen(
           archivedEntries: [archivedEntry],
-          deletedEntries: [deletedEntry],
-          onMenuPressed: () {},
-          onRestoreEntry: (_) {},
+          onBackPressed: () {},
+          onUnarchiveEntry: (_) {},
           onDeleteEntry: (_) {},
-          onPermanentlyDeleteEntry: (_) {},
-          onEmptyTrash: () {},
-          autoDeleteEnabled: true,
-          retentionDays: 30,
         ),
       ),
     );
 
-    // Archived Tab check
     expect(find.text('1 archived entries'), findsOneWidget);
     expect(find.text('Archived Entry'), findsOneWidget);
-
-    // Switch to Trash tab
-    await tester.tap(find.text('Trash'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('1 items in trash'), findsOneWidget);
-    expect(find.text('Deleted Entry'), findsOneWidget);
-    // Auto-delete label
     expect(
-      find.text('Items in Trash are permanently deleted after 30 days.'),
+      find.text('Swipe right to restore, swipe left to trash.'),
       findsOneWidget,
     );
-    // Days remaining badge (could be 29 or 30 due to ms precision, but most likely 30)
-    expect(find.textContaining('days left'), findsOneWidget);
-    // Empty Trash button
-    expect(find.widgetWithText(TextButton, 'Empty'), findsOneWidget);
   });
 
-  testWidgets('ArchiveScreen swipe right to restore in Archived tab', (
+  testWidgets('ArchiveScreen swipe right to restore', (
     WidgetTester tester,
   ) async {
     String? restoredId;
@@ -73,14 +45,9 @@ void main() {
       MaterialApp(
         home: ArchiveScreen(
           archivedEntries: [archivedEntry],
-          deletedEntries: const [],
-          onMenuPressed: () {},
-          onRestoreEntry: (id) => restoredId = id,
+          onBackPressed: () {},
+          onUnarchiveEntry: (id) => restoredId = id,
           onDeleteEntry: (_) {},
-          onPermanentlyDeleteEntry: (_) {},
-          onEmptyTrash: () {},
-          autoDeleteEnabled: true,
-          retentionDays: 30,
         ),
       ),
     );
@@ -91,23 +58,16 @@ void main() {
     expect(restoredId, 'archived');
   });
 
-  testWidgets('ArchiveScreen swipe left to trash in Archived tab', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('ArchiveScreen swipe left to trash', (WidgetTester tester) async {
     String? deletedId;
 
     await tester.pumpWidget(
       MaterialApp(
         home: ArchiveScreen(
           archivedEntries: [archivedEntry],
-          deletedEntries: const [],
-          onMenuPressed: () {},
-          onRestoreEntry: (_) {},
+          onBackPressed: () {},
+          onUnarchiveEntry: (_) {},
           onDeleteEntry: (id) => deletedId = id,
-          onPermanentlyDeleteEntry: (_) {},
-          onEmptyTrash: () {},
-          autoDeleteEnabled: true,
-          retentionDays: 30,
         ),
       ),
     );
@@ -116,76 +76,5 @@ void main() {
     await tester.drag(find.text('Archived Entry'), const Offset(-500, 0));
     await tester.pumpAndSettle();
     expect(deletedId, 'archived');
-  });
-
-  testWidgets('ArchiveScreen empty trash confirmation works', (
-    WidgetTester tester,
-  ) async {
-    bool emptyTrashCalled = false;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ArchiveScreen(
-          archivedEntries: const [],
-          deletedEntries: [deletedEntry],
-          onMenuPressed: () {},
-          onRestoreEntry: (_) {},
-          onDeleteEntry: (_) {},
-          onPermanentlyDeleteEntry: (_) {},
-          onEmptyTrash: () => emptyTrashCalled = true,
-          autoDeleteEnabled: true,
-          retentionDays: 30,
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Trash'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.widgetWithText(TextButton, 'Empty'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Empty Trash?'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(TextButton, 'Empty Trash'));
-    await tester.pumpAndSettle();
-
-    expect(emptyTrashCalled, isTrue);
-  });
-
-  testWidgets('ArchiveScreen permanent delete confirmation works', (
-    WidgetTester tester,
-  ) async {
-    String? permanentlyDeletedId;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ArchiveScreen(
-          archivedEntries: const [],
-          deletedEntries: [deletedEntry],
-          onMenuPressed: () {},
-          onRestoreEntry: (_) {},
-          onDeleteEntry: (_) {},
-          onPermanentlyDeleteEntry: (id) => permanentlyDeletedId = id,
-          onEmptyTrash: () {},
-          autoDeleteEnabled: true,
-          retentionDays: 30,
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Trash'));
-    await tester.pumpAndSettle();
-
-    // Swipe left to delete forever
-    await tester.drag(find.text('Deleted Entry'), const Offset(-500, 0));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Delete permanently?'), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(TextButton, 'Delete Forever'));
-    await tester.pumpAndSettle();
-
-    expect(permanentlyDeletedId, 'deleted');
   });
 }

@@ -62,6 +62,17 @@ class SqliteDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> permanentlyDeleteEntries(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final db = await _openDatabase();
+    final batch = db.batch();
+    for (final id in ids) {
+      batch.delete(_entriesTable, where: 'id = ?', whereArgs: [id]);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
   Future<void> archiveEntry(String id, bool isArchived) async {
     final db = await _openDatabase();
     await db.update(

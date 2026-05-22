@@ -13,6 +13,7 @@ import 'screens/media_screen.dart';
 import 'screens/info_screen.dart';
 import 'screens/entry_search_delegate.dart';
 import 'screens/archive_screen.dart';
+import 'screens/trash_screen.dart';
 import 'screens/biometric_lock_screen.dart';
 import 'widgets/side_drawer.dart';
 import 'models/diary_entry.dart';
@@ -104,11 +105,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     _MainDestination(drawerIndex: 0, screen: _MainScreen.timeline),
     _MainDestination(drawerIndex: 1, screen: _MainScreen.calendar),
     _MainDestination(drawerIndex: 2, screen: _MainScreen.archive),
-    _MainDestination(drawerIndex: 3, screen: _MainScreen.media),
-    _MainDestination(drawerIndex: 4, screen: _MainScreen.analytics),
-    _MainDestination(drawerIndex: 5, screen: _MainScreen.settings),
-    _MainDestination(drawerIndex: 6, screen: _MainScreen.help),
-    _MainDestination(drawerIndex: 7, screen: _MainScreen.about),
+    _MainDestination(drawerIndex: 3, screen: _MainScreen.trash),
+    _MainDestination(drawerIndex: 4, screen: _MainScreen.media),
+    _MainDestination(drawerIndex: 5, screen: _MainScreen.analytics),
+    _MainDestination(drawerIndex: 6, screen: _MainScreen.settings),
+    _MainDestination(drawerIndex: 7, screen: _MainScreen.help),
+    _MainDestination(drawerIndex: 8, screen: _MainScreen.about),
   ];
 
   _MainScreen _currentScreen = _MainScreen.timeline;
@@ -234,7 +236,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final autoDelete = prefs.getBool('auto_delete_trash') ?? true;
     final retentionDays = prefs.getInt('trash_retention_days') ?? 30;
 
-    if (mounted) {
+    if (mounted &&
+        (_autoDeleteTrash != autoDelete ||
+            _trashRetentionDays != retentionDays)) {
       setState(() {
         _autoDeleteTrash = autoDelete;
         _trashRetentionDays = retentionDays;
@@ -262,11 +266,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _createEntry() async {
     final existingTags = _entries.expand((e) => e.tags).toSet().toList();
-    final entry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(
-        builder: (context) => NewEntryScreen(existingTags: existingTags),
-      ),
-    );
+    final entry = await Navigator.of(
+      context,
+    ).push<DiaryEntry>(NewEntryScreen.route(existingTags: existingTags));
     if (entry == null) return;
 
     await widget.entryStore.upsertEntry(entry);
@@ -281,10 +283,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _editEntry(DiaryEntry entry) async {
     final existingTags = _entries.expand((e) => e.tags).toSet().toList();
     final updatedEntry = await Navigator.of(context).push<DiaryEntry>(
-      MaterialPageRoute(
-        builder: (context) =>
-            NewEntryScreen(entry: entry, existingTags: existingTags),
-      ),
+      NewEntryScreen.route(entry: entry, existingTags: existingTags),
     );
     if (updatedEntry == null) return;
 
@@ -334,7 +333,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _deleteEntry(String id) async {
     final index = _entries.indexWhere((item) => item.id == id);
     if (index == -1) return;
-    final entry = _entries[index];
     await widget.entryStore.trashEntry(id, true);
     if (!mounted) return;
     setState(() {
@@ -361,7 +359,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _archiveEntry(String id, bool archived) async {
     final index = _entries.indexWhere((item) => item.id == id);
     if (index == -1) return;
-    final entry = _entries[index];
     await widget.entryStore.archiveEntry(id, archived);
     if (!mounted) return;
     setState(() {
@@ -443,9 +440,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         .toList();
     if (deletedIds.isEmpty) return;
 
-    for (final id in deletedIds) {
-      await widget.entryStore.permanentlyDeleteEntry(id);
-    }
+    await widget.entryStore.permanentlyDeleteEntries(deletedIds);
 
     if (!mounted) return;
     setState(() {
@@ -506,6 +501,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         .drawerIndex;
   }
 
+  void _goBackToTimeline() {
+    setState(() {
+      _currentScreen = _MainScreen.timeline;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isAuthenticated) {
@@ -515,24 +516,51 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       );
     }
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: SideDrawer(
-        onItemSelected: _onItemSelected,
-        selectedIndex: _selectedDrawerIndex,
-        authService: widget.authService,
+    return PopScope(
+      canPop: _currentScreen == _MainScreen.timeline,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _goBackToTimeline();
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: SideDrawer(
+          onItemSelected: _onItemSelected,
+          selectedIndex: _selectedDrawerIndex,
+          authService: widget.authService,
+        ),
+        body: AnimatedSwitcher(
+          duration: AppTheme.transitionDuration,
+          reverseDuration: AppTheme.reverseTransitionDuration,
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(
+                  begin: AppTheme.scaleSwitcherTransition,
+                  end: 1.0,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey<int>(_currentScreen.index),
+            child: _buildCurrentScreen(),
+          ),
+        ),
       ),
-      body: _buildCurrentScreen(),
     );
   }
 
   Widget _buildCurrentScreen() {
-    if (_isLoadingEntries) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    final isLoading = _isLoadingEntries;
 
     return switch (_currentScreen) {
       _MainScreen.timeline => TimelineScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isArchived && !e.isDeleted).toList(),
         onMenuPressed: _openDrawer,
         onAddEntry: _createEntry,
@@ -561,42 +589,58 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         },
       ),
       _MainScreen.calendar => CalendarScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
         onSearchEntries: _searchEntries,
         onEditEntry: _editEntry,
       ),
       _MainScreen.archive => ArchiveScreen(
+        isLoading: isLoading,
         archivedEntries: _entries
             .where((e) => e.isArchived && !e.isDeleted)
             .toList(),
-        deletedEntries: _entries.where((e) => e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
-        onRestoreEntry: _restoreEntry,
+        onBackPressed: _goBackToTimeline,
+        onUnarchiveEntry: _restoreEntry,
         onDeleteEntry: _deleteEntry,
+      ),
+      _MainScreen.trash => TrashScreen(
+        isLoading: isLoading,
+        deletedEntries: _entries.where((e) => e.isDeleted).toList(),
+        onBackPressed: _goBackToTimeline,
+        onRestoreEntry: _restoreEntry,
         onPermanentlyDeleteEntry: _permanentlyDeleteEntry,
         onEmptyTrash: _emptyTrash,
         autoDeleteEnabled: _autoDeleteTrash,
         retentionDays: _trashRetentionDays,
       ),
       _MainScreen.media => MediaScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.analytics => AnalyticsScreen(
+        isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
-        onMenuPressed: _openDrawer,
+        onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.settings => SettingsScreen(
-        onMenuPressed: _openDrawer,
+        isLoading: isLoading,
+        onBackPressed: _goBackToTimeline,
         authService: widget.authService,
         securityService: widget.securityService,
         themeService: widget.themeService,
         entryStore: widget.entryStore,
         onSyncCompleted: _loadEntries,
       ),
-      _MainScreen.help => InfoScreen.help(onMenuPressed: _openDrawer),
-      _MainScreen.about => InfoScreen.about(onMenuPressed: _openDrawer),
+      _MainScreen.help => InfoScreen.help(
+        isLoading: isLoading,
+        onBackPressed: _goBackToTimeline,
+      ),
+      _MainScreen.about => InfoScreen.about(
+        isLoading: isLoading,
+        onBackPressed: _goBackToTimeline,
+      ),
     };
   }
 }
@@ -612,6 +656,7 @@ enum _MainScreen {
   timeline,
   calendar,
   archive,
+  trash,
   media,
   analytics,
   settings,

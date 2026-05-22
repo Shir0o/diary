@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../helpers/font_helper.dart';
 import '../models/diary_entry.dart';
+import '../widgets/skeleton_loader.dart';
 
 class MediaScreen extends StatelessWidget {
   final List<DiaryEntry> entries;
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
+  final bool isLoading;
 
-  const MediaScreen({super.key, required this.entries, this.onMenuPressed});
+  const MediaScreen({
+    super.key,
+    required this.entries,
+    required this.onBackPressed,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +26,7 @@ class MediaScreen extends StatelessWidget {
 
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Media',
@@ -30,14 +37,16 @@ class MediaScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.menu, color: colorScheme.onSurface),
-          onPressed: onMenuPressed,
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: onBackPressed,
         ),
       ),
-      body: mediaItems.isEmpty
+      body: isLoading
+          ? const MediaScreenSkeleton()
+          : mediaItems.isEmpty
           ? _EmptyMediaState(entryCount: entries.length)
           : GridView.builder(
               padding: const EdgeInsets.all(16),

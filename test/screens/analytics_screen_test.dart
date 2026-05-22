@@ -36,6 +36,7 @@ void main() {
         home: AnalyticsScreen(
           entries: mockEntries,
           referenceDate: DateTime(2026, 4, 24),
+          onBackPressed: () {},
         ),
       ),
     );
@@ -54,7 +55,9 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: AnalyticsScreen(entries: [])),
+      MaterialApp(
+        home: AnalyticsScreen(entries: const [], onBackPressed: () {}),
+      ),
     );
 
     expect(find.text('0'), findsOneWidget);

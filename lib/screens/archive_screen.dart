@@ -2,30 +2,23 @@ import 'package:flutter/material.dart';
 import '../models/diary_entry.dart';
 import '../widgets/entry_card.dart';
 import '../helpers/font_helper.dart';
+import '../widgets/skeleton_loader.dart';
 import '../config/app_theme.dart';
 
 class ArchiveScreen extends StatelessWidget {
   final List<DiaryEntry> archivedEntries;
-  final List<DiaryEntry> deletedEntries;
-  final VoidCallback onMenuPressed;
-  final ValueChanged<String> onRestoreEntry;
+  final VoidCallback onBackPressed;
+  final ValueChanged<String> onUnarchiveEntry;
   final ValueChanged<String> onDeleteEntry;
-  final ValueChanged<String> onPermanentlyDeleteEntry;
-  final VoidCallback onEmptyTrash;
-  final bool autoDeleteEnabled;
-  final int retentionDays;
+  final bool isLoading;
 
   const ArchiveScreen({
     super.key,
     required this.archivedEntries,
-    required this.deletedEntries,
-    required this.onMenuPressed,
-    required this.onRestoreEntry,
+    required this.onBackPressed,
+    required this.onUnarchiveEntry,
     required this.onDeleteEntry,
-    required this.onPermanentlyDeleteEntry,
-    required this.onEmptyTrash,
-    required this.autoDeleteEnabled,
-    required this.retentionDays,
+    this.isLoading = false,
   });
 
   @override
@@ -33,110 +26,47 @@ class ArchiveScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: colorScheme.background,
-        appBar: AppBar(
-          title: Text(
-            'Archive & Trash',
-            style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: colorScheme.background,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.menu, color: colorScheme.onSurface),
-            onPressed: onMenuPressed,
-          ),
-          bottom: TabBar(
-            tabs: const [
-              Tab(text: 'Archived'),
-              Tab(text: 'Trash'),
-            ],
-            labelColor: colorScheme.primary,
-            indicatorColor: colorScheme.primary,
-            unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Archive',
+          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
         ),
-        body: TabBarView(
-          children: [_buildArchivedTab(context), _buildTrashTab(context)],
+        centerTitle: true,
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: onBackPressed,
         ),
       ),
-    );
-  }
-
-  Widget _buildArchivedTab(BuildContext context) {
-    return Column(
-      children: [
-        _buildListHeader(
-          context,
-          '${archivedEntries.length} archived entries',
-          subtitle: 'Swipe right to restore, swipe left to trash.',
-        ),
-        Expanded(
-          child: _EntryList(
-            entries: archivedEntries,
-            emptyMessage: 'No archived entries',
-            actionLeftToRight: _ListAction.restore,
-            actionRightToLeft: _ListAction.delete,
-            onAction: (id, action) {
-              if (action == _ListAction.restore) {
-                onRestoreEntry(id);
-              } else if (action == _ListAction.delete) {
-                onDeleteEntry(id);
-              }
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTrashTab(BuildContext context) {
-    return Column(
-      children: [
-        _buildListHeader(
-          context,
-          '${deletedEntries.length} items in trash',
-          subtitle: autoDeleteEnabled
-              ? 'Items in Trash are permanently deleted after $retentionDays days.'
-              : 'Auto-delete is disabled.',
-          actionButton: deletedEntries.isNotEmpty
-              ? TextButton.icon(
-                  onPressed: () => _confirmEmptyTrash(context),
-                  icon: Icon(
-                    Icons.delete_sweep,
-                    color: Theme.of(context).colorScheme.error,
+      body: isLoading
+          ? const EntryListSkeleton()
+          : Column(
+              children: [
+                _buildListHeader(
+                  context,
+                  '${archivedEntries.length} archived entries',
+                  subtitle: 'Swipe right to restore, swipe left to trash.',
+                ),
+                Expanded(
+                  child: _EntryList(
+                    entries: archivedEntries,
+                    emptyMessage: 'No archived entries',
+                    actionLeftToRight: _ListAction.restore,
+                    actionRightToLeft: _ListAction.delete,
+                    onAction: (id, action) {
+                      if (action == _ListAction.restore) {
+                        onUnarchiveEntry(id);
+                      } else if (action == _ListAction.delete) {
+                        onDeleteEntry(id);
+                      }
+                    },
                   ),
-                  label: Text(
-                    'Empty',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                )
-              : null,
-        ),
-        Expanded(
-          child: _EntryList(
-            entries: deletedEntries,
-            emptyMessage: 'Trash is empty',
-            actionLeftToRight: _ListAction.restore,
-            actionRightToLeft: _ListAction.deleteForever,
-            onAction: (id, action) {
-              if (action == _ListAction.restore) {
-                onRestoreEntry(id);
-              } else if (action == _ListAction.deleteForever) {
-                final entry = deletedEntries.firstWhere((e) => e.id == id);
-                _confirmPermanentDelete(context, entry);
-              }
-            },
-            autoDeleteEnabled: autoDeleteEnabled,
-            retentionDays: retentionDays,
-          ),
-        ),
-      ],
+                ),
+              ],
+            ),
     );
   }
 
@@ -144,7 +74,6 @@ class ArchiveScreen extends StatelessWidget {
     BuildContext context,
     String title, {
     String? subtitle,
-    Widget? actionButton,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
@@ -185,79 +114,13 @@ class ArchiveScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (actionButton != null) ...[const SizedBox(width: 8), actionButton],
         ],
       ),
     );
   }
-
-  Future<void> _confirmEmptyTrash(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Empty Trash?'),
-          content: const Text(
-            'All items in the trash will be permanently deleted. This action cannot be undone.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(
-                'Empty Trash',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      onEmptyTrash();
-    }
-  }
-
-  Future<void> _confirmPermanentDelete(
-    BuildContext context,
-    DiaryEntry entry,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete permanently?'),
-          content: const Text(
-            'This action cannot be undone. The entry will be gone forever.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(
-                'Delete Forever',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      onPermanentlyDeleteEntry(entry.id);
-    }
-  }
 }
 
-enum _ListAction { restore, delete, deleteForever }
+enum _ListAction { restore, delete }
 
 class _EntryList extends StatelessWidget {
   final List<DiaryEntry> entries;
@@ -265,8 +128,6 @@ class _EntryList extends StatelessWidget {
   final _ListAction actionLeftToRight;
   final _ListAction actionRightToLeft;
   final void Function(String id, _ListAction action) onAction;
-  final bool autoDeleteEnabled;
-  final int retentionDays;
 
   const _EntryList({
     required this.entries,
@@ -274,8 +135,6 @@ class _EntryList extends StatelessWidget {
     required this.actionLeftToRight,
     required this.actionRightToLeft,
     required this.onAction,
-    this.autoDeleteEnabled = false,
-    this.retentionDays = 30,
   });
 
   @override
@@ -319,11 +178,6 @@ class _EntryList extends StatelessWidget {
                   ? actionLeftToRight
                   : actionRightToLeft;
 
-              if (action == _ListAction.deleteForever) {
-                onAction(entry.id, action);
-                return false;
-              }
-
               onAction(entry.id, action);
               return true;
             },
@@ -331,39 +185,10 @@ class _EntryList extends StatelessWidget {
               entry: entry,
               margin: EdgeInsets.zero,
               onTap: null,
-              trailing: autoDeleteEnabled && entry.isDeleted
-                  ? _buildDaysRemainingBadge(context, entry)
-                  : null,
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDaysRemainingBadge(BuildContext context, DiaryEntry entry) {
-    final deleteDate = entry.updatedAt.add(Duration(days: retentionDays));
-    final daysLeft = deleteDate.difference(DateTime.now()).inDays;
-
-    final String text = daysLeft <= 0 ? 'Deletes today' : '$daysLeft days left';
-    final errorColor = Theme.of(context).colorScheme.error;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: errorColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: errorColor.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        text,
-        style: safeGoogleFont(
-          'Inter',
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: errorColor,
-        ),
-      ),
     );
   }
 
@@ -386,11 +211,6 @@ class _EntryList extends StatelessWidget {
         bgColor = AppTheme.warningColor;
         iconData = Icons.delete;
         label = 'Trash';
-        break;
-      case _ListAction.deleteForever:
-        bgColor = Theme.of(context).colorScheme.error;
-        iconData = Icons.delete_forever;
-        label = 'Delete';
         break;
     }
 

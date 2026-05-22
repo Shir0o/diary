@@ -7,7 +7,9 @@ void main() {
   testWidgets('CalendarScreen should render CalendarDatePicker and entries', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: CalendarScreen()));
+    await tester.pumpWidget(
+      MaterialApp(home: CalendarScreen(onBackPressed: () {})),
+    );
 
     expect(find.text('Calendar'), findsOneWidget);
     expect(find.byType(CalendarDatePicker), findsOneWidget);
@@ -19,7 +21,12 @@ void main() {
     // The hardcoded entries in CalendarScreen are dated 2026-04-24; pin the
     // initial date so this test is independent of the current wall clock.
     await tester.pumpWidget(
-      MaterialApp(home: CalendarScreen(initialDate: DateTime(2026, 4, 24))),
+      MaterialApp(
+        home: CalendarScreen(
+          initialDate: DateTime(2026, 4, 24),
+          onBackPressed: () {},
+        ),
+      ),
     );
 
     expect(find.byType(EntryCard), findsAtLeastNWidgets(1));

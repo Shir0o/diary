@@ -12,6 +12,8 @@ abstract class DiaryEntryStore {
 
   Future<void> permanentlyDeleteEntry(String id);
 
+  Future<void> permanentlyDeleteEntries(List<String> ids);
+
   Future<void> archiveEntry(String id, bool isArchived);
 
   Future<void> deleteEntriesDeletedBefore(DateTime cutoff);

@@ -9,23 +9,26 @@ import '../services/security_service.dart';
 import '../services/theme_service.dart';
 import '../config/app_theme.dart';
 import '../data/diary_entry_store.dart';
+import '../widgets/skeleton_loader.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final VoidCallback? onMenuPressed;
+  final VoidCallback onBackPressed;
   final AuthService authService;
   final SecurityService securityService;
   final ThemeService themeService;
   final DiaryEntryStore entryStore;
   final VoidCallback? onSyncCompleted;
+  final bool isLoading;
 
   const SettingsScreen({
     super.key,
-    this.onMenuPressed,
+    required this.onBackPressed,
     required this.authService,
     required this.securityService,
     required this.themeService,
     required this.entryStore,
     this.onSyncCompleted,
+    this.isLoading = false,
   });
 
   @override
@@ -118,16 +121,13 @@ class _SettingsScreenState extends State<SettingsScreen>
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.background.withValues(alpha: 0.95),
+        backgroundColor: colorScheme.surface.withValues(alpha: 0.95),
         elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: colorScheme.onSurface),
-            onPressed:
-                widget.onMenuPressed ?? () => Scaffold.of(context).openDrawer(),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: widget.onBackPressed,
         ),
         title: Text(
           'Settings',
@@ -140,81 +140,83 @@ class _SettingsScreenState extends State<SettingsScreen>
         ),
         centerTitle: true,
       ),
-      body: StreamBuilder<GoogleSignInAccount?>(
-        stream: widget.authService.onCurrentUserChanged,
-        initialData: widget.authService.currentUser,
-        builder: (context, snapshot) {
-          final user = snapshot.data;
+      body: widget.isLoading
+          ? const SettingsScreenSkeleton()
+          : StreamBuilder<GoogleSignInAccount?>(
+              stream: widget.authService.onCurrentUserChanged,
+              initialData: widget.authService.currentUser,
+              builder: (context, snapshot) {
+                final user = snapshot.data;
 
-          return ListView(
-            padding: const EdgeInsets.only(bottom: 24),
-            children: [
-              const SizedBox(height: AppTheme.spacingSmall),
-              _buildSectionHeader('ACCOUNT'),
-              _buildSettingsCard([
-                if (user == null)
-                  _buildActionItem(
-                    icon: Icons.login,
-                    title: 'Sign in with Google',
-                    onTap: () async {
-                      await widget.authService.signIn();
-                    },
-                  )
-                else
-                  _buildAccountItem(user),
-              ]),
-              const SizedBox(height: AppTheme.spacingMedium),
-              _buildSectionHeader('SECURITY & APPEARANCE'),
-              _buildSettingsCard([
-                _buildToggleItem(
-                  icon: Icons.fingerprint,
-                  title: 'Biometric Lock',
-                  value: _biometricLock,
-                  onChanged: _toggleBiometricLock,
-                  showBorder: true,
-                ),
-                _buildDropdownItem(
-                  icon: Icons.palette_outlined,
-                  title: 'Theme',
-                  value: ThemeModeOption.fromMode(
-                    widget.themeService.themeMode,
-                  ),
-                  items: ThemeModeOption.values,
-                  onChanged: (ThemeModeOption? newValue) {
-                    if (newValue != null) {
-                      widget.themeService.setThemeMode(newValue.mode);
-                    }
-                  },
-                ),
-              ]),
-              const SizedBox(height: AppTheme.spacingMedium),
-              _buildSectionHeader('TRASH & ARCHIVE'),
-              _buildSettingsCard([
-                _buildToggleItem(
-                  icon: Icons.auto_delete_outlined,
-                  title: 'Auto-delete Trash',
-                  value: _autoDeleteTrash,
-                  onChanged: (val) async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('auto_delete_trash', val);
-                    setState(() {
-                      _autoDeleteTrash = val;
-                    });
-                    widget.onSyncCompleted?.call();
-                  },
-                  showBorder: _autoDeleteTrash,
-                ),
-                if (_autoDeleteTrash) _buildRetentionPeriodItem(),
-              ]),
-              const SizedBox(height: AppTheme.spacingMedium),
-              _buildSectionHeader('CLOUD SYNC'),
-              _buildCloudBackupCard(user != null),
-              const SizedBox(height: AppTheme.spacingExtraLarge),
-              _buildFooter(),
-            ],
-          );
-        },
-      ),
+                return ListView(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  children: [
+                    const SizedBox(height: AppTheme.spacingSmall),
+                    _buildSectionHeader('ACCOUNT'),
+                    _buildSettingsCard([
+                      if (user == null)
+                        _buildActionItem(
+                          icon: Icons.login,
+                          title: 'Sign in with Google',
+                          onTap: () async {
+                            await widget.authService.signIn();
+                          },
+                        )
+                      else
+                        _buildAccountItem(user),
+                    ]),
+                    const SizedBox(height: AppTheme.spacingMedium),
+                    _buildSectionHeader('SECURITY & APPEARANCE'),
+                    _buildSettingsCard([
+                      _buildToggleItem(
+                        icon: Icons.fingerprint,
+                        title: 'Biometric Lock',
+                        value: _biometricLock,
+                        onChanged: _toggleBiometricLock,
+                        showBorder: true,
+                      ),
+                      _buildDropdownItem(
+                        icon: Icons.palette_outlined,
+                        title: 'Theme',
+                        value: ThemeModeOption.fromMode(
+                          widget.themeService.themeMode,
+                        ),
+                        items: ThemeModeOption.values,
+                        onChanged: (ThemeModeOption? newValue) {
+                          if (newValue != null) {
+                            widget.themeService.setThemeMode(newValue.mode);
+                          }
+                        },
+                      ),
+                    ]),
+                    const SizedBox(height: AppTheme.spacingMedium),
+                    _buildSectionHeader('TRASH & ARCHIVE'),
+                    _buildSettingsCard([
+                      _buildToggleItem(
+                        icon: Icons.auto_delete_outlined,
+                        title: 'Auto-delete Trash',
+                        value: _autoDeleteTrash,
+                        onChanged: (val) async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('auto_delete_trash', val);
+                          setState(() {
+                            _autoDeleteTrash = val;
+                          });
+                          widget.onSyncCompleted?.call();
+                        },
+                        showBorder: _autoDeleteTrash,
+                      ),
+                      if (_autoDeleteTrash) _buildRetentionPeriodItem(),
+                    ]),
+                    const SizedBox(height: AppTheme.spacingMedium),
+                    _buildSectionHeader('CLOUD SYNC'),
+                    _buildCloudBackupCard(user != null),
+                    const SizedBox(height: AppTheme.spacingExtraLarge),
+                    _buildFooter(),
+                  ],
+                );
+              },
+            ),
     );
   }
 
@@ -728,6 +730,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       if (!mounted) return;
       final syncedAt = result.remoteModified ?? DateTime.now();
       await _saveLastSyncAt(syncedAt);
+      if (!mounted) return;
       setState(() {
         _lastSyncAt = syncedAt;
       });

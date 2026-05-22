@@ -44,6 +44,11 @@ class InMemoryDiaryEntryStore implements DiaryEntryStore {
   }
 
   @override
+  Future<void> permanentlyDeleteEntries(List<String> ids) async {
+    _entries.removeWhere((entry) => ids.contains(entry.id));
+  }
+
+  @override
   Future<void> archiveEntry(String id, bool isArchived) async {
     final index = _entries.indexWhere((entry) => entry.id == id);
     if (index != -1) {

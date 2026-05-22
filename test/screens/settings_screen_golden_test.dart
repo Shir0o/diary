@@ -61,6 +61,7 @@ void main() {
   testGoldens('SettingsScreen - appearance', (tester) async {
     await tester.pumpWidgetBuilder(
       SettingsScreen(
+        onBackPressed: () {},
         authService: authService,
         securityService: mockSecurityService,
         themeService: mockThemeService,
