@@ -28,7 +28,8 @@ void main() {
   late MockThemeService mockThemeService;
   late MockDiaryEntryStore mockEntryStore;
   late AuthService authService;
-  late StreamController<GoogleSignInAccount?> currentUserController;
+  late StreamController<GoogleSignInAuthenticationEvent>
+  authenticationEventsController;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -37,13 +38,16 @@ void main() {
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();
     mockEntryStore = MockDiaryEntryStore();
-    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
+    authenticationEventsController =
+        StreamController<GoogleSignInAuthenticationEvent>.broadcast();
+
+    when(
+      () => mockGoogleSignIn.authenticationEvents,
+    ).thenAnswer((_) => authenticationEventsController.stream);
+    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
 
     authService = AuthService(googleSignIn: mockGoogleSignIn);
 
-    when(
-      () => mockGoogleSignIn.onCurrentUserChanged,
-    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockAccount.email).thenReturn('bob@example.com');
     when(() => mockAccount.displayName).thenReturn('Bob');
     when(() => mockAccount.photoUrl).thenReturn('');
@@ -68,7 +72,7 @@ void main() {
   });
 
   tearDown(() {
-    currentUserController.close();
+    authenticationEventsController.close();
   });
 
   Widget createWidgetUnderTest() {
@@ -89,8 +93,6 @@ void main() {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
-
-    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
 
     await tester.pumpWidget(createWidgetUnderTest());
 
@@ -122,7 +124,10 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
 
-    when(() => mockGoogleSignIn.currentUser).thenReturn(mockAccount);
+    authService = AuthService(
+      googleSignIn: mockGoogleSignIn,
+      initialUser: mockAccount,
+    );
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
@@ -139,7 +144,10 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
 
-    when(() => mockGoogleSignIn.currentUser).thenReturn(mockAccount);
+    authService = AuthService(
+      googleSignIn: mockGoogleSignIn,
+      initialUser: mockAccount,
+    );
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();

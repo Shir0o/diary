@@ -28,7 +28,8 @@ void main() {
   late MockThemeService mockThemeService;
   late MockDiaryEntryStore mockEntryStore;
   late AuthService authService;
-  late StreamController<GoogleSignInAccount?> currentUserController;
+  late StreamController<GoogleSignInAuthenticationEvent>
+  authenticationEventsController;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -36,13 +37,15 @@ void main() {
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();
     mockEntryStore = MockDiaryEntryStore();
-    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    authService = AuthService(googleSignIn: mockGoogleSignIn);
+    authenticationEventsController =
+        StreamController<GoogleSignInAuthenticationEvent>.broadcast();
 
     when(
-      () => mockGoogleSignIn.onCurrentUserChanged,
-    ).thenAnswer((_) => currentUserController.stream);
-    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
+      () => mockGoogleSignIn.authenticationEvents,
+    ).thenAnswer((_) => authenticationEventsController.stream);
+    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
 
     when(
       () => mockSecurityService.isBiometricLockEnabled,
@@ -55,7 +58,7 @@ void main() {
   });
 
   tearDown(() {
-    currentUserController.close();
+    authenticationEventsController.close();
   });
 
   testGoldens('SettingsScreen - appearance', (tester) async {

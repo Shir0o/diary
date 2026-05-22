@@ -24,22 +24,26 @@ void main() {
   late MockSecurityService mockSecurityService;
   late MockThemeService mockThemeService;
   late AuthService authService;
-  late StreamController<GoogleSignInAccount?> currentUserController;
+  late StreamController<GoogleSignInAuthenticationEvent>
+  authenticationEventsController;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     mockGoogleSignIn = MockGoogleSignIn();
     mockSecurityService = MockSecurityService();
     mockThemeService = MockThemeService();
-    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-
-    authService = AuthService(googleSignIn: mockGoogleSignIn);
+    authenticationEventsController =
+        StreamController<GoogleSignInAuthenticationEvent>.broadcast();
 
     when(
-      () => mockGoogleSignIn.onCurrentUserChanged,
-    ).thenAnswer((_) => currentUserController.stream);
-    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
-    when(() => mockGoogleSignIn.signInSilently()).thenAnswer((_) async => null);
+      () => mockGoogleSignIn.authenticationEvents,
+    ).thenAnswer((_) => authenticationEventsController.stream);
+    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+    when(
+      () => mockGoogleSignIn.attemptLightweightAuthentication(),
+    ).thenAnswer((_) async => null);
+
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
 
     when(
       () => mockSecurityService.isBiometricLockEnabled,
@@ -54,7 +58,7 @@ void main() {
   });
 
   tearDown(() {
-    currentUserController.close();
+    authenticationEventsController.close();
   });
 
   final testEntries = [

@@ -12,18 +12,22 @@ void main() {
   late MockGoogleSignIn mockGoogleSignIn;
   late MockGoogleSignInAccount mockAccount;
   late AuthService authService;
-  late StreamController<GoogleSignInAccount?> currentUserController;
+  late StreamController<GoogleSignInAuthenticationEvent>
+  authenticationEventsController;
 
   setUp(() {
     mockGoogleSignIn = MockGoogleSignIn();
     mockAccount = MockGoogleSignInAccount();
-    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
+    authenticationEventsController =
+        StreamController<GoogleSignInAuthenticationEvent>.broadcast();
+
+    when(
+      () => mockGoogleSignIn.authenticationEvents,
+    ).thenAnswer((_) => authenticationEventsController.stream);
+    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
 
     authService = AuthService(googleSignIn: mockGoogleSignIn);
 
-    when(
-      () => mockGoogleSignIn.onCurrentUserChanged,
-    ).thenAnswer((_) => currentUserController.stream);
     when(() => mockAccount.email).thenReturn('test@example.com');
     when(() => mockAccount.displayName).thenReturn('Test User');
     when(
@@ -32,25 +36,24 @@ void main() {
   });
 
   tearDown(() {
-    currentUserController.close();
+    authenticationEventsController.close();
   });
 
   group('AuthService', () {
     test('signIn signs in successfully', () async {
       when(
-        () => mockGoogleSignIn.signIn(),
+        () => mockGoogleSignIn.authenticate(),
       ).thenAnswer((_) async => mockAccount);
-      when(() => mockGoogleSignIn.currentUser).thenReturn(mockAccount);
 
       final user = await authService.signIn();
 
       expect(user, isNotNull);
       expect(user?.email, 'test@example.com');
-      verify(() => mockGoogleSignIn.signIn()).called(1);
+      verify(() => mockGoogleSignIn.authenticate()).called(1);
     });
 
     test('signOut signs out successfully', () async {
-      when(() => mockGoogleSignIn.signOut()).thenAnswer((_) async => null);
+      when(() => mockGoogleSignIn.signOut()).thenAnswer((_) async {});
 
       await authService.signOut();
 
@@ -59,14 +62,16 @@ void main() {
 
     test('silentSignIn signs in if possible', () async {
       when(
-        () => mockGoogleSignIn.signInSilently(),
+        () => mockGoogleSignIn.attemptLightweightAuthentication(),
       ).thenAnswer((_) async => mockAccount);
 
       final user = await authService.silentSignIn();
 
       expect(user, isNotNull);
       expect(user?.email, 'test@example.com');
-      verify(() => mockGoogleSignIn.signInSilently()).called(1);
+      verify(
+        () => mockGoogleSignIn.attemptLightweightAuthentication(),
+      ).called(1);
     });
 
     test('onCurrentUserChanged emits user changes', () async {
@@ -75,8 +80,12 @@ void main() {
         emitsInOrder([mockAccount, null]),
       );
 
-      currentUserController.add(mockAccount);
-      currentUserController.add(null);
+      authenticationEventsController.add(
+        GoogleSignInAuthenticationEventSignIn(user: mockAccount),
+      );
+      authenticationEventsController.add(
+        GoogleSignInAuthenticationEventSignOut(),
+      );
     });
   });
 }
