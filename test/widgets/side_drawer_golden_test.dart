@@ -15,21 +15,24 @@ class MockGoogleSignIn extends Mock implements GoogleSignIn {}
 void main() {
   late MockGoogleSignIn mockGoogleSignIn;
   late AuthService authService;
-  late StreamController<GoogleSignInAccount?> currentUserController;
+  late StreamController<GoogleSignInAuthenticationEvent>
+  authenticationEventsController;
 
   setUp(() {
     mockGoogleSignIn = MockGoogleSignIn();
-    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-    authService = AuthService(googleSignIn: mockGoogleSignIn);
+    authenticationEventsController =
+        StreamController<GoogleSignInAuthenticationEvent>.broadcast();
 
     when(
-      () => mockGoogleSignIn.onCurrentUserChanged,
-    ).thenAnswer((_) => currentUserController.stream);
-    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
+      () => mockGoogleSignIn.authenticationEvents,
+    ).thenAnswer((_) => authenticationEventsController.stream);
+    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
   });
 
   tearDown(() {
-    currentUserController.close();
+    authenticationEventsController.close();
   });
 
   group('SideDrawer Golden Tests', () {

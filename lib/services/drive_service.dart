@@ -43,7 +43,6 @@ class EtagClient extends http.BaseClient {
 }
 
 class DriveService {
-  final GoogleSignIn _googleSignIn;
   final http.Client? _testClient;
   final String _prefPrefix;
   static const _backupFileName = 'diary.jsonl';
@@ -51,11 +50,15 @@ class DriveService {
 
   Future<SyncResult>? _inFlight;
 
+  final GoogleSignInAccount? Function()? _currentUserProvider;
+
   DriveService(
-    this._googleSignIn, {
+    GoogleSignIn googleSignIn, {
+    GoogleSignInAccount? Function()? currentUserProvider,
     http.Client? testClient,
     String preferencePrefix = '',
-  }) : _testClient = testClient,
+  }) : _currentUserProvider = currentUserProvider,
+       _testClient = testClient,
        _prefPrefix = preferencePrefix;
 
   Future<SyncResult> sync(DiaryEntryStore entryStore) {
@@ -354,8 +357,19 @@ class DriveService {
     if (_testClient != null) {
       return _testClient;
     }
-    final client = await _googleSignIn.authenticatedClient();
-    if (client == null) throw Exception('User not authenticated');
-    return client;
+    final currentUser = _currentUserProvider?.call();
+    if (currentUser == null) throw Exception('User not authenticated');
+
+    final scopes = [
+      'email',
+      'https://www.googleapis.com/auth/userinfo.profile',
+      drive.DriveApi.driveFileScope,
+    ];
+
+    GoogleSignInClientAuthorization? auth = await currentUser
+        .authorizationClient
+        .authorizationForScopes(scopes);
+    auth ??= await currentUser.authorizationClient.authorizeScopes(scopes);
+    return auth.authClient(scopes: scopes);
   }
 }

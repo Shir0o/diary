@@ -27,6 +27,7 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env', isOptional: true);
 
   final authService = AuthService();
+  await authService.initialize();
   await authService.silentSignIn();
 
   final securityService = SecurityService();

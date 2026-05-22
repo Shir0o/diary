@@ -14,25 +14,28 @@ void main() {
   late MockGoogleSignIn mockGoogleSignIn;
   late MockGoogleSignInAccount mockAccount;
   late AuthService authService;
-  late StreamController<GoogleSignInAccount?> currentUserController;
+  late StreamController<GoogleSignInAuthenticationEvent>
+  authenticationEventsController;
 
   setUp(() {
     mockGoogleSignIn = MockGoogleSignIn();
     mockAccount = MockGoogleSignInAccount();
-    currentUserController = StreamController<GoogleSignInAccount?>.broadcast();
-
-    authService = AuthService(googleSignIn: mockGoogleSignIn);
+    authenticationEventsController =
+        StreamController<GoogleSignInAuthenticationEvent>.broadcast();
 
     when(
-      () => mockGoogleSignIn.onCurrentUserChanged,
-    ).thenAnswer((_) => currentUserController.stream);
+      () => mockGoogleSignIn.authenticationEvents,
+    ).thenAnswer((_) => authenticationEventsController.stream);
+    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+
+    authService = AuthService(googleSignIn: mockGoogleSignIn);
     when(() => mockAccount.email).thenReturn('bob@example.com');
     when(() => mockAccount.displayName).thenReturn('Bob');
     when(() => mockAccount.photoUrl).thenReturn('');
   });
 
   tearDown(() {
-    currentUserController.close();
+    authenticationEventsController.close();
   });
 
   Widget createWidgetUnderTest({
@@ -55,8 +58,6 @@ void main() {
   testWidgets('SideDrawer renders header and navigation items', (
     WidgetTester tester,
   ) async {
-    when(() => mockGoogleSignIn.currentUser).thenReturn(null);
-
     await tester.pumpWidget(
       createWidgetUnderTest(onItemSelected: (_) {}, authService: authService),
     );
