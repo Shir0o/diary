@@ -12,12 +12,14 @@ class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
   final List<String> existingTags;
   final LocationService? locationService;
+  final DateTime? initialDate;
 
   const NewEntryScreen({
     super.key,
     this.entry,
     this.existingTags = const [],
     this.locationService,
+    this.initialDate,
   });
 
   static const String routeName = '/new-entry';
@@ -58,7 +60,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
     _tagInputController = TextEditingController();
-    _entryDate = widget.entry?.date ?? DateTime.now();
+    _entryDate = widget.entry?.date ?? widget.initialDate ?? DateTime.now();
     _mood = widget.entry?.mood ?? '📝';
     _tags = List.from(widget.entry?.tags ?? []);
   }

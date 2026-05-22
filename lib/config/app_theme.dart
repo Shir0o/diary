@@ -46,6 +46,22 @@ class AppTheme {
   static const double opacitySubtle = 0.5;
   static const double opacityMedium = 0.6;
 
+  // Font Sizes
+  static const double fontSizeCaption = 12.0;
+  static const double fontSizeBodySmall = 13.0;
+  static const double fontSizeBodyMedium = 14.0;
+  static const double fontSizeTitleMedium = 18.0;
+
+  // Icon and Indicator Sizes
+  static const double iconSizeSmall = 18.0;
+  static const double progressIndicatorSizeMedium = 24.0;
+  static const double progressIndicatorSizeSmall = 18.0;
+  static const double progressIndicatorStrokeWidthMedium = 2.5;
+  static const double progressIndicatorStrokeWidthSmall = 2.0;
+
+  // Location/Sheet Layout Dimensions
+  static const double locationSheetSuggestionsHeight = 180.0;
+
   // Animation durations
   static const Duration transitionDuration = Duration(milliseconds: 350);
   static const Duration reverseTransitionDuration = Duration(milliseconds: 250);
