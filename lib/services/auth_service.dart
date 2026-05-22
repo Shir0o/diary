@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'drive_service.dart';
 
+import '../config/app_config.dart';
+
 class AuthService {
   final GoogleSignIn _googleSignIn;
   GoogleSignInAccount? _currentUser;
@@ -37,7 +39,26 @@ class AuthService {
 
   Future<void> initialize() async {
     try {
-      await _googleSignIn.initialize();
+      final webClientId = AppConfig.googleWebClientId.isEmpty
+          ? null
+          : AppConfig.googleWebClientId;
+      String? clientId;
+      if (kIsWeb) {
+        clientId = webClientId;
+      } else if (defaultTargetPlatform == TargetPlatform.android) {
+        clientId = AppConfig.googleAndroidClientId.isEmpty
+            ? null
+            : AppConfig.googleAndroidClientId;
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        clientId = AppConfig.googleIosClientId.isEmpty
+            ? null
+            : AppConfig.googleIosClientId;
+      }
+
+      await _googleSignIn.initialize(
+        clientId: clientId,
+        serverClientId: webClientId,
+      );
     } catch (e) {
       debugPrint('Error initializing GoogleSignIn: $e');
     }

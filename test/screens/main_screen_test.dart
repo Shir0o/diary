@@ -38,7 +38,12 @@ void main() {
     when(
       () => mockGoogleSignIn.authenticationEvents,
     ).thenAnswer((_) => authenticationEventsController.stream);
-    when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+    when(
+      () => mockGoogleSignIn.initialize(
+        clientId: any(named: 'clientId'),
+        serverClientId: any(named: 'serverClientId'),
+      ),
+    ).thenAnswer((_) async {});
     when(
       () => mockGoogleSignIn.attemptLightweightAuthentication(),
     ).thenAnswer((_) async => null);
