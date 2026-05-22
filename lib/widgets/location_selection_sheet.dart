@@ -271,74 +271,66 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
             const Divider(height: 16),
 
             // Suggestions list / loader
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: _isLoadingSuggestions
-                  ? const Padding(
-                      padding: EdgeInsets.all(AppTheme.spacingMedium),
-                      child: Center(
+            Flexible(
+              child: SizedBox(
+                height: 180,
+                child: _isLoadingSuggestions
+                    ? const Center(
                         child: SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(strokeWidth: 2.5),
                         ),
-                      ),
-                    )
-                  : _suggestions.isEmpty
-                  ? (widget.initialLocation.isEmpty &&
-                            _searchController.text.trim().isEmpty
-                        ? const SizedBox.shrink()
-                        : Padding(
-                            padding: const EdgeInsets.all(
-                              AppTheme.spacingSmall,
+                      )
+                    : _suggestions.isEmpty
+                    ? Center(
+                        child: Text(
+                          _searchController.text.trim().isEmpty
+                              ? 'Type to search for location suggestions'
+                              : 'No suggestions found. Press Save to use typed address.',
+                          style: safeGoogleFont(
+                            'IBM Plex Sans',
+                            fontSize: 13,
+                            color: colorScheme.onSurface.withValues(
+                              alpha: AppTheme.opacitySubtle,
                             ),
-                            child: Text(
-                              _searchController.text.isEmpty
-                                  ? 'Type to search for location suggestions'
-                                  : 'No suggestions found. Press Save to use typed address.',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _suggestions.length,
+                        itemBuilder: (context, index) {
+                          final suggestion = _suggestions[index];
+                          return ListTile(
+                            leading: Icon(
+                              Icons.location_on_outlined,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: AppTheme.opacityMedium,
+                              ),
+                              size: 18,
+                            ),
+                            title: Text(
+                              suggestion,
                               style: safeGoogleFont(
                                 'IBM Plex Sans',
-                                fontSize: 13,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: AppTheme.opacitySubtle,
-                                ),
+                                fontSize: 14,
+                                color: colorScheme.onSurface,
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                          ))
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _suggestions.length,
-                      itemBuilder: (context, index) {
-                        final suggestion = _suggestions[index];
-                        return ListTile(
-                          leading: Icon(
-                            Icons.location_on_outlined,
-                            color: colorScheme.onSurface.withValues(
-                              alpha: AppTheme.opacityMedium,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacingSmall,
                             ),
-                            size: 18,
-                          ),
-                          title: Text(
-                            suggestion,
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 14,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.spacingSmall,
-                          ),
-                          onTap: () {
-                            setState(() {
-                              _searchController.text = suggestion;
-                              _suggestions = const [];
-                            });
-                          },
-                        );
-                      },
-                    ),
+                            onTap: () {
+                              setState(() {
+                                _searchController.text = suggestion;
+                                _suggestions = const [];
+                              });
+                            },
+                          );
+                        },
+                      ),
+              ),
             ),
             const SizedBox(height: AppTheme.spacingMedium),
 
