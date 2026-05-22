@@ -565,4 +565,44 @@ void main() {
       expect(popped, isTrue);
     },
   );
+
+  testWidgets(
+    'Unsaved Changes Dialog - Tapping Save pops without showing dialog',
+    (WidgetTester tester) async {
+      DiaryEntry? savedEntry;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  savedEntry = await Navigator.of(
+                    context,
+                  ).push<DiaryEntry>(NewEntryScreen.route());
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Enter content (unsaved changes exist)
+      await tester.enterText(find.byType(TextField), 'Some content');
+      await tester.pumpAndSettle();
+
+      // Tap Save
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      // Verify dialog never appeared, and screen popped with the entry
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(savedEntry, isNotNull);
+      expect(savedEntry!.content, 'Some content');
+    },
+  );
 }

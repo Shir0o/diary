@@ -45,6 +45,8 @@ class NewEntryScreen extends StatefulWidget {
 }
 
 class _NewEntryScreenState extends State<NewEntryScreen> {
+  static const String _defaultMood = '📝';
+
   late final TextEditingController _controller;
   late final TextEditingController _locationController;
   late final TextEditingController _tagInputController;
@@ -53,6 +55,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   late String _mood;
   late List<String> _tags;
   late final LocationService _locationService;
+  bool _isSavingOrDiscarding = false;
 
   @override
   void initState() {
@@ -64,7 +67,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _initialEntryDate =
         widget.entry?.date ?? widget.initialDate ?? DateTime.now();
     _entryDate = _initialEntryDate;
-    _mood = widget.entry?.mood ?? '📝';
+    _mood = widget.entry?.mood ?? _defaultMood;
     _tags = List.from(widget.entry?.tags ?? []);
 
     _controller.addListener(_onFieldChanged);
@@ -96,6 +99,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         if (didPop) return;
         final shouldDiscard = await _showUnsavedChangesDialog();
         if (shouldDiscard && context.mounted) {
+          setState(() {
+            _isSavingOrDiscarding = true;
+          });
           Navigator.of(context).pop();
         }
       },
@@ -123,6 +129,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ElevatedButton(
                 onPressed: () {
+                  setState(() {
+                    _isSavingOrDiscarding = true;
+                  });
                   Navigator.of(context).pop(_buildEntry());
                 },
                 style: ElevatedButton.styleFrom(
@@ -715,6 +724,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   bool _hasUnsavedChanges() {
+    if (_isSavingOrDiscarding) return false;
     final currentContent = _controller.text;
     final currentLocation = _locationController.text;
     final currentMood = _mood;
@@ -726,7 +736,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       final isContentNotEmpty = currentContent.trim().isNotEmpty;
       final isLocationNotEmpty = currentLocation.trim().isNotEmpty;
       final isTagsNotEmpty = currentTags.isNotEmpty;
-      final isMoodChanged = currentMood != '📝';
+      final isMoodChanged = currentMood != _defaultMood;
 
       return isContentNotEmpty ||
           isLocationNotEmpty ||
@@ -764,20 +774,19 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       builder: (BuildContext context) {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
+        final textTheme = theme.textTheme;
 
         return AlertDialog(
           title: Text(
             'Unsaved Changes',
-            style: safeGoogleFont(
-              'IBM Plex Sans',
+            style: (textTheme.titleLarge ?? const TextStyle()).copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
             ),
           ),
           content: Text(
             'You have unsaved changes. Are you sure you want to discard them?',
-            style: safeGoogleFont(
-              'IBM Plex Sans',
+            style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
               color: colorScheme.onSurface,
             ),
           ),
@@ -786,8 +795,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(
                 'Keep Editing',
-                style: safeGoogleFont(
-                  'IBM Plex Sans',
+                style: (textTheme.labelLarge ?? const TextStyle()).copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.primary,
                 ),
@@ -797,8 +805,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(
                 'Discard',
-                style: safeGoogleFont(
-                  'IBM Plex Sans',
+                style: (textTheme.labelLarge ?? const TextStyle()).copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.error,
                 ),
