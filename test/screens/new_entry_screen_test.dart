@@ -605,4 +605,43 @@ void main() {
       expect(savedEntry!.content, 'Some content');
     },
   );
+
+  testWidgets(
+    'Unsaved Changes Dialog - DateTime difference in milliseconds is ignored',
+    (WidgetTester tester) async {
+      final initialDate = DateTime(2026, 5, 22, 10, 15, 30, 456);
+      bool popped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          NewEntryScreen(initialDate: initialDate),
+                    ),
+                  );
+                  popped = true;
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Tap back arrow without changes, should pop immediately
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(NewEntryScreen), findsNothing);
+      expect(popped, isTrue);
+    },
+  );
 }

@@ -732,7 +732,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final currentDate = _entryDate;
 
     if (widget.entry == null) {
-      final isDateChanged = currentDate != _initialEntryDate;
+      final isDateChanged = !_isSameDateTime(currentDate, _initialEntryDate);
       final isContentNotEmpty = currentContent.trim().isNotEmpty;
       final isLocationNotEmpty = currentLocation.trim().isNotEmpty;
       final isTagsNotEmpty = currentTags.isNotEmpty;
@@ -751,7 +751,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       final isLocationChanged =
           currentLocation.trim() != existingLocation.trim();
       final isMoodChanged = currentMood != existingEntry.mood;
-      final isDateChanged = currentDate != existingEntry.date;
+      final isDateChanged = !_isSameDateTime(currentDate, existingEntry.date);
       final isTagsChanged = !_areTagsEqual(currentTags, existingEntry.tags);
 
       return isContentChanged ||
@@ -766,6 +766,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final set1 = list1.toSet();
     final set2 = list2.toSet();
     return set1.length == set2.length && set1.containsAll(set2);
+  }
+
+  bool _isSameDateTime(DateTime dt1, DateTime dt2) {
+    return dt1.year == dt2.year &&
+        dt1.month == dt2.month &&
+        dt1.day == dt2.day &&
+        dt1.hour == dt2.hour &&
+        dt1.minute == dt2.minute;
   }
 
   Future<bool> _showUnsavedChangesDialog() async {
