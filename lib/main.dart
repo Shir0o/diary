@@ -117,6 +117,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   List<DiaryEntry> _entries = [];
   bool _isLoadingEntries = true;
   Timer? _autoSyncTimer;
+  bool _autoDeleteTrash = true;
+  int _trashRetentionDays = 30;
 
   void _triggerAutoSync() {
     _autoSyncTimer?.cancel();
@@ -230,6 +232,24 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final autoDelete = prefs.getBool('auto_delete_trash') ?? true;
+    final retentionDays = prefs.getInt('trash_retention_days') ?? 30;
+
+    if (mounted &&
+        (_autoDeleteTrash != autoDelete ||
+            _trashRetentionDays != retentionDays)) {
+      setState(() {
+        _autoDeleteTrash = autoDelete;
+        _trashRetentionDays = retentionDays;
+      });
+    }
+
+    if (autoDelete) {
+      final cutoff = DateTime.now().subtract(Duration(days: retentionDays));
+      await widget.entryStore.deleteEntriesDeletedBefore(cutoff);
+    }
+
     await widget.entryStore.seedEntriesIfEmpty(_defaultEntries);
     final entries = await widget.entryStore.loadEntries();
 
@@ -278,44 +298,130 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     _triggerAutoSync();
   }
 
+  void _showUndoSnackBar({
+    required String message,
+    required Future<void> Function() onUndo,
+  }) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            try {
+              await onUndo();
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to undo action: $e'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteEntry(String id) async {
+    final index = _entries.indexWhere((item) => item.id == id);
+    if (index == -1) return;
     await widget.entryStore.trashEntry(id, true);
     if (!mounted) return;
     setState(() {
-      final index = _entries.indexWhere((item) => item.id == id);
-      if (index != -1) {
-        _entries[index] = _entries[index].copyWith(isDeleted: true);
-      }
+      _entries[index] = _entries[index].copyWith(isDeleted: true);
     });
     _triggerAutoSync();
+
+    _showUndoSnackBar(
+      message: 'Entry moved to Trash',
+      onUndo: () async {
+        await widget.entryStore.trashEntry(id, false);
+        if (!mounted) return;
+        setState(() {
+          final idx = _entries.indexWhere((item) => item.id == id);
+          if (idx != -1) {
+            _entries[idx] = _entries[idx].copyWith(isDeleted: false);
+          }
+        });
+        _triggerAutoSync();
+      },
+    );
   }
 
   Future<void> _archiveEntry(String id, bool archived) async {
+    final index = _entries.indexWhere((item) => item.id == id);
+    if (index == -1) return;
     await widget.entryStore.archiveEntry(id, archived);
     if (!mounted) return;
     setState(() {
-      final index = _entries.indexWhere((item) => item.id == id);
-      if (index != -1) {
-        _entries[index] = _entries[index].copyWith(isArchived: archived);
-      }
+      _entries[index] = _entries[index].copyWith(isArchived: archived);
     });
     _triggerAutoSync();
+
+    _showUndoSnackBar(
+      message: archived ? 'Entry archived' : 'Entry unarchived',
+      onUndo: () async {
+        await widget.entryStore.archiveEntry(id, !archived);
+        if (!mounted) return;
+        setState(() {
+          final idx = _entries.indexWhere((item) => item.id == id);
+          if (idx != -1) {
+            _entries[idx] = _entries[idx].copyWith(isArchived: !archived);
+          }
+        });
+        _triggerAutoSync();
+      },
+    );
   }
 
   Future<void> _restoreEntry(String id) async {
+    final index = _entries.indexWhere((item) => item.id == id);
+    if (index == -1) return;
+    final entry = _entries[index];
+    final wasArchived = entry.isArchived;
+    final wasDeleted = entry.isDeleted;
+
     await widget.entryStore.archiveEntry(id, false);
     await widget.entryStore.trashEntry(id, false);
     if (!mounted) return;
     setState(() {
-      final index = _entries.indexWhere((item) => item.id == id);
-      if (index != -1) {
-        _entries[index] = _entries[index].copyWith(
-          isArchived: false,
-          isDeleted: false,
-        );
-      }
+      _entries[index] = _entries[index].copyWith(
+        isArchived: false,
+        isDeleted: false,
+      );
     });
     _triggerAutoSync();
+
+    _showUndoSnackBar(
+      message: 'Entry restored',
+      onUndo: () async {
+        if (wasArchived) {
+          await widget.entryStore.archiveEntry(id, true);
+        }
+        if (wasDeleted) {
+          await widget.entryStore.trashEntry(id, true);
+        }
+        if (!mounted) return;
+        setState(() {
+          final idx = _entries.indexWhere((item) => item.id == id);
+          if (idx != -1) {
+            _entries[idx] = _entries[idx].copyWith(
+              isArchived: wasArchived,
+              isDeleted: wasDeleted,
+            );
+          }
+        });
+        _triggerAutoSync();
+      },
+    );
   }
 
   Future<void> _permanentlyDeleteEntry(String id) async {
@@ -325,6 +431,29 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _entries.removeWhere((item) => item.id == id);
     });
     _triggerAutoSync();
+  }
+
+  Future<void> _emptyTrash() async {
+    final deletedIds = _entries
+        .where((e) => e.isDeleted)
+        .map((e) => e.id)
+        .toList();
+    if (deletedIds.isEmpty) return;
+
+    await widget.entryStore.permanentlyDeleteEntries(deletedIds);
+
+    if (!mounted) return;
+    setState(() {
+      _entries.removeWhere((e) => deletedIds.contains(e.id));
+    });
+    _triggerAutoSync();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Trash emptied successfully'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _sortEntries() {
@@ -473,6 +602,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             .toList(),
         onBackPressed: _goBackToTimeline,
         onUnarchiveEntry: _restoreEntry,
+        onDeleteEntry: _deleteEntry,
       ),
       _MainScreen.trash => TrashScreen(
         isLoading: isLoading,
@@ -480,6 +610,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         onBackPressed: _goBackToTimeline,
         onRestoreEntry: _restoreEntry,
         onPermanentlyDeleteEntry: _permanentlyDeleteEntry,
+        onEmptyTrash: _emptyTrash,
+        autoDeleteEnabled: _autoDeleteTrash,
+        retentionDays: _trashRetentionDays,
       ),
       _MainScreen.media => MediaScreen(
         isLoading: isLoading,

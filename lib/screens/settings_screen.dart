@@ -44,6 +44,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isSyncing = false;
   DateTime? _lastSyncAt;
   late AnimationController _syncAnimationController;
+  bool _autoDeleteTrash = true;
+  int _trashRetentionDays = 30;
 
   @override
   void initState() {
@@ -66,6 +68,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     final prefs = await SharedPreferences.getInstance();
     final lastSyncIso = prefs.getString(_lastSyncAtKey);
     final autoSyncEnabled = prefs.getBool('auto_sync') ?? true;
+    final autoDelete = prefs.getBool('auto_delete_trash') ?? true;
+    final retentionDays = prefs.getInt('trash_retention_days') ?? 30;
     if (mounted) {
       setState(() {
         _biometricLock = enabled;
@@ -73,6 +77,8 @@ class _SettingsScreenState extends State<SettingsScreen>
         _lastSyncAt = lastSyncIso != null
             ? DateTime.tryParse(lastSyncIso)
             : null;
+        _autoDeleteTrash = autoDelete;
+        _trashRetentionDays = retentionDays;
       });
     }
   }
@@ -184,6 +190,25 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                     ]),
                     const SizedBox(height: AppTheme.spacingMedium),
+                    _buildSectionHeader('TRASH & ARCHIVE'),
+                    _buildSettingsCard([
+                      _buildToggleItem(
+                        icon: Icons.auto_delete_outlined,
+                        title: 'Auto-delete Trash',
+                        value: _autoDeleteTrash,
+                        onChanged: (val) async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('auto_delete_trash', val);
+                          setState(() {
+                            _autoDeleteTrash = val;
+                          });
+                          widget.onSyncCompleted?.call();
+                        },
+                        showBorder: _autoDeleteTrash,
+                      ),
+                      if (_autoDeleteTrash) _buildRetentionPeriodItem(),
+                    ]),
+                    const SizedBox(height: AppTheme.spacingMedium),
                     _buildSectionHeader('CLOUD SYNC'),
                     _buildCloudBackupCard(user != null),
                     const SizedBox(height: AppTheme.spacingExtraLarge),
@@ -192,6 +217,53 @@ class _SettingsScreenState extends State<SettingsScreen>
                 );
               },
             ),
+    );
+  }
+
+  Widget _buildRetentionPeriodItem() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          _buildIconContainer(Icons.timer_outlined),
+          const SizedBox(width: AppTheme.spacingMedium),
+          Expanded(
+            child: Text(
+              'Retention Period',
+              style: safeGoogleFont(
+                'IBM Plex Sans',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: _trashRetentionDays,
+              onChanged: (int? newValue) async {
+                if (newValue != null) {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setInt('trash_retention_days', newValue);
+                  setState(() {
+                    _trashRetentionDays = newValue;
+                  });
+                  widget.onSyncCompleted?.call();
+                }
+              },
+              icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
+              dropdownColor: colorScheme.surface,
+              items: const [
+                DropdownMenuItem<int>(value: 7, child: Text('7 days')),
+                DropdownMenuItem<int>(value: 30, child: Text('30 days')),
+                DropdownMenuItem<int>(value: 90, child: Text('90 days')),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

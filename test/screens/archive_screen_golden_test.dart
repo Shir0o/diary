@@ -27,6 +27,7 @@ void main() {
           archivedEntries: mockEntries,
           onBackPressed: () {},
           onUnarchiveEntry: (_) {},
+          onDeleteEntry: (_) {},
         ),
         wrapper: (child) => MaterialApp(
           debugShowCheckedModeBanner: false,

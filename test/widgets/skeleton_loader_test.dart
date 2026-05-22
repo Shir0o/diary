@@ -247,6 +247,7 @@ void main() {
             archivedEntries: const [],
             onBackPressed: () {},
             onUnarchiveEntry: (_) {},
+            onDeleteEntry: (_) {},
           ),
         ),
       );
@@ -265,6 +266,9 @@ void main() {
             onBackPressed: () {},
             onRestoreEntry: (_) {},
             onPermanentlyDeleteEntry: (_) {},
+            onEmptyTrash: () {},
+            autoDeleteEnabled: true,
+            retentionDays: 30,
           ),
         ),
       );

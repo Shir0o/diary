@@ -28,6 +28,9 @@ void main() {
           onBackPressed: () {},
           onRestoreEntry: (_) {},
           onPermanentlyDeleteEntry: (_) {},
+          onEmptyTrash: () {},
+          autoDeleteEnabled: true,
+          retentionDays: 30,
         ),
         wrapper: (child) => MaterialApp(
           debugShowCheckedModeBanner: false,
