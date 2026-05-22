@@ -12,6 +12,9 @@ abstract class LocationService {
 }
 
 class GeolocatorLocationService implements LocationService {
+  static const String _userAgent =
+      'DiaryAppPersonalProject-twang-v1.0/1.0 (shir0o-diary-project@twang-personal.net)';
+
   final HttpClient _httpClient;
 
   GeolocatorLocationService({HttpClient? httpClient})
@@ -79,10 +82,7 @@ class GeolocatorLocationService implements LocationService {
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
       );
       final request = await _httpClient.getUrl(uri);
-      request.headers.set(
-        'User-Agent',
-        'DiaryAppPersonalProject-twang-v1.0/1.0 (shir0o-diary-project@twang-personal.net)',
-      );
+      request.headers.set('User-Agent', _userAgent);
       final response = await request.close();
       if (response.statusCode == 200) {
         final body = await response.transform(utf8.decoder).join();
@@ -137,10 +137,7 @@ class GeolocatorLocationService implements LocationService {
         'https://nominatim.openstreetmap.org/search?format=json&q=${Uri.encodeComponent(query)}&limit=5',
       );
       final request = await _httpClient.getUrl(uri);
-      request.headers.set(
-        'User-Agent',
-        'DiaryAppPersonalProject-twang-v1.0/1.0 (shir0o-diary-project@twang-personal.net)',
-      );
+      request.headers.set('User-Agent', _userAgent);
       final response = await request.close();
       if (response.statusCode == 200) {
         final body = await response.transform(utf8.decoder).join();

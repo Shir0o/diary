@@ -9,7 +9,7 @@ import 'package:diary/screens/new_entry_screen.dart';
 void main() {
   testGoldens('NewEntryScreen - appearance', (tester) async {
     await tester.pumpWidgetBuilder(
-      const NewEntryScreen(),
+      NewEntryScreen(initialDate: DateTime(2026, 4, 24, 10, 0)),
       wrapper: (child) =>
           MaterialApp(debugShowCheckedModeBanner: false, home: child),
       surfaceSize: const Size(390, 844), // iPhone 13/14 size

@@ -146,7 +146,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                 'Add Location',
                 style: safeGoogleFont(
                   'IBM Plex Sans',
-                  fontSize: 18,
+                  fontSize: AppTheme.fontSizeTitleMedium,
                   fontWeight: FontWeight.w600,
                   color: colorScheme.onSurface,
                 ),
@@ -215,7 +215,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                   _errorMessage!,
                   style: safeGoogleFont(
                     'IBM Plex Sans',
-                    fontSize: 12,
+                    fontSize: AppTheme.fontSizeCaption,
                     color: colorScheme.error,
                   ),
                 ),
@@ -236,10 +236,11 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                   children: [
                     _isDetecting
                         ? SizedBox(
-                            width: 18,
-                            height: 18,
+                            width: AppTheme.progressIndicatorSizeSmall,
+                            height: AppTheme.progressIndicatorSizeSmall,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth:
+                                  AppTheme.progressIndicatorStrokeWidthSmall,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 colorScheme.primary,
                               ),
@@ -247,7 +248,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                           )
                         : Icon(
                             Icons.my_location,
-                            size: 18,
+                            size: AppTheme.iconSizeSmall,
                             color: colorScheme.primary,
                           ),
                     const SizedBox(width: AppTheme.spacingSmall),
@@ -260,7 +261,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                           'IBM Plex Sans',
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w500,
-                          fontSize: 14,
+                          fontSize: AppTheme.fontSizeBodyMedium,
                         ),
                       ),
                     ),
@@ -273,13 +274,16 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
             // Suggestions list / loader
             Flexible(
               child: SizedBox(
-                height: 180,
+                height: AppTheme.locationSheetSuggestionsHeight,
                 child: _isLoadingSuggestions
                     ? const Center(
                         child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                          width: AppTheme.progressIndicatorSizeMedium,
+                          height: AppTheme.progressIndicatorSizeMedium,
+                          child: CircularProgressIndicator(
+                            strokeWidth:
+                                AppTheme.progressIndicatorStrokeWidthMedium,
+                          ),
                         ),
                       )
                     : _suggestions.isEmpty
@@ -290,7 +294,7 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                               : 'No suggestions found. Press Save to use typed address.',
                           style: safeGoogleFont(
                             'IBM Plex Sans',
-                            fontSize: 13,
+                            fontSize: AppTheme.fontSizeBodySmall,
                             color: colorScheme.onSurface.withValues(
                               alpha: AppTheme.opacitySubtle,
                             ),
@@ -308,13 +312,13 @@ class _LocationSelectionSheetState extends State<LocationSelectionSheet> {
                               color: colorScheme.onSurface.withValues(
                                 alpha: AppTheme.opacityMedium,
                               ),
-                              size: 18,
+                              size: AppTheme.iconSizeSmall,
                             ),
                             title: Text(
                               suggestion,
                               style: safeGoogleFont(
                                 'IBM Plex Sans',
-                                fontSize: 14,
+                                fontSize: AppTheme.fontSizeBodyMedium,
                                 color: colorScheme.onSurface,
                               ),
                             ),
