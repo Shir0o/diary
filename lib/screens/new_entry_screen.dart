@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -572,7 +573,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       context: context,
       initialDate: _entryDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
+      lastDate: DateTime(DateTime.now().year + 5),
     );
     if (pickedDate == null || !mounted) return;
 
@@ -913,11 +914,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   bool _areListsEqual(List<String> list1, List<String> list2) {
-    if (list1.length != list2.length) return false;
-    for (int i = 0; i < list1.length; i++) {
-      if (list1[i] != list2[i]) return false;
-    }
-    return true;
+    return listEquals(list1, list2);
   }
 
   bool _areTagsEqual(List<String> list1, List<String> list2) {

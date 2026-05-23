@@ -137,7 +137,7 @@ class EntrySearchDelegate extends SearchDelegate<DiaryEntry?> {
                 final range = await showDateRangePicker(
                   context: context,
                   firstDate: DateTime(2020),
-                  lastDate: DateTime(2035),
+                  lastDate: DateTime(DateTime.now().year + 5),
                   initialDateRange: _selectedDateRange,
                 );
                 if (range != null) {

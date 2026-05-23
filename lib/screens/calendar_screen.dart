@@ -179,6 +179,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
       cells.add(DateTime(_currentMonth.year, _currentMonth.month, i));
     }
 
+    final today = DateTime.now();
+    final entryDates = _entries
+        .where((entry) => !entry.isArchived && !entry.isDeleted)
+        .map(
+          (entry) => '${entry.date.year}-${entry.date.month}-${entry.date.day}',
+        )
+        .toSet();
+
     final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Column(
@@ -254,19 +262,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   cell.month == _selectedDate.month &&
                   cell.day == _selectedDate.day;
 
-              final today = DateTime.now();
               final isToday =
                   cell.year == today.year &&
                   cell.month == today.month &&
                   cell.day == today.day;
 
-              final hasEntries = _entries.any((entry) {
-                return !entry.isArchived &&
-                    !entry.isDeleted &&
-                    entry.date.year == cell.year &&
-                    entry.date.month == cell.month &&
-                    entry.date.day == cell.day;
-              });
+              final hasEntries = entryDates.contains(
+                '${cell.year}-${cell.month}-${cell.day}',
+              );
 
               return GestureDetector(
                 onTap: () {
