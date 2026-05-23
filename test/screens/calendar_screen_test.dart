@@ -12,7 +12,7 @@ void main() {
     );
 
     expect(find.text('Calendar'), findsOneWidget);
-    expect(find.byType(CalendarDatePicker), findsOneWidget);
+    expect(find.byType(GridView), findsOneWidget);
   });
 
   testWidgets('Selecting a date should filter entries (mock test)', (
@@ -31,14 +31,11 @@ void main() {
 
     expect(find.byType(EntryCard), findsAtLeastNWidgets(1));
 
-    // Tap a different date (e.g., yesterday)
-    // Finding a date in CalendarDatePicker is tricky by text if it's not unique,
-    // but usually we can find the day number.
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    await tester.tap(find.text(yesterday.day.toString()).last);
+    // Tap a different date (e.g., April 23) which has another default entry
+    await tester.tap(find.text('23').last);
     await tester.pumpAndSettle();
 
-    // Verify list updates (this depends on implementation)
-    // For now this is just a placeholder test structure.
+    // Verify list updates
+    expect(find.byType(EntryCard), findsAtLeastNWidgets(1));
   });
 }

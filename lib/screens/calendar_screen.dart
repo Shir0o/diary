@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/diary_entry.dart';
 import '../widgets/entry_card.dart';
 import '../helpers/font_helper.dart';
@@ -28,11 +29,13 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _selectedDate;
+  late DateTime _currentMonth;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate ?? DateTime.now();
+    _currentMonth = DateTime(_selectedDate.year, _selectedDate.month);
   }
 
   static final List<DiaryEntry> _defaultEntries = [
@@ -104,23 +107,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ? const CalendarScreenSkeleton()
           : Column(
               children: [
-                Theme(
-                  data: theme.copyWith(
-                    colorScheme: colorScheme.copyWith(
-                      onSurface: colorScheme.onSurface,
-                    ),
-                  ),
-                  child: CalendarDatePicker(
-                    initialDate: _selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2030),
-                    onDateChanged: (date) {
-                      setState(() {
-                        _selectedDate = date;
-                      });
-                    },
-                  ),
-                ),
+                _buildCustomCalendar(context),
                 Divider(
                   height: 1,
                   color: colorScheme.outline.withValues(alpha: 0.2),
@@ -154,6 +141,192 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  int _daysInMonth(DateTime date) {
+    return DateTime(date.year, date.month + 1, 0).day;
+  }
+
+  int _firstWeekdayOfMonth(DateTime date) {
+    return DateTime(date.year, date.month, 1).weekday;
+  }
+
+  void _previousMonth() {
+    setState(() {
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+    });
+  }
+
+  Widget _buildCustomCalendar(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final days = _daysInMonth(_currentMonth);
+    final firstWeekday = _firstWeekdayOfMonth(_currentMonth);
+
+    final List<DateTime?> cells = [];
+    for (int i = 1; i < firstWeekday; i++) {
+      cells.add(null);
+    }
+    for (int i = 1; i <= days; i++) {
+      cells.add(DateTime(_currentMonth.year, _currentMonth.month, i));
+    }
+
+    final today = DateTime.now();
+    final entryDates = _entries
+        .where((entry) => !entry.isArchived && !entry.isDeleted)
+        .map(
+          (entry) => '${entry.date.year}-${entry.date.month}-${entry.date.day}',
+        )
+        .toSet();
+
+    final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    return Column(
+      children: [
+        // Month Selector Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _previousMonth,
+              ),
+              Text(
+                DateFormat('MMMM yyyy').format(_currentMonth),
+                style: safeGoogleFont(
+                  'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _nextMonth,
+              ),
+            ],
+          ),
+        ),
+        // Weekdays Abbreviations
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: weekdays.map((day) {
+              return SizedBox(
+                width: 40,
+                child: Text(
+                  day,
+                  textAlign: TextAlign.center,
+                  style: safeGoogleFont(
+                    'Inter',
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Day Grid
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1.3,
+            ),
+            itemCount: cells.length,
+            itemBuilder: (context, index) {
+              final cell = cells[index];
+              if (cell == null) return const SizedBox.shrink();
+
+              final isSelected =
+                  cell.year == _selectedDate.year &&
+                  cell.month == _selectedDate.month &&
+                  cell.day == _selectedDate.day;
+
+              final isToday =
+                  cell.year == today.year &&
+                  cell.month == today.month &&
+                  cell.day == today.day;
+
+              final hasEntries = entryDates.contains(
+                '${cell.year}-${cell.month}-${cell.day}',
+              );
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedDate = cell;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? colorScheme.primary
+                        : isToday
+                        ? colorScheme.primary.withValues(alpha: 0.1)
+                        : Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: isToday && !isSelected
+                        ? Border.all(color: colorScheme.primary, width: 1.5)
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        cell.day.toString(),
+                        style: safeGoogleFont(
+                          'Inter',
+                          fontSize: 14,
+                          fontWeight: isSelected || isToday
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: isSelected
+                              ? colorScheme.onPrimary
+                              : colorScheme.onSurface,
+                        ),
+                      ),
+                      if (hasEntries) ...[
+                        const SizedBox(height: 2),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? colorScheme.onPrimary
+                                : colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

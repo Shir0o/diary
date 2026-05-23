@@ -84,6 +84,7 @@ class MainScreen extends StatefulWidget {
   final AuthService authService;
   final SecurityService securityService;
   final ThemeService themeService;
+  final bool seedDemoData;
 
   const MainScreen({
     super.key,
@@ -91,6 +92,7 @@ class MainScreen extends StatefulWidget {
     required this.authService,
     required this.securityService,
     required this.themeService,
+    this.seedDemoData = false,
   });
 
   @override
@@ -251,7 +253,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       await widget.entryStore.deleteEntriesDeletedBefore(cutoff);
     }
 
-    await widget.entryStore.seedEntriesIfEmpty(_defaultEntries);
+    if (widget.seedDemoData) {
+      await widget.entryStore.seedEntriesIfEmpty(_defaultEntries);
+    }
     final entries = await widget.entryStore.loadEntries();
 
     if (!mounted) return;

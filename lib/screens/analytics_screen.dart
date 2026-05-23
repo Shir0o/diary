@@ -4,7 +4,7 @@ import '../helpers/analytics_helper.dart';
 import '../helpers/font_helper.dart';
 import '../widgets/skeleton_loader.dart';
 
-class AnalyticsScreen extends StatelessWidget {
+class AnalyticsScreen extends StatefulWidget {
   final List<DiaryEntry> entries;
   final DateTime? referenceDate;
   final VoidCallback onBackPressed;
@@ -19,20 +19,42 @@ class AnalyticsScreen extends StatelessWidget {
   });
 
   @override
+  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+}
+
+class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  String _selectedRange = 'All Time';
+
+  List<DiaryEntry> get _filteredEntries {
+    if (_selectedRange == 'All Time') return widget.entries;
+
+    final now = widget.referenceDate ?? DateTime.now();
+    final cutoff = switch (_selectedRange) {
+      '7 Days' => now.subtract(const Duration(days: 7)),
+      '30 Days' => now.subtract(const Duration(days: 30)),
+      '90 Days' => now.subtract(const Duration(days: 90)),
+      _ => now,
+    };
+
+    return widget.entries.where((e) => e.date.isAfter(cutoff)).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final totalEntries = AnalyticsHelper.calculateTotalEntries(entries);
+    final filtered = _filteredEntries;
+    final totalEntries = AnalyticsHelper.calculateTotalEntries(filtered);
     final streak = AnalyticsHelper.calculateCurrentStreak(
-      entries,
-      relativeTo: referenceDate,
+      filtered,
+      relativeTo: widget.referenceDate,
     );
-    final moodDist = AnalyticsHelper.calculateMoodDistribution(entries);
-    final tagDist = AnalyticsHelper.calculateTagDistribution(entries);
+    final moodDist = AnalyticsHelper.calculateMoodDistribution(filtered);
+    final tagDist = AnalyticsHelper.calculateTagDistribution(filtered);
     final weeklyActivity = AnalyticsHelper.getWeeklyActivity(
-      entries,
-      relativeTo: referenceDate,
+      filtered,
+      relativeTo: widget.referenceDate,
     );
 
     return Scaffold(
@@ -47,14 +69,15 @@ class AnalyticsScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: onBackPressed,
+          onPressed: widget.onBackPressed,
         ),
       ),
-      body: isLoading
+      body: widget.isLoading
           ? const AnalyticsScreenSkeleton()
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                _buildRangeSelector(context),
                 Row(
                   children: [
                     Expanded(
@@ -91,7 +114,7 @@ class AnalyticsScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 _buildActivityChart(weeklyActivity, context),
                 const SizedBox(height: 24),
-                _buildInsightsCard(context),
+                _buildInsightsCard(moodDist, context),
               ],
             ),
     );
@@ -377,8 +400,34 @@ class AnalyticsScreen extends StatelessWidget {
     return weekdays[date.weekday - 1];
   }
 
-  Widget _buildInsightsCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildInsightsCard(Map<String, int> moodDist, BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    if (moodDist.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final mostCommonMoodEntry = moodDist.entries.fold<MapEntry<String, int>?>(
+      null,
+      (max, e) => max == null || e.value > max.value ? e : max,
+    );
+
+    if (mostCommonMoodEntry == null) return const SizedBox.shrink();
+
+    final mood = mostCommonMoodEntry.key;
+    final moodDescription = switch (mood) {
+      '🚀' => 'Energetic',
+      '☕' => 'Relaxed',
+      '📝' => 'Reflective',
+      '😊' => 'Happy',
+      '😌' => 'Peaceful',
+      '😢' => 'Sad',
+      '😤' => 'Stressed',
+      '🎉' => 'Celebratory',
+      _ => 'Wonderful',
+    };
+
     return Card(
       elevation: 0,
       color: colorScheme.primary.withValues(alpha: 0.05),
@@ -394,7 +443,7 @@ class AnalyticsScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'You\'ve been feeling 🚀 "Energetic" most of this week. Keep up the great work!',
+                "You've been feeling $mood \"$moodDescription\" most of this period. Keep up the great work!",
                 style: safeGoogleFont(
                   'Inter',
                   fontSize: 14,
@@ -404,6 +453,60 @@ class AnalyticsScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRangeSelector(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final ranges = ['7 Days', '30 Days', '90 Days', 'All Time'];
+
+    return Container(
+      height: 40,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: ranges.length,
+        itemBuilder: (context, index) {
+          final range = ranges[index];
+          final isSelected = _selectedRange == range;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(
+                range,
+                style: safeGoogleFont(
+                  'Inter',
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurface,
+                ),
+              ),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() {
+                    _selectedRange = range;
+                  });
+                }
+              },
+              selectedColor: colorScheme.primary,
+              backgroundColor: colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected
+                      ? Colors.transparent
+                      : colorScheme.outline.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
