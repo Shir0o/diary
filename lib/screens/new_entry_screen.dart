@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import '../helpers/font_helper.dart';
 import '../helpers/page_transitions.dart';
 import '../models/diary_entry.dart';
@@ -54,6 +58,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   late DateTime _entryDate;
   late String _mood;
   late List<String> _tags;
+  late List<String> _imageUrls;
   late final LocationService _locationService;
   bool _isSavingOrDiscarding = false;
 
@@ -69,6 +74,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _entryDate = _initialEntryDate;
     _mood = widget.entry?.mood ?? _defaultMood;
     _tags = List.from(widget.entry?.tags ?? []);
+    _imageUrls = List.from(widget.entry?.imageUrls ?? []);
 
     _controller.addListener(_onFieldChanged);
     _locationController.addListener(_onFieldChanged);
@@ -286,6 +292,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         }).toList(),
                       ),
                     ],
+                    if (_imageUrls.isNotEmpty) _buildImageStrip(context),
                     const SizedBox(height: AppTheme.spacingLarge),
                     TextField(
                       controller: _controller,
@@ -336,9 +343,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         InkWell(
-                          onTap: () => _showUnavailableMessage(
-                            'Image attachments are not available yet.',
-                          ),
+                          onTap: _pickImage,
                           child: Icon(
                             Icons.image_outlined,
                             color: colorScheme.primary,
@@ -413,9 +418,152 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       content: content,
       mood: _mood,
       location: _emptyToNull(_locationController.text),
-      imageUrls: existingEntry?.imageUrls ?? const [],
+      imageUrls: _imageUrls,
       tags: _tags,
       updatedAt: DateTime.now(),
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final colorScheme = Theme.of(context).colorScheme;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library, color: colorScheme.primary),
+                title: const Text('Choose from Gallery'),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_camera, color: colorScheme.primary),
+                title: const Text('Take a Photo'),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
+    try {
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final imagesDir = Directory(p.join(appDocDir.path, 'entry_images'));
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
+      }
+
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${p.basename(pickedFile.path)}';
+      final localPath = p.join(imagesDir.path, fileName);
+      await File(pickedFile.path).copy(localPath);
+
+      if (mounted) {
+        setState(() {
+          _imageUrls.add(localPath);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildImageStrip(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.only(top: AppTheme.spacingMedium),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _imageUrls.length,
+        itemBuilder: (context, index) {
+          final imagePath = _imageUrls[index];
+          final file = File(imagePath);
+
+          return Container(
+            margin: const EdgeInsets.only(right: AppTheme.spacingMedium),
+            width: 120,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    AppTheme.borderRadiusMedium,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Image.file(
+                      file,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: colorScheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _imageUrls.removeAt(index);
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -492,12 +640,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           },
         );
       },
-    );
-  }
-
-  void _showUnavailableMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -729,6 +871,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final currentLocation = _locationController.text;
     final currentMood = _mood;
     final currentTags = _tags;
+    final currentImages = _imageUrls;
     final currentDate = _entryDate;
 
     if (widget.entry == null) {
@@ -736,11 +879,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       final isContentNotEmpty = currentContent.trim().isNotEmpty;
       final isLocationNotEmpty = currentLocation.trim().isNotEmpty;
       final isTagsNotEmpty = currentTags.isNotEmpty;
+      final isImagesNotEmpty = currentImages.isNotEmpty;
       final isMoodChanged = currentMood != _defaultMood;
 
       return isContentNotEmpty ||
           isLocationNotEmpty ||
           isTagsNotEmpty ||
+          isImagesNotEmpty ||
           isMoodChanged ||
           isDateChanged;
     } else {
@@ -753,13 +898,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       final isMoodChanged = currentMood != existingEntry.mood;
       final isDateChanged = !_isSameDateTime(currentDate, existingEntry.date);
       final isTagsChanged = !_areTagsEqual(currentTags, existingEntry.tags);
+      final isImagesChanged = !_areListsEqual(
+        currentImages,
+        existingEntry.imageUrls,
+      );
 
       return isContentChanged ||
           isLocationChanged ||
           isMoodChanged ||
           isDateChanged ||
-          isTagsChanged;
+          isTagsChanged ||
+          isImagesChanged;
     }
+  }
+
+  bool _areListsEqual(List<String> list1, List<String> list2) {
+    if (list1.length != list2.length) return false;
+    for (int i = 0; i < list1.length; i++) {
+      if (list1[i] != list2[i]) return false;
+    }
+    return true;
   }
 
   bool _areTagsEqual(List<String> list1, List<String> list2) {

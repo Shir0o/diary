@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:diary/data/in_memory_diary_entry_store.dart';
 import 'package:diary/main.dart';
 import 'package:diary/models/diary_entry.dart';
+import 'package:diary/screens/calendar_screen.dart';
 import 'package:diary/services/auth_service.dart';
 import 'package:diary/services/security_service.dart';
 import 'package:diary/services/theme_service.dart';
@@ -120,7 +121,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Calendar'), findsWidgets);
-    expect(find.byType(CalendarDatePicker), findsOneWidget);
+    expect(find.byType(CalendarScreen), findsOneWidget);
 
     // Tap back arrow to return to Timeline, then navigate to Analytics via drawer
     await tester.tap(find.byIcon(Icons.arrow_back));

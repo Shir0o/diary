@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/diary_entry.dart';
@@ -82,6 +83,40 @@ class EntryCard extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+              if (entry.imageUrls.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spacingSmall),
+                SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: entry.imageUrls.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        width: entry.imageUrls.length == 1 ? 200 : 120,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.borderRadiusSmall,
+                          ),
+                          child: Image.file(
+                            File(entry.imageUrls[index]),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: colorScheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
               if (entry.tags.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spacingSmall),
                 Wrap(
