@@ -11,6 +11,7 @@ import '../helpers/font_helper.dart';
 import '../helpers/page_transitions.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
+import '../config/app_strings.dart';
 import '../services/location_service.dart';
 import '../services/speech_service.dart';
 import '../widgets/location_selection_sheet.dart';
@@ -76,6 +77,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   double _soundLevel = 0.0;
   int _dictationStartIndex = 0;
   int _lastRecognizedLength = 0;
+  int _dictationSessionId = 0;
 
   @override
   void initState() {
@@ -1028,8 +1030,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     return result ?? false;
   }
 
-  Future<void> _startListeningSession() async {
-    if (!mounted || !_isDictating) return;
+  Future<void> _startListeningSession(int sessionId) async {
+    if (!mounted || !_isDictating || sessionId != _dictationSessionId) return;
 
     final selection = _controller.selection;
     _dictationStartIndex = selection.start >= 0
@@ -1040,7 +1042,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     try {
       await _speechService.startListening(
         onResult: (text) {
-          if (!mounted || !_isDictating) return;
+          if (!mounted || !_isDictating || sessionId != _dictationSessionId) {
+            return;
+          }
           setState(() {
             final currentText = _controller.text;
 
@@ -1062,7 +1066,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           });
         },
         onError: (error) {
-          if (!mounted) return;
+          if (!mounted || sessionId != _dictationSessionId) return;
           setState(() {
             _isDictating = false;
             _isListening = false;
@@ -1070,13 +1074,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Dictation Error: $error'),
+              content: Text(AppStrings.dictationError(error)),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         },
         onStatusChange: (isListening) {
-          if (!mounted) return;
+          if (!mounted || sessionId != _dictationSessionId) return;
           setState(() {
             _isListening = isListening;
             if (!isListening) {
@@ -1084,9 +1088,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
               // Silence timeout triggered auto-restart
               if (_isDictating) {
-                Future.delayed(const Duration(milliseconds: 300), () {
-                  if (_isDictating && mounted) {
-                    _startListeningSession();
+                Future.delayed(AppTheme.dictationRestartDelay, () {
+                  if (_isDictating &&
+                      mounted &&
+                      sessionId == _dictationSessionId) {
+                    _startListeningSession(sessionId);
                   }
                 });
               }
@@ -1094,14 +1100,16 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           });
         },
         onSoundLevelChange: (level) {
-          if (!mounted || !_isDictating) return;
+          if (!mounted || !_isDictating || sessionId != _dictationSessionId) {
+            return;
+          }
           setState(() {
             _soundLevel = level;
           });
         },
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || sessionId != _dictationSessionId) return;
       setState(() {
         _isDictating = false;
         _isListening = false;
@@ -1109,7 +1117,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to start dictation: $e'),
+          content: Text(AppStrings.dictationFailed(e.toString())),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -1122,13 +1130,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         _isDictating = false;
         _isListening = false;
         _soundLevel = 0.0;
+        _dictationSessionId++; // Invalidate any pending restarts
       });
       await _speechService.stopListening();
     } else {
       setState(() {
+        _dictationSessionId++; // Start fresh session
         _isDictating = true;
       });
-      await _startListeningSession();
+      await _startListeningSession(_dictationSessionId);
     }
   }
 

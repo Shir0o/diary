@@ -70,6 +70,7 @@ class AppTheme {
   // Animation durations
   static const Duration transitionDuration = Duration(milliseconds: 350);
   static const Duration reverseTransitionDuration = Duration(milliseconds: 250);
+  static const Duration dictationRestartDelay = Duration(milliseconds: 300);
 
   // Animation scale & offset values
   static const double scaleRouteTransition = 0.90;

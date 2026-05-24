@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../config/app_strings.dart';
 
 /// An abstract service class to interface with speech recognition capabilities.
 /// This abstraction enables clean mocking in tests.
@@ -87,7 +88,7 @@ class SpeechToTextService implements SpeechService {
   }) async {
     final available = await initialize();
     if (!available) {
-      onError('Speech recognition not available');
+      onError(AppStrings.speechNotAvailable);
       return;
     }
 
