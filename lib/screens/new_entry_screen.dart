@@ -72,6 +72,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   // Dictation variables
   bool _isListening = false;
+  bool _isDictating = false;
   double _soundLevel = 0.0;
   int _dictationStartIndex = 0;
   int _lastRecognizedLength = 0;
@@ -101,7 +102,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   @override
   void dispose() {
-    if (_isListening) {
+    if (_isListening || _isDictating) {
+      _isDictating = false;
       _speechService.stopListening();
     }
     _controller.removeListener(_onFieldChanged);
@@ -1026,93 +1028,107 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     return result ?? false;
   }
 
-  Future<void> _toggleDictation() async {
-    if (_isListening) {
-      await _speechService.stopListening();
+  Future<void> _startListeningSession() async {
+    if (!mounted || !_isDictating) return;
+
+    final selection = _controller.selection;
+    _dictationStartIndex = selection.start >= 0
+        ? selection.start
+        : _controller.text.length;
+    _lastRecognizedLength = 0;
+
+    try {
+      await _speechService.startListening(
+        onResult: (text) {
+          if (!mounted || !_isDictating) return;
+          setState(() {
+            final currentText = _controller.text;
+
+            // Validate and clamp indices to avoid RangeError if manual edits happen during dictation
+            final safeStart = _dictationStartIndex.clamp(0, currentText.length);
+            final safeEnd = (_dictationStartIndex + _lastRecognizedLength)
+                .clamp(safeStart, currentText.length);
+
+            final newText = currentText.replaceRange(safeStart, safeEnd, text);
+
+            _controller.value = TextEditingValue(
+              text: newText,
+              selection: TextSelection.collapsed(
+                offset: safeStart + text.length,
+              ),
+            );
+
+            _lastRecognizedLength = text.length;
+          });
+        },
+        onError: (error) {
+          if (!mounted) return;
+          setState(() {
+            _isDictating = false;
+            _isListening = false;
+            _soundLevel = 0.0;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Dictation Error: $error'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        },
+        onStatusChange: (isListening) {
+          if (!mounted) return;
+          setState(() {
+            _isListening = isListening;
+            if (!isListening) {
+              _soundLevel = 0.0;
+
+              // Silence timeout triggered auto-restart
+              if (_isDictating) {
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  if (_isDictating && mounted) {
+                    _startListeningSession();
+                  }
+                });
+              }
+            }
+          });
+        },
+        onSoundLevelChange: (level) {
+          if (!mounted || !_isDictating) return;
+          setState(() {
+            _soundLevel = level;
+          });
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
+        _isDictating = false;
         _isListening = false;
         _soundLevel = 0.0;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to start dictation: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleDictation() async {
+    if (_isDictating) {
+      setState(() {
+        _isDictating = false;
+        _isListening = false;
+        _soundLevel = 0.0;
+      });
+      await _speechService.stopListening();
     } else {
-      final selection = _controller.selection;
-      _dictationStartIndex = selection.start >= 0
-          ? selection.start
-          : _controller.text.length;
-      _lastRecognizedLength = 0;
-
-      try {
-        await _speechService.startListening(
-          onResult: (text) {
-            if (!mounted) return;
-            setState(() {
-              final currentText = _controller.text;
-
-              // Validate and clamp indices to avoid RangeError if manual edits happen during dictation
-              final safeStart = _dictationStartIndex.clamp(
-                0,
-                currentText.length,
-              );
-              final safeEnd = (_dictationStartIndex + _lastRecognizedLength)
-                  .clamp(safeStart, currentText.length);
-
-              final newText = currentText.replaceRange(
-                safeStart,
-                safeEnd,
-                text,
-              );
-
-              _controller.value = TextEditingValue(
-                text: newText,
-                selection: TextSelection.collapsed(
-                  offset: safeStart + text.length,
-                ),
-              );
-
-              _lastRecognizedLength = text.length;
-            });
-          },
-          onError: (error) {
-            if (!mounted) return;
-            setState(() {
-              _isListening = false;
-              _soundLevel = 0.0;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Dictation Error: $error'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-          },
-          onStatusChange: (isListening) {
-            if (!mounted) return;
-            setState(() {
-              _isListening = isListening;
-              if (!isListening) {
-                _soundLevel = 0.0;
-              }
-            });
-          },
-          onSoundLevelChange: (level) {
-            if (!mounted) return;
-            setState(() {
-              _soundLevel = level;
-            });
-          },
-        );
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _isListening = false;
-          _soundLevel = 0.0;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to start dictation: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      setState(() {
+        _isDictating = true;
+      });
+      await _startListeningSession();
     }
   }
 
