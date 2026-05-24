@@ -72,5 +72,9 @@
 	<string>This app needs access to location when open to add locations to your diary entries.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app needs access to location to add locations to your diary entries.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to dictate your diary entries.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone to record your voice for dictation.</string>
 </dict>
 </plist>
