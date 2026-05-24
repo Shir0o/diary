@@ -11,6 +11,7 @@ import '../helpers/font_helper.dart';
 import '../helpers/page_transitions.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
+import '../config/app_strings.dart';
 import '../services/location_service.dart';
 import '../services/speech_service.dart';
 import '../widgets/location_selection_sheet.dart';
@@ -72,9 +73,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   // Dictation variables
   bool _isListening = false;
+  bool _isDictating = false;
   double _soundLevel = 0.0;
   int _dictationStartIndex = 0;
   int _lastRecognizedLength = 0;
+  int _dictationSessionId = 0;
 
   @override
   void initState() {
@@ -101,7 +104,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   @override
   void dispose() {
-    if (_isListening) {
+    if (_isListening || _isDictating) {
+      _isDictating = false;
       _speechService.stopListening();
     }
     _controller.removeListener(_onFieldChanged);
@@ -1026,93 +1030,115 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     return result ?? false;
   }
 
-  Future<void> _toggleDictation() async {
-    if (_isListening) {
-      await _speechService.stopListening();
+  Future<void> _startListeningSession(int sessionId) async {
+    if (!mounted || !_isDictating || sessionId != _dictationSessionId) return;
+
+    final selection = _controller.selection;
+    _dictationStartIndex = selection.start >= 0
+        ? selection.start
+        : _controller.text.length;
+    _lastRecognizedLength = 0;
+
+    try {
+      await _speechService.startListening(
+        onResult: (text) {
+          if (!mounted || !_isDictating || sessionId != _dictationSessionId) {
+            return;
+          }
+          setState(() {
+            final currentText = _controller.text;
+
+            // Validate and clamp indices to avoid RangeError if manual edits happen during dictation
+            final safeStart = _dictationStartIndex.clamp(0, currentText.length);
+            final safeEnd = (_dictationStartIndex + _lastRecognizedLength)
+                .clamp(safeStart, currentText.length);
+
+            final newText = currentText.replaceRange(safeStart, safeEnd, text);
+
+            _controller.value = TextEditingValue(
+              text: newText,
+              selection: TextSelection.collapsed(
+                offset: safeStart + text.length,
+              ),
+            );
+
+            _lastRecognizedLength = text.length;
+          });
+        },
+        onError: (error) {
+          if (!mounted || sessionId != _dictationSessionId) return;
+          setState(() {
+            _isDictating = false;
+            _isListening = false;
+            _soundLevel = 0.0;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppStrings.dictationError(error)),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        },
+        onStatusChange: (isListening) {
+          if (!mounted || sessionId != _dictationSessionId) return;
+          setState(() {
+            _isListening = isListening;
+            if (!isListening) {
+              _soundLevel = 0.0;
+
+              // Silence timeout triggered auto-restart
+              if (_isDictating) {
+                Future.delayed(AppTheme.dictationRestartDelay, () {
+                  if (_isDictating &&
+                      mounted &&
+                      sessionId == _dictationSessionId) {
+                    _startListeningSession(sessionId);
+                  }
+                });
+              }
+            }
+          });
+        },
+        onSoundLevelChange: (level) {
+          if (!mounted || !_isDictating || sessionId != _dictationSessionId) {
+            return;
+          }
+          setState(() {
+            _soundLevel = level;
+          });
+        },
+      );
+    } catch (e) {
+      if (!mounted || sessionId != _dictationSessionId) return;
       setState(() {
+        _isDictating = false;
         _isListening = false;
         _soundLevel = 0.0;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.dictationFailed(e.toString())),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleDictation() async {
+    if (_isDictating) {
+      setState(() {
+        _isDictating = false;
+        _isListening = false;
+        _soundLevel = 0.0;
+        _dictationSessionId++; // Invalidate any pending restarts
+      });
+      await _speechService.stopListening();
     } else {
-      final selection = _controller.selection;
-      _dictationStartIndex = selection.start >= 0
-          ? selection.start
-          : _controller.text.length;
-      _lastRecognizedLength = 0;
-
-      try {
-        await _speechService.startListening(
-          onResult: (text) {
-            if (!mounted) return;
-            setState(() {
-              final currentText = _controller.text;
-
-              // Validate and clamp indices to avoid RangeError if manual edits happen during dictation
-              final safeStart = _dictationStartIndex.clamp(
-                0,
-                currentText.length,
-              );
-              final safeEnd = (_dictationStartIndex + _lastRecognizedLength)
-                  .clamp(safeStart, currentText.length);
-
-              final newText = currentText.replaceRange(
-                safeStart,
-                safeEnd,
-                text,
-              );
-
-              _controller.value = TextEditingValue(
-                text: newText,
-                selection: TextSelection.collapsed(
-                  offset: safeStart + text.length,
-                ),
-              );
-
-              _lastRecognizedLength = text.length;
-            });
-          },
-          onError: (error) {
-            if (!mounted) return;
-            setState(() {
-              _isListening = false;
-              _soundLevel = 0.0;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Dictation Error: $error'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-          },
-          onStatusChange: (isListening) {
-            if (!mounted) return;
-            setState(() {
-              _isListening = isListening;
-              if (!isListening) {
-                _soundLevel = 0.0;
-              }
-            });
-          },
-          onSoundLevelChange: (level) {
-            if (!mounted) return;
-            setState(() {
-              _soundLevel = level;
-            });
-          },
-        );
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _isListening = false;
-          _soundLevel = 0.0;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to start dictation: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      setState(() {
+        _dictationSessionId++; // Start fresh session
+        _isDictating = true;
+      });
+      await _startListeningSession(_dictationSessionId);
     }
   }
 
