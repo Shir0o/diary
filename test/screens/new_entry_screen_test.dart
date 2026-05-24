@@ -4,8 +4,11 @@ import 'package:mocktail/mocktail.dart';
 import 'package:diary/models/diary_entry.dart';
 import 'package:diary/screens/new_entry_screen.dart';
 import 'package:diary/services/location_service.dart';
+import 'package:diary/services/speech_service.dart';
 
 class MockLocationService extends Mock implements LocationService {}
+
+class MockSpeechService extends Mock implements SpeechService {}
 
 void main() {
   testWidgets('NewEntryScreen should display all required UI elements', (
@@ -642,6 +645,114 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(NewEntryScreen), findsNothing);
       expect(popped, isTrue);
+    },
+  );
+
+  testWidgets(
+    'Dictation button should toggle listening state and show listening panel',
+    (WidgetTester tester) async {
+      final mockSpeechService = MockSpeechService();
+      when(() => mockSpeechService.isListening).thenReturn(false);
+      when(() => mockSpeechService.isAvailable).thenReturn(true);
+      when(() => mockSpeechService.initialize()).thenAnswer((_) async => true);
+      when(() => mockSpeechService.stopListening()).thenAnswer((_) async {});
+
+      bool startCalled = false;
+      when(
+        () => mockSpeechService.startListening(
+          onResult: any(named: 'onResult'),
+          onError: any(named: 'onError'),
+          onStatusChange: any(named: 'onStatusChange'),
+          onSoundLevelChange: any(named: 'onSoundLevelChange'),
+        ),
+      ).thenAnswer((invocation) async {
+        startCalled = true;
+        final onStatusChange =
+            invocation.namedArguments[#onStatusChange] as Function(bool);
+        onStatusChange(true);
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(home: NewEntryScreen(speechService: mockSpeechService)),
+      );
+
+      final dictationBtn = find.byKey(const ValueKey('dictation-button'));
+      expect(dictationBtn, findsOneWidget);
+      expect(find.text('Listening...'), findsNothing);
+
+      await tester.tap(dictationBtn);
+      await tester.pump();
+
+      expect(startCalled, isTrue);
+      expect(find.text('Listening...'), findsOneWidget);
+      expect(find.text('Speak now to dictate your entry'), findsOneWidget);
+      expect(find.text('Stop'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Dictation should insert speech results at current cursor position',
+    (WidgetTester tester) async {
+      final mockSpeechService = MockSpeechService();
+      when(() => mockSpeechService.isListening).thenReturn(false);
+      when(() => mockSpeechService.isAvailable).thenReturn(true);
+      when(() => mockSpeechService.initialize()).thenAnswer((_) async => true);
+      when(() => mockSpeechService.stopListening()).thenAnswer((_) async {});
+
+      Function(String)? resultCallback;
+      Function(bool)? statusCallback;
+
+      when(
+        () => mockSpeechService.startListening(
+          onResult: any(named: 'onResult'),
+          onError: any(named: 'onError'),
+          onStatusChange: any(named: 'onStatusChange'),
+          onSoundLevelChange: any(named: 'onSoundLevelChange'),
+        ),
+      ).thenAnswer((invocation) async {
+        resultCallback =
+            invocation.namedArguments[#onResult] as Function(String);
+        statusCallback =
+            invocation.namedArguments[#onStatusChange] as Function(bool);
+        statusCallback!(true);
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(home: NewEntryScreen(speechService: mockSpeechService)),
+      );
+
+      final textFieldFinder = find.byType(TextField).first;
+      await tester.enterText(textFieldFinder, 'Hello !');
+      await tester.pump();
+
+      final TextField textFieldWidget = tester.widget<TextField>(
+        textFieldFinder,
+      );
+      final controller = textFieldWidget.controller!;
+      controller.selection = const TextSelection.collapsed(offset: 6);
+
+      await tester.tap(find.byKey(const ValueKey('dictation-button')));
+      await tester.pump();
+
+      expect(resultCallback, isNotNull);
+
+      resultCallback!('world');
+      await tester.pump();
+
+      expect(controller.text, 'Hello world!');
+      expect(controller.selection.baseOffset, 11);
+
+      resultCallback!('world of coding');
+      await tester.pump();
+
+      expect(controller.text, 'Hello world of coding!');
+      expect(controller.selection.baseOffset, 21);
+
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+
+      expect(find.text('Listening...'), findsNothing);
+      expect(controller.text, 'Hello world of coding!');
     },
   );
 }

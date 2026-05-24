@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,12 +12,14 @@ import '../helpers/page_transitions.dart';
 import '../models/diary_entry.dart';
 import '../config/app_theme.dart';
 import '../services/location_service.dart';
+import '../services/speech_service.dart';
 import '../widgets/location_selection_sheet.dart';
 
 class NewEntryScreen extends StatefulWidget {
   final DiaryEntry? entry;
   final List<String> existingTags;
   final LocationService? locationService;
+  final SpeechService? speechService;
   final DateTime? initialDate;
 
   const NewEntryScreen({
@@ -24,6 +27,7 @@ class NewEntryScreen extends StatefulWidget {
     this.entry,
     this.existingTags = const [],
     this.locationService,
+    this.speechService,
     this.initialDate,
   });
 
@@ -33,12 +37,14 @@ class NewEntryScreen extends StatefulWidget {
     DiaryEntry? entry,
     List<String> existingTags = const [],
     LocationService? locationService,
+    SpeechService? speechService,
   }) {
     return SmoothPageRoute<DiaryEntry>(
       child: NewEntryScreen(
         entry: entry,
         existingTags: existingTags,
         locationService: locationService,
+        speechService: speechService,
       ),
       direction: SlideDirection.bottomToTop,
       settings: const RouteSettings(name: routeName),
@@ -61,12 +67,20 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   late List<String> _tags;
   late List<String> _imageUrls;
   late final LocationService _locationService;
+  late final SpeechService _speechService;
   bool _isSavingOrDiscarding = false;
+
+  // Dictation variables
+  bool _isListening = false;
+  double _soundLevel = 0.0;
+  int _dictationStartIndex = 0;
+  int _lastRecognizedLength = 0;
 
   @override
   void initState() {
     super.initState();
     _locationService = widget.locationService ?? GeolocatorLocationService();
+    _speechService = widget.speechService ?? SpeechToTextService();
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
     _tagInputController = TextEditingController();
@@ -87,6 +101,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   @override
   void dispose() {
+    if (_isListening) {
+      _speechService.stopListening();
+    }
     _controller.removeListener(_onFieldChanged);
     _locationController.removeListener(_onFieldChanged);
     _controller.dispose();
@@ -154,254 +171,282 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             ),
           ],
         ),
-        body: Column(
+        body: Stack(
           children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppTheme.spacingMedium),
-                    Text(
-                      DateFormat('MMM dd, yyyy').format(_entryDate),
-                      style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spacingExtraSmall),
-                    InkWell(
-                      onTap: _pickDateTime,
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.borderRadiusSmall,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              DateFormat('h:mm a').format(_entryDate),
-                              style: safeGoogleFont(
-                                'IBM Plex Sans',
-                                fontSize: 18,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              '•',
-                              style: TextStyle(
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              DateFormat('EEEE').format(_entryDate),
-                              style: safeGoogleFont(
-                                'IBM Plex Sans',
-                                fontSize: 18,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Icon(
-                              Icons.edit_calendar_outlined,
-                              size: 18,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (_locationController.text.trim().isNotEmpty) ...[
-                      const SizedBox(height: AppTheme.spacingSmall),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 18,
-                            color: colorScheme.primary,
+            Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: AppTheme.spacingMedium),
+                        Text(
+                          DateFormat('MMM dd, yyyy').format(_entryDate),
+                          style: safeGoogleFont(
+                            'IBM Plex Sans',
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              _locationController.text.trim(),
-                              style: safeGoogleFont(
-                                'IBM Plex Sans',
-                                fontSize: 14,
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
+                        ),
+                        const SizedBox(height: AppTheme.spacingExtraSmall),
+                        InkWell(
+                          onTap: _pickDateTime,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.borderRadiusSmall,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  DateFormat('h:mm a').format(_entryDate),
+                                  style: safeGoogleFont(
+                                    'IBM Plex Sans',
+                                    fontSize: 18,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '•',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('EEEE').format(_entryDate),
+                                  style: safeGoogleFont(
+                                    'IBM Plex Sans',
+                                    fontSize: 18,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.edit_calendar_outlined,
+                                  size: 18,
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                        ),
+                        if (_locationController.text.trim().isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacingSmall),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 18,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  _locationController.text.trim(),
+                                  style: safeGoogleFont(
+                                    'IBM Plex Sans',
+                                    fontSize: 14,
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
-                    if (_tags.isNotEmpty) ...[
-                      const SizedBox(height: AppTheme.spacingSmall),
-                      Wrap(
-                        spacing: AppTheme.spacingSmall,
-                        runSpacing: AppTheme.spacingSmall,
-                        children: _tags.map((tag) {
-                          return InputChip(
-                            label: Text(
-                              tag,
-                              style:
-                                  (Theme.of(context).textTheme.labelMedium ??
-                                          const TextStyle())
-                                      .copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color: colorScheme.onPrimaryContainer,
-                                      ),
-                            ),
-                            backgroundColor: colorScheme.primaryContainer,
-                            deleteIcon: Icon(
-                              Icons.close,
-                              size: 14,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                            onDeleted: () {
-                              setState(() {
-                                _tags.remove(tag);
-                              });
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.borderRadiusLarge,
+                        if (_tags.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacingSmall),
+                          Wrap(
+                            spacing: AppTheme.spacingSmall,
+                            runSpacing: AppTheme.spacingSmall,
+                            children: _tags.map((tag) {
+                              return InputChip(
+                                label: Text(
+                                  tag,
+                                  style:
+                                      (Theme.of(
+                                                context,
+                                              ).textTheme.labelMedium ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            fontWeight: FontWeight.w500,
+                                            color:
+                                                colorScheme.onPrimaryContainer,
+                                          ),
+                                ),
+                                backgroundColor: colorScheme.primaryContainer,
+                                deleteIcon: Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                                onDeleted: () {
+                                  setState(() {
+                                    _tags.remove(tag);
+                                  });
+                                },
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.borderRadiusLarge,
+                                  ),
+                                  side: BorderSide.none,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spacingExtraSmall,
+                                ),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        if (_imageUrls.isNotEmpty) _buildImageStrip(context),
+                        const SizedBox(height: AppTheme.spacingLarge),
+                        TextField(
+                          controller: _controller,
+                          maxLines: null,
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: 'Write your heart out...',
+                            hintStyle: safeGoogleFont(
+                              'IBM Plex Sans',
+                              fontSize: 18,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.4,
                               ),
-                              side: BorderSide.none,
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.spacingExtraSmall,
-                            ),
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                    if (_imageUrls.isNotEmpty) _buildImageStrip(context),
-                    const SizedBox(height: AppTheme.spacingLarge),
-                    TextField(
-                      controller: _controller,
-                      maxLines: null,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: 'Write your heart out...',
-                        hintStyle: safeGoogleFont(
-                          'IBM Plex Sans',
-                          fontSize: 18,
-                          color: colorScheme.onSurface.withValues(alpha: 0.4),
-                        ),
-                        border: InputBorder.none,
-                      ),
-                      style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 18,
-                        color: colorScheme.onSurface,
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 16,
-              ),
-              decoration: BoxDecoration(
-                color: colorScheme.surface.withValues(alpha: 0.9),
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.onSurface.withValues(alpha: 0.1),
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        InkWell(
-                          onTap: _pickImage,
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: colorScheme.primary,
+                            border: InputBorder.none,
                           ),
-                        ),
-                        InkWell(
-                          onTap: _editTags,
-                          child: Icon(
-                            Icons.label_outlined,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                        InkWell(
-                          onTap: _pickMood,
-                          child: Icon(
-                            Icons.mood_outlined,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 24,
-                          color: colorScheme.onSurface.withValues(alpha: 0.2),
-                        ),
-                        InkWell(
-                          onTap: _editLocation,
-                          child: Icon(
-                            Icons.location_on_outlined,
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          style: safeGoogleFont(
+                            'IBM Plex Sans',
+                            fontSize: 18,
+                            color: colorScheme.onSurface,
+                            height: 1.6,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        size: 16,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                Container(
+                  padding: EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    top: 16,
+                    bottom: MediaQuery.of(context).padding.bottom + 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface.withValues(alpha: 0.9),
+                    border: Border(
+                      top: BorderSide(
+                        color: colorScheme.onSurface.withValues(alpha: 0.1),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Saved locally',
-                        key: const ValueKey('entry-save-status'),
-                        style: safeGoogleFont(
-                          'IBM Plex Sans',
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                          fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            InkWell(
+                              onTap: _pickImage,
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            InkWell(
+                              onTap: _editTags,
+                              child: Icon(
+                                Icons.label_outlined,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            InkWell(
+                              onTap: _pickMood,
+                              child: Icon(
+                                Icons.mood_outlined,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            InkWell(
+                              key: const ValueKey('dictation-button'),
+                              onTap: _toggleDictation,
+                              child: Icon(
+                                _isListening
+                                    ? Icons.mic
+                                    : Icons.mic_none_outlined,
+                                color: _isListening
+                                    ? colorScheme.error
+                                    : colorScheme.primary,
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 24,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.2,
+                              ),
+                            ),
+                            InkWell(
+                              onTap: _editLocation,
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 16,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Saved locally',
+                            key: const ValueKey('entry-save-status'),
+                            style: safeGoogleFont(
+                              'IBM Plex Sans',
+                              fontSize: 12,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+            if (_isListening) _buildListeningPanel(context),
           ],
         ),
       ),
@@ -979,5 +1024,218 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       },
     );
     return result ?? false;
+  }
+
+  Future<void> _toggleDictation() async {
+    if (_isListening) {
+      await _speechService.stopListening();
+      setState(() {
+        _isListening = false;
+        _soundLevel = 0.0;
+      });
+    } else {
+      final selection = _controller.selection;
+      _dictationStartIndex = selection.start >= 0
+          ? selection.start
+          : _controller.text.length;
+      _lastRecognizedLength = 0;
+
+      try {
+        await _speechService.startListening(
+          onResult: (text) {
+            if (!mounted) return;
+            setState(() {
+              final currentText = _controller.text;
+
+              // Validate and clamp indices to avoid RangeError if manual edits happen during dictation
+              final safeStart = _dictationStartIndex.clamp(
+                0,
+                currentText.length,
+              );
+              final safeEnd = (_dictationStartIndex + _lastRecognizedLength)
+                  .clamp(safeStart, currentText.length);
+
+              final newText = currentText.replaceRange(
+                safeStart,
+                safeEnd,
+                text,
+              );
+
+              _controller.value = TextEditingValue(
+                text: newText,
+                selection: TextSelection.collapsed(
+                  offset: safeStart + text.length,
+                ),
+              );
+
+              _lastRecognizedLength = text.length;
+            });
+          },
+          onError: (error) {
+            if (!mounted) return;
+            setState(() {
+              _isListening = false;
+              _soundLevel = 0.0;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Dictation Error: $error'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          },
+          onStatusChange: (isListening) {
+            if (!mounted) return;
+            setState(() {
+              _isListening = isListening;
+              if (!isListening) {
+                _soundLevel = 0.0;
+              }
+            });
+          },
+          onSoundLevelChange: (level) {
+            if (!mounted) return;
+            setState(() {
+              _soundLevel = level;
+            });
+          },
+        );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _isListening = false;
+          _soundLevel = 0.0;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start dictation: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildListeningPanel(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final double normalizedLevel = (_soundLevel.clamp(0.0, 10.0)) / 10.0;
+    final double pulseScale = 1.0 + (normalizedLevel * 0.4);
+
+    return Positioned(
+      left: AppTheme.spacingMedium,
+      right: AppTheme.spacingMedium,
+      bottom: AppTheme.spacingMedium,
+      child: Hero(
+        tag: 'dictation-panel',
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacingLarge,
+                  vertical: AppTheme.spacingMedium,
+                ),
+                child: Row(
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 100),
+                          width: 44 * pulseScale,
+                          height: 44 * pulseScale,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.mic,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Listening...',
+                            style: safeGoogleFont(
+                              'IBM Plex Sans',
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Speak now to dictate your entry',
+                            style: safeGoogleFont(
+                              'IBM Plex Sans',
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _toggleDictation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.errorContainer,
+                        foregroundColor: colorScheme.onErrorContainer,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text('Stop'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
