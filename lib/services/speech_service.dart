@@ -37,6 +37,10 @@ class SpeechToTextService implements SpeechService {
   final stt.SpeechToText _speechToText;
   bool _isAvailable = false;
 
+  // Active session event listeners
+  Function(bool isListening)? _activeOnStatusChange;
+  Function(String error)? _activeOnError;
+
   SpeechToTextService({stt.SpeechToText? speechToText})
     : _speechToText = speechToText ?? stt.SpeechToText();
 
@@ -55,9 +59,15 @@ class SpeechToTextService implements SpeechService {
           debugPrint(
             'SpeechToText Error: ${errorNotification.errorMsg} - permanent: ${errorNotification.permanent}',
           );
+          _activeOnError?.call(errorNotification.errorMsg);
         },
         onStatus: (status) {
           debugPrint('SpeechToText Status: $status');
+          if (status == 'notListening' || status == 'done') {
+            _activeOnStatusChange?.call(false);
+          } else if (status == 'listening') {
+            _activeOnStatusChange?.call(true);
+          }
         },
       );
       return _isAvailable;
@@ -81,6 +91,9 @@ class SpeechToTextService implements SpeechService {
       return;
     }
 
+    _activeOnStatusChange = onStatusChange;
+    _activeOnError = onError;
+
     try {
       onStatusChange(true);
       await _speechToText.listen(
@@ -88,6 +101,8 @@ class SpeechToTextService implements SpeechService {
           onResult(result.recognizedWords);
           if (result.finalResult) {
             onStatusChange(false);
+            _activeOnStatusChange = null;
+            _activeOnError = null;
           }
         },
         onSoundLevelChange: onSoundLevelChange,
@@ -99,6 +114,8 @@ class SpeechToTextService implements SpeechService {
     } catch (e) {
       onStatusChange(false);
       onError(e.toString());
+      _activeOnStatusChange = null;
+      _activeOnError = null;
     }
   }
 
@@ -106,6 +123,9 @@ class SpeechToTextService implements SpeechService {
   Future<void> stopListening() async {
     try {
       await _speechToText.stop();
+      _activeOnStatusChange?.call(false);
+      _activeOnStatusChange = null;
+      _activeOnError = null;
     } catch (e) {
       debugPrint('Error stopping SpeechToText: $e');
     }

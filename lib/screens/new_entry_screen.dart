@@ -1046,16 +1046,25 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             if (!mounted) return;
             setState(() {
               final currentText = _controller.text;
+
+              // Validate and clamp indices to avoid RangeError if manual edits happen during dictation
+              final safeStart = _dictationStartIndex.clamp(
+                0,
+                currentText.length,
+              );
+              final safeEnd = (_dictationStartIndex + _lastRecognizedLength)
+                  .clamp(safeStart, currentText.length);
+
               final newText = currentText.replaceRange(
-                _dictationStartIndex,
-                _dictationStartIndex + _lastRecognizedLength,
+                safeStart,
+                safeEnd,
                 text,
               );
 
               _controller.value = TextEditingValue(
                 text: newText,
                 selection: TextSelection.collapsed(
-                  offset: _dictationStartIndex + text.length,
+                  offset: safeStart + text.length,
                 ),
               );
 
@@ -1115,9 +1124,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     final double pulseScale = 1.0 + (normalizedLevel * 0.4);
 
     return Positioned(
-      left: 20,
-      right: 20,
-      bottom: 20,
+      left: AppTheme.spacingMedium,
+      right: AppTheme.spacingMedium,
+      bottom: AppTheme.spacingMedium,
       child: Hero(
         tag: 'dictation-panel',
         child: Container(
@@ -1142,8 +1151,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
+                  horizontal: AppTheme.spacingLarge,
+                  vertical: AppTheme.spacingMedium,
                 ),
                 child: Row(
                   children: [
