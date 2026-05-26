@@ -20,7 +20,7 @@ dependencies:
   local_auth: ^3.0.1
   shared_preferences: ^2.5.5
   uuid: ^4.3.3
-  geolocator: ^13.0.1
+  geolocator: ^14.0.2
   http: ^1.2.2
   image_picker: ^1.1.2
   path_provider: ^2.1.3
