@@ -3,7 +3,7 @@
 ## [v0.1.0-dev] - 2026-05-26
 
 ### Agent Developer Workflow Configuration
-- Updated `GEMINI.md` to define standard developer guidelines for agent execution:
+- Created `docs/DEVELOPMENT.md` to define standard developer guidelines for agent execution:
   - Adherence strictly to Test-Driven Development (TDD).
   - Minimum test coverage of 95% for new and modified code.
   - Context referencing workflow requiring reading the documentation table of index and changelog before beginning tasks.
