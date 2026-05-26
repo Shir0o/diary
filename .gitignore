@@ -44,3 +44,4 @@ AGENTS.md
 app.*.map.json
 app.*.symbols
 migrate_working_dir/
+GEMINI.md
