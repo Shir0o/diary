@@ -298,7 +298,7 @@ class _EntryList extends StatelessWidget {
 
     switch (action) {
       case _ListAction.restore:
-        bgColor = AppTheme.successColor;
+        bgColor = const Color(0xFF6B9C5A);
         iconData = Icons.restore_from_trash;
         label = 'Restore';
         break;

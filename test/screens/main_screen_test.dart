@@ -59,6 +59,9 @@ void main() {
     ).thenAnswer((_) async => true);
 
     when(() => mockThemeService.themeMode).thenReturn(ThemeMode.system);
+    when(() => mockThemeService.themePalette).thenReturn('lilac');
+    when(() => mockThemeService.timelineLayout).thenReturn('playful');
+    when(() => mockThemeService.userName).thenReturn('User');
     when(() => mockThemeService.addListener(any())).thenReturn(null);
     when(() => mockThemeService.removeListener(any())).thenReturn(null);
   });

@@ -1,38 +1,8 @@
 import 'package:flutter/material.dart';
+import '../helpers/font_helper.dart';
 
 class AppTheme {
   AppTheme._();
-
-  // Brand
-  static const Color primaryColor = Color(0xFF6751a4);
-
-  // Light palette
-  static const Color lightBackground = Color(0xFFFEF7FF);
-  static const Color lightSurface = Colors.white;
-  static const Color lightOnSurface = Color(0xFF141316);
-  static const Color lightOutline = Color(0xFFCAC4D0);
-  static const Color lightIconBg = Color(0xFFF2F1F3);
-
-  // Dark palette
-  static const Color darkBackground = Color(0xFF141316);
-  static const Color darkSurface = Color(0xFF1F1D22);
-  static const Color darkOnSurface = Color(0xFFE6E1E9);
-  static const Color darkOutline = Color(0xFF49454F);
-  static const Color darkIconBg = Color(0xFF2A282E);
-
-  // Semantic colors
-  static const Color successColor = Color(0xFF388E3C);
-  static const Color warningColor = Color(0xFFF57C00);
-  static const Color errorColor = Color(0xFFD32F2F);
-
-  // Gradient Colors
-  static const Color lightGradientStart = Color(0xFFFEF7FF);
-  static const Color lightGradientMiddle = Color(0xFFF6F0FC);
-  static const Color lightGradientEnd = Color(0xFFEDE4F9);
-
-  static const Color darkGradientStart = Color(0xFF141316);
-  static const Color darkGradientMiddle = Color(0xFF1B181E);
-  static const Color darkGradientEnd = Color(0xFF221A2C);
 
   // Spacing
   static const double spacingExtraSmall = 4.0;
@@ -77,59 +47,311 @@ class AppTheme {
   static const double scaleSwitcherTransition = 0.96;
   static const double parallaxSlideOffset = -0.3;
 
-  static ThemeData lightTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      brightness: Brightness.light,
-      surface: lightSurface,
-      onSurface: lightOnSurface,
-      outline: lightOutline,
-    ),
-    scaffoldBackgroundColor: lightBackground,
-    appBarTheme: AppBarTheme(
-      backgroundColor: lightBackground.withValues(alpha: 0.95),
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      iconTheme: const IconThemeData(color: lightOnSurface),
-      titleTextStyle: const TextStyle(
-        color: lightOnSurface,
-        fontWeight: FontWeight.bold,
-        fontSize: 20,
-        fontFamily: 'IBM Plex Sans',
-      ),
-    ),
-    dividerColor: lightOutline.withValues(alpha: 0.3),
-  );
+  // Palette details
+  static Color getPrimaryColor(String palette) {
+    switch (palette) {
+      case 'rose':
+        return const Color(0xFFE589A6);
+      case 'sky':
+        return const Color(0xFF6CA8FF);
+      case 'sage':
+        return const Color(0xFF7BB98A);
+      case 'lilac':
+      default:
+        return const Color(0xFF8B6CFF);
+    }
+  }
 
-  static ThemeData darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      brightness: Brightness.dark,
-      surface: darkSurface,
-      onSurface: darkOnSurface,
-      outline: darkOutline,
-    ),
-    scaffoldBackgroundColor: darkBackground,
-    appBarTheme: AppBarTheme(
-      backgroundColor: darkBackground.withValues(alpha: 0.95),
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      iconTheme: const IconThemeData(color: darkOnSurface),
-      titleTextStyle: const TextStyle(
-        color: darkOnSurface,
+  static Color getSecondaryColor(String palette) {
+    switch (palette) {
+      case 'rose':
+        return const Color(0xFFF0B6A0);
+      case 'sky':
+        return const Color(0xFF8BD0E0);
+      case 'sage':
+        return const Color(0xFFC3D98E);
+      case 'lilac':
+      default:
+        return const Color(0xFFB06CA6);
+    }
+  }
+
+  static Gradient getAccentGradient(String palette) {
+    return LinearGradient(
+      colors: [getPrimaryColor(palette), getSecondaryColor(palette)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+
+  static Gradient getScreenBackground(Brightness brightness, String palette) {
+    if (brightness == Brightness.light) {
+      switch (palette) {
+        case 'rose':
+          return const LinearGradient(
+            colors: [Color(0xFFFFF1F4), Color(0xFFFAF3F5)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+        case 'sky':
+          return const LinearGradient(
+            colors: [Color(0xFFF1F7FF), Color(0xFFF3FAF9)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+        case 'sage':
+          return const LinearGradient(
+            colors: [Color(0xFFF1FFF4), Color(0xFFFAF9F3)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+        case 'lilac':
+        default:
+          return const LinearGradient(
+            colors: [Color(0xFFF4F1FF), Color(0xFFF7F3FA)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+      }
+    } else {
+      switch (palette) {
+        case 'rose':
+          return const LinearGradient(
+            colors: [Color(0xFF301820), Color(0xFF221116)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+        case 'sky':
+          return const LinearGradient(
+            colors: [Color(0xFF182530), Color(0xFF111A22)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+        case 'sage':
+          return const LinearGradient(
+            colors: [Color(0xFF183021), Color(0xFF112217)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+        case 'lilac':
+        default:
+          return const LinearGradient(
+            colors: [Color(0xFF1D1830), Color(0xFF151122)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          );
+      }
+    }
+  }
+
+  static Color getCardBackground(Brightness brightness, String palette) {
+    if (brightness == Brightness.light) {
+      return Colors.white;
+    } else {
+      switch (palette) {
+        case 'rose':
+          return const Color(0xFF392128);
+        case 'sky':
+          return const Color(0xFF212C39);
+        case 'sage':
+          return const Color(0xFF21392B);
+        case 'lilac':
+        default:
+          return const Color(0xFF282139);
+      }
+    }
+  }
+
+  static Color getCardBackground2(Brightness brightness, String palette) {
+    if (brightness == Brightness.light) {
+      switch (palette) {
+        case 'rose':
+          return const Color(0xFFFAF3F5);
+        case 'sky':
+          return const Color(0xFFF3FAF9);
+        case 'sage':
+          return const Color(0xFFFAF9F3);
+        case 'lilac':
+        default:
+          return const Color(0xFFFAF8FD);
+      }
+    } else {
+      switch (palette) {
+        case 'rose':
+          return const Color(0xFF2C191E);
+        case 'sky':
+          return const Color(0xFF19222C);
+        case 'sage':
+          return const Color(0xFF192C21);
+        case 'lilac':
+        default:
+          return const Color(0xFF221B32);
+      }
+    }
+  }
+
+  static Color getHeadingColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFF3A3357)
+        : const Color(0xFFEFEAF7);
+  }
+
+  static Color getBodyColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFF7D769A)
+        : const Color(0xFFB8B0D2);
+  }
+
+  static Color getMutedColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFF8B83A8)
+        : const Color(0xFF9A92B8);
+  }
+
+  static Color getFaintColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFFA99FC4)
+        : const Color(0xFF7C749A);
+  }
+
+  static Color getHairlineColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFFF1EDF8)
+        : Colors.white.withValues(alpha: 0.08);
+  }
+
+  static Color getDottedLineColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFFD9CDF5)
+        : Colors.white.withValues(alpha: 0.16);
+  }
+
+  static Color getSoftBg(String palette) {
+    switch (palette) {
+      case 'rose':
+        return const Color(0xFFFDEBF0);
+      case 'sky':
+        return const Color(0xFFEBF4FF);
+      case 'sage':
+        return const Color(0xFFECF5ED);
+      case 'lilac':
+      default:
+        return const Color(0xFFEFE9FF);
+    }
+  }
+
+  static Color getChipColor(Brightness brightness) {
+    return brightness == Brightness.light
+        ? const Color(0xFFF4F1FB)
+        : Colors.white.withValues(alpha: 0.06);
+  }
+
+  static ThemeData buildTheme(Brightness brightness, String palette) {
+    final primary = getPrimaryColor(palette);
+    final background = getScreenBackground(brightness, palette).colors.first;
+    final cardBg = getCardBackground(brightness, palette);
+    final heading = getHeadingColor(brightness);
+    final body = getBodyColor(brightness);
+    final muted = getMutedColor(brightness);
+    final outlineColor = getHairlineColor(brightness);
+
+    final fontName = 'Quicksand';
+
+    final textTheme = TextTheme(
+      headlineLarge: safeGoogleFont(
+        fontName,
+        color: heading,
+        fontWeight: FontWeight.bold,
+        fontSize: 32,
+      ),
+      headlineMedium: safeGoogleFont(
+        fontName,
+        color: heading,
+        fontWeight: FontWeight.bold,
+        fontSize: 24,
+      ),
+      headlineSmall: safeGoogleFont(
+        fontName,
+        color: heading,
         fontWeight: FontWeight.bold,
         fontSize: 20,
-        fontFamily: 'IBM Plex Sans',
       ),
-    ),
-    dividerColor: darkOutline.withValues(alpha: 0.4),
-  );
+      titleLarge: safeGoogleFont(
+        fontName,
+        color: heading,
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      ),
+      titleMedium: safeGoogleFont(
+        fontName,
+        color: heading,
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+      ),
+      titleSmall: safeGoogleFont(
+        fontName,
+        color: heading,
+        fontWeight: FontWeight.w500,
+        fontSize: 14,
+      ),
+      bodyLarge: safeGoogleFont(
+        fontName,
+        color: body,
+        fontSize: 16,
+        height: 1.5,
+      ),
+      bodyMedium: safeGoogleFont(
+        fontName,
+        color: body,
+        fontSize: 14,
+        height: 1.45,
+      ),
+      bodySmall: safeGoogleFont(fontName, color: muted, fontSize: 12),
+      labelLarge: safeGoogleFont(
+        fontName,
+        color: heading,
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+      labelMedium: safeGoogleFont(fontName, color: muted, fontSize: 12),
+      labelSmall: safeGoogleFont(fontName, color: muted, fontSize: 10),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      primaryColor: primary,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: brightness,
+        surface: cardBg,
+        onSurface: heading,
+        outline: outlineColor,
+      ),
+      scaffoldBackgroundColor: background,
+      textTheme: textTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: heading),
+        titleTextStyle: textTheme.titleLarge?.copyWith(fontSize: 20),
+      ),
+      dividerColor: outlineColor,
+      cardTheme: CardThemeData(
+        color: cardBg,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: outlineColor),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData get lightTheme => buildTheme(Brightness.light, 'lilac');
+  static ThemeData get darkTheme => buildTheme(Brightness.dark, 'lilac');
 }
 
 enum ThemeModeOption {

@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -59,6 +59,7 @@ class NewEntryScreen extends StatefulWidget {
 class _NewEntryScreenState extends State<NewEntryScreen> {
   static const String _defaultMood = '📝';
 
+  late final TextEditingController _titleController;
   late final TextEditingController _controller;
   late final TextEditingController _locationController;
   late final TextEditingController _tagInputController;
@@ -84,6 +85,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     super.initState();
     _locationService = widget.locationService ?? GeolocatorLocationService();
     _speechService = widget.speechService ?? SpeechToTextService();
+    _titleController = TextEditingController(text: widget.entry?.title);
     _controller = TextEditingController(text: widget.entry?.content);
     _locationController = TextEditingController(text: widget.entry?.location);
     _tagInputController = TextEditingController();
@@ -94,6 +96,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _tags = List.from(widget.entry?.tags ?? []);
     _imageUrls = List.from(widget.entry?.imageUrls ?? []);
 
+    _titleController.addListener(_onFieldChanged);
     _controller.addListener(_onFieldChanged);
     _locationController.addListener(_onFieldChanged);
   }
@@ -108,8 +111,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       _isDictating = false;
       _speechService.stopListening();
     }
+    _titleController.removeListener(_onFieldChanged);
     _controller.removeListener(_onFieldChanged);
     _locationController.removeListener(_onFieldChanged);
+    _titleController.dispose();
     _controller.dispose();
     _locationController.dispose();
     _tagInputController.dispose();
@@ -119,7 +124,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final brightness = theme.brightness;
     final colorScheme = theme.colorScheme;
+    final primary = colorScheme.primary;
 
     return PopScope(
       canPop: !_hasUnsavedChanges(),
@@ -134,327 +141,847 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          backgroundColor: colorScheme.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-          title: Text(
-            widget.entry == null ? 'New Entry' : '',
-            style: safeGoogleFont(
-              'IBM Plex Sans',
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _isSavingOrDiscarding = true;
-                  });
-                  Navigator.of(context).pop(_buildEntry());
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 0,
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Custom Compose Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
                 ),
-                child: const Text('Save'),
-              ),
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: AppTheme.spacingMedium),
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(_entryDate),
-                          style: safeGoogleFont(
-                            'IBM Plex Sans',
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: AppTheme.getCardBackground(
+                            brightness,
+                            'lilac',
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.arrow_back,
+                            size: 18,
+                            color: AppTheme.getMutedColor(brightness),
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spacingExtraSmall),
-                        InkWell(
-                          onTap: _pickDateTime,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.borderRadiusSmall,
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          widget.entry == null ? 'New Entry' : '',
+                          style: safeGoogleFont(
+                            'Quicksand',
+                            color: AppTheme.getHeadingColor(brightness),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Wrap(
-                              spacing: 8,
-                              runSpacing: 4,
-                              crossAxisAlignment: WrapCrossAlignment.center,
+                        ),
+                        Text(
+                          'Saved locally',
+                          style: safeGoogleFont(
+                            'Quicksand',
+                            fontSize: 11,
+                            color: AppTheme.getFaintColor(brightness),
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isSavingOrDiscarding = true;
+                        });
+                        Navigator.of(context).pop(_buildEntry());
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.getAccentGradient('lilac'),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primary.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Save',
+                          style: safeGoogleFont(
+                            'Quicksand',
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Form Body
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 6,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Mood selection block
+                      Text(
+                        "HOW ARE YOU FEELING?",
+                        style: safeGoogleFont(
+                          'Space Mono',
+                          color: AppTheme.getFaintColor(brightness),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildMoodButton('😊', 'happy'),
+                          _buildMoodButton('😌', 'calm'),
+                          _buildMoodButton('😍', 'love'),
+                          _buildMoodButton('😔', 'down'),
+                          _buildMoodButton('😴', 'tired'),
+                          _buildMoodButton('🥳', 'proud'),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Formatting Toolbar (Visual Placeholder)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 6,
+                          horizontal: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: AppTheme.getHairlineColor(brightness),
+                            ),
+                          ),
+                        ),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            _buildToolbarIcon('B', true, false),
+                            const SizedBox(width: 6),
+                            _buildToolbarIcon('I', false, true),
+                            const SizedBox(width: 6),
+                            _buildToolbarIcon(
+                              'U',
+                              false,
+                              false,
+                              underline: true,
+                            ),
+                            const SizedBox(width: 6),
+                            _buildToolbarIcon('•', false, false),
+                            const SizedBox(width: 6),
+                            _buildToolbarIcon('“”', false, false),
+                          ],
+                        ),
+                      ),
+
+                      // Content Body
+                      TextField(
+                        controller: _controller,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        style: safeGoogleFont(
+                          'Quicksand',
+                          color: AppTheme.getHeadingColor(brightness),
+                          fontSize: 14.5,
+                          height: 1.55,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Write your heart out...',
+                          hintStyle: TextStyle(
+                            color: AppTheme.getFaintColor(brightness),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Dictation Section
+                      if (_isListening || _isDictating)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFEFE9FF), Color(0xFFFBE9F6)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFE0517A),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Listening...',
+                                        style: safeGoogleFont(
+                                          'Quicksand',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF7A63C9),
+                                        ),
+                                      ),
+                                      Text(
+                                        'Speak now to dictate your entry',
+                                        style: safeGoogleFont(
+                                          'Quicksand',
+                                          fontSize: 12,
+                                          color: const Color(0xFF7A63C9),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '0:14',
+                                    style: safeGoogleFont(
+                                      'Space Mono',
+                                      fontSize: 12,
+                                      color: AppTheme.getMutedColor(brightness),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 34,
+                                child: VoiceWaveformAnimation(
+                                  soundLevel: _soundLevel,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              ElevatedButton(
+                                onPressed: _toggleDictation,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE0517A),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
+                                  minimumSize: const Size(double.infinity, 44),
+                                ),
+                                child: Text(
+                                  'Stop',
+                                  style: safeGoogleFont(
+                                    'Quicksand',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: _toggleDictation,
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.getCardBackground(
+                                brightness,
+                                'lilac',
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: AppTheme.getHairlineColor(brightness),
+                              ),
+                            ),
+                            child: Row(
                               children: [
-                                Text(
-                                  DateFormat('h:mm a').format(_entryDate),
-                                  style: safeGoogleFont(
-                                    'IBM Plex Sans',
-                                    fontSize: 18,
-                                    color: colorScheme.onSurface.withValues(
-                                      alpha: 0.6,
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.getAccentGradient(
+                                      'lilac',
                                     ),
-                                    fontWeight: FontWeight.w500,
+                                    shape: BoxShape.circle,
                                   ),
-                                ),
-                                Text(
-                                  '•',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurface.withValues(
-                                      alpha: 0.6,
+                                  child: const Center(
+                                    child: Text(
+                                      '🎙️',
+                                      style: TextStyle(fontSize: 18),
                                     ),
                                   ),
                                 ),
-                                Text(
-                                  DateFormat('EEEE').format(_entryDate),
-                                  style: safeGoogleFont(
-                                    'IBM Plex Sans',
-                                    fontSize: 18,
-                                    color: colorScheme.onSurface.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.edit_calendar_outlined,
-                                  size: 18,
-                                  color: colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Dictate',
+                                        style: safeGoogleFont(
+                                          'Quicksand',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.getHeadingColor(
+                                            brightness,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Speak and we\'ll transcribe it in',
+                                        style: safeGoogleFont(
+                                          'Quicksand',
+                                          fontSize: 12,
+                                          color: AppTheme.getMutedColor(
+                                            brightness,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        if (_locationController.text.trim().isNotEmpty) ...[
-                          const SizedBox(height: AppTheme.spacingSmall),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 18,
-                                color: colorScheme.primary,
+                      const SizedBox(height: 20),
+
+                      // Media Section
+                      Text(
+                        "MEDIA",
+                        style: safeGoogleFont(
+                          'Space Mono',
+                          color: AppTheme.getFaintColor(brightness),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          if (_imageUrls.isNotEmpty)
+                            Container(
+                              width: 78,
+                              height: 78,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  _locationController.text.trim(),
-                                  style: safeGoogleFont(
-                                    'IBM Plex Sans',
-                                    fontSize: 14,
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (_tags.isNotEmpty) ...[
-                          const SizedBox(height: AppTheme.spacingSmall),
-                          Wrap(
-                            spacing: AppTheme.spacingSmall,
-                            runSpacing: AppTheme.spacingSmall,
-                            children: _tags.map((tag) {
-                              return InputChip(
-                                label: Text(
-                                  tag,
-                                  style:
-                                      (Theme.of(
-                                                context,
-                                              ).textTheme.labelMedium ??
-                                              const TextStyle())
-                                          .copyWith(
-                                            fontWeight: FontWeight.w500,
-                                            color:
-                                                colorScheme.onPrimaryContainer,
+                              clipBehavior: Clip.antiAlias,
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: _imageUrls.first.startsWith('http')
+                                        ? Image.network(
+                                            _imageUrls.first,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                CustomPaint(
+                                                  painter:
+                                                      DiagonalStripesPainter(
+                                                        color1: const Color(
+                                                          0xFFE7E0F7,
+                                                        ),
+                                                        color2: const Color(
+                                                          0xFFEFE9FB,
+                                                        ),
+                                                        stripeWidth: 8,
+                                                      ),
+                                                ),
+                                          )
+                                        : Image.file(
+                                            File(_imageUrls.first),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                CustomPaint(
+                                                  painter:
+                                                      DiagonalStripesPainter(
+                                                        color1: const Color(
+                                                          0xFFE7E0F7,
+                                                        ),
+                                                        color2: const Color(
+                                                          0xFFEFE9FB,
+                                                        ),
+                                                        stripeWidth: 8,
+                                                      ),
+                                                ),
                                           ),
-                                ),
-                                backgroundColor: colorScheme.primaryContainer,
-                                deleteIcon: Icon(
-                                  Icons.close,
-                                  size: 14,
-                                  color: colorScheme.onPrimaryContainer,
-                                ),
-                                onDeleted: () {
-                                  setState(() {
-                                    _tags.remove(tag);
-                                  });
-                                },
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.borderRadiusLarge,
                                   ),
-                                  side: BorderSide.none,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacingExtraSmall,
-                                ),
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                        if (_imageUrls.isNotEmpty) _buildImageStrip(context),
-                        const SizedBox(height: AppTheme.spacingLarge),
-                        TextField(
-                          controller: _controller,
-                          maxLines: null,
-                          autofocus: true,
-                          decoration: InputDecoration(
-                            hintText: 'Write your heart out...',
-                            hintStyle: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 18,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.4,
+                                  Positioned(
+                                    top: 5,
+                                    right: 5,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _imageUrls.clear();
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0x992B2540),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            '✕',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            border: InputBorder.none,
+                          GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              width: 78,
+                              height: 78,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: AppTheme.getDottedLineColor(
+                                    brightness,
+                                  ),
+                                  style: BorderStyle.solid,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    '🖼️',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'Photo',
+                                    style: safeGoogleFont(
+                                      'Quicksand',
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.getFaintColor(brightness),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          style: safeGoogleFont(
-                            'IBM Plex Sans',
-                            fontSize: 18,
-                            color: colorScheme.onSurface,
-                            height: 1.6,
+                          const SizedBox(width: 10),
+                          Container(
+                            width: 78,
+                            height: 78,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppTheme.getDottedLineColor(brightness),
+                                style: BorderStyle.solid,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  '🎬',
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Video',
+                                  style: safeGoogleFont(
+                                    'Quicksand',
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.getFaintColor(brightness),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Tag Section
+                      Text(
+                        "TAG",
+                        style: safeGoogleFont(
+                          'Space Mono',
+                          color: AppTheme.getFaintColor(brightness),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _tags.map((t) => _buildTagPill(t)).toList(),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Metadata block
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.getCardBackground(
+                            brightness,
+                            'lilac',
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: AppTheme.getHairlineColor(brightness),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.only(
-                    left: 24,
-                    right: 24,
-                    top: 16,
-                    bottom: MediaQuery.of(context).padding.bottom + 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withValues(alpha: 0.9),
-                    border: Border(
-                      top: BorderSide(
-                        color: colorScheme.onSurface.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
+                        child: Column(
                           children: [
-                            InkWell(
-                              onTap: _pickImage,
-                              child: Icon(
-                                Icons.image_outlined,
-                                color: colorScheme.primary,
+                            GestureDetector(
+                              onTap: _pickDateTime,
+                              child: _buildMetaRow(
+                                '📅',
+                                'Date',
+                                DateFormat('EEEE, MMM d').format(_entryDate),
                               ),
                             ),
-                            InkWell(
-                              onTap: _editTags,
-                              child: Icon(
-                                Icons.label_outlined,
-                                color: colorScheme.primary,
+                            Divider(
+                              height: 1,
+                              color: AppTheme.getHairlineColor(brightness),
+                            ),
+                            GestureDetector(
+                              onTap: _pickDateTime,
+                              child: _buildMetaRow(
+                                '🕙',
+                                'Time',
+                                DateFormat('HH:mm').format(_entryDate),
                               ),
                             ),
-                            InkWell(
-                              onTap: _pickMood,
-                              child: Icon(
-                                Icons.mood_outlined,
-                                color: colorScheme.primary,
-                              ),
+                            Divider(
+                              height: 1,
+                              color: AppTheme.getHairlineColor(brightness),
                             ),
-                            InkWell(
-                              key: const ValueKey('dictation-button'),
-                              onTap: _toggleDictation,
-                              child: Icon(
-                                _isListening
-                                    ? Icons.mic
-                                    : Icons.mic_none_outlined,
-                                color: _isListening
-                                    ? colorScheme.error
-                                    : colorScheme.primary,
-                              ),
-                            ),
-                            Container(
-                              width: 1,
-                              height: 24,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.2,
-                              ),
-                            ),
-                            InkWell(
+                            GestureDetector(
                               onTap: _editLocation,
-                              child: Icon(
-                                Icons.location_on_outlined,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
+                              child: _buildMetaRow(
+                                '📍',
+                                'Location',
+                                _locationController.text.trim().isEmpty
+                                    ? 'Add location'
+                                    : _locationController.text.trim(),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle_outline,
-                            size: 16,
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Saved locally',
-                            key: const ValueKey('entry-save-status'),
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontSize: 12,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
-              ],
-            ),
-            if (_isListening) _buildListeningPanel(context),
-          ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.getCardBackground(brightness, 'lilac'),
+                  border: Border(
+                    top: BorderSide(
+                      color: AppTheme.getHairlineColor(brightness),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.mood_outlined),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.location_on_outlined),
+                      onPressed: _editLocation,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.label_outlined),
+                      onPressed: _editTags,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.image_outlined),
+                      onPressed: _pickImage,
+                    ),
+                    IconButton(
+                      key: const Key('dictation-button'),
+                      icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                      onPressed: _toggleDictation,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildMoodButton(String emoji, String key) {
+    final theme = Theme.of(context);
+    final isSelected =
+        _mood == emoji ||
+        (key == 'happy' && _mood == '😊') ||
+        (key == 'calm' && _mood == '😌') ||
+        (key == 'love' && _mood == '😍') ||
+        (key == 'down' && _mood == '😔') ||
+        (key == 'tired' && _mood == '😴') ||
+        (key == 'proud' && _mood == '🥳');
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _mood = emoji;
+        });
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFEFE9FF)
+              : AppTheme.getCardBackground(theme.brightness, 'lilac'),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF8B6CFF) : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Center(child: Text(emoji, style: const TextStyle(fontSize: 23))),
+      ),
+    );
+  }
+
+  Widget _buildToolbarIcon(
+    String label,
+    bool isBold,
+    bool isItalic, {
+    bool underline = false,
+  }) {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: AppTheme.getChipColor(brightness),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style:
+              safeGoogleFont(
+                'Quicksand',
+                fontSize: 14,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+                color: AppTheme.getMutedColor(brightness),
+              ).copyWith(
+                decoration: underline
+                    ? TextDecoration.underline
+                    : TextDecoration.none,
+              ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagPill(String tag) {
+    final isSelected = _tags.contains(tag);
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _tags.remove(tag);
+          } else {
+            _tags.add(tag);
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? _getTagBg(tag)
+              : AppTheme.getChipColor(brightness),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? _getTagColor(tag) : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          tag,
+          style: safeGoogleFont(
+            'Quicksand',
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: isSelected
+                ? _getTagColor(tag)
+                : AppTheme.getMutedColor(brightness),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetaRow(dynamic icon, String title, String val) {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+      child: Row(
+        children: [
+          if (icon is IconData)
+            Icon(icon, size: 18, color: AppTheme.getMutedColor(brightness))
+          else if (icon is String)
+            Text(icon, style: const TextStyle(fontSize: 17)),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              style: safeGoogleFont(
+                'Quicksand',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.getHeadingColor(brightness),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            val,
+            style: safeGoogleFont(
+              'Quicksand',
+              fontSize: 13,
+              color: AppTheme.getFaintColor(brightness),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.chevron_right,
+            size: 16,
+            color: AppTheme.getFaintColor(brightness),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getTagColor(String tag) {
+    switch (tag.toLowerCase()) {
+      case 'work':
+        return const Color(0xFF7A63C9);
+      case 'reading':
+        return const Color(0xFFB06CA6);
+      case 'friends':
+        return const Color(0xFFA86BC9);
+      case 'outdoors':
+        return const Color(0xFF6B9C5A);
+      case 'travel':
+        return const Color(0xFFC78B3C);
+      default:
+        return const Color(0xFF8B6CFF);
+    }
+  }
+
+  Color _getTagBg(String tag) {
+    switch (tag.toLowerCase()) {
+      case 'work':
+        return const Color(0xFFEFE9FF);
+      case 'reading':
+        return const Color(0xFFFBE9F6);
+      case 'friends':
+        return const Color(0xFFF3E9FB);
+      case 'outdoors':
+        return const Color(0xFFE6F2E2);
+      case 'travel':
+        return const Color(0xFFF6EDDC);
+      default:
+        return const Color(0xFFEFE9FF);
+    }
   }
 
   DiaryEntry _buildEntry() {
@@ -541,82 +1068,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     }
   }
 
-  Widget _buildImageStrip(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.only(top: AppTheme.spacingMedium),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _imageUrls.length,
-        itemBuilder: (context, index) {
-          final imagePath = _imageUrls[index];
-          final file = File(imagePath);
-
-          return Container(
-            margin: const EdgeInsets.only(right: AppTheme.spacingMedium),
-            width: 120,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                    AppTheme.borderRadiusMedium,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Image.file(
-                      file,
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _imageUrls.removeAt(index);
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.black54,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Future<void> _pickDateTime() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -640,35 +1091,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         pickedTime.hour,
         pickedTime.minute,
       );
-    });
-  }
-
-  Future<void> _pickMood() async {
-    final selectedMood = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        const moods = ['📝', '☕', '🚀', '😊', '😌', '😢', '😤', '🎉'];
-        return GridView.count(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          crossAxisCount: 4,
-          shrinkWrap: true,
-          children: [
-            for (final mood in moods)
-              InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => Navigator.of(context).pop(mood),
-                child: Center(
-                  child: Text(mood, style: const TextStyle(fontSize: 32)),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-    if (selectedMood == null) return;
-    setState(() {
-      _mood = selectedMood;
     });
   }
 
@@ -1141,127 +1563,107 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       await _startListeningSession(_dictationSessionId);
     }
   }
+}
 
-  Widget _buildListeningPanel(BuildContext context) {
+class VoiceWaveformAnimation extends StatefulWidget {
+  final double soundLevel;
+  const VoiceWaveformAnimation({super.key, required this.soundLevel});
+
+  @override
+  State<VoiceWaveformAnimation> createState() => _VoiceWaveformAnimationState();
+}
+
+class _VoiceWaveformAnimationState extends State<VoiceWaveformAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final primary = theme.primaryColor;
 
-    final double normalizedLevel = (_soundLevel.clamp(0.0, 10.0)) / 10.0;
-    final double pulseScale = 1.0 + (normalizedLevel * 0.4);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(22, (index) {
+            final double animVal = _controller.value;
+            final double offset = index * 0.15;
+            final double waveVal =
+                (math.sin(animVal * 2 * math.pi + offset) + 1) / 2.0;
+            final double scale =
+                0.2 +
+                (waveVal * 0.5) +
+                (widget.soundLevel * 0.05).clamp(0.0, 0.3);
 
-    return Positioned(
-      left: AppTheme.spacingMedium,
-      right: AppTheme.spacingMedium,
-      bottom: AppTheme.spacingMedium,
-      child: Hero(
-        tag: 'dictation-panel',
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-            border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.2),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacingLarge,
-                  vertical: AppTheme.spacingMedium,
-                ),
-                child: Row(
-                  children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 100),
-                          width: 44 * pulseScale,
-                          height: 44 * pulseScale,
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.mic,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Listening...',
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Speak now to dictate your entry',
-                            style: safeGoogleFont(
-                              'IBM Plex Sans',
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _toggleDictation,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.errorContainer,
-                        foregroundColor: colorScheme.onErrorContainer,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                      child: const Text('Stop'),
-                    ),
-                  ],
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                height: 34 * scale,
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
+            );
+          }),
+        );
+      },
     );
   }
+}
+
+class DiagonalStripesPainter extends CustomPainter {
+  final Color color1;
+  final Color color2;
+  final double stripeWidth;
+
+  DiagonalStripesPainter({
+    required this.color1,
+    required this.color2,
+    this.stripeWidth = 10.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Draw background
+    paint.color = color1;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+
+    // Draw diagonal stripes
+    paint.color = color2;
+    final path = Path();
+
+    final double step = stripeWidth * 2;
+    for (double i = -size.height; i < size.width; i += step) {
+      path.reset();
+      path.moveTo(i, 0);
+      path.lineTo(i + stripeWidth, 0);
+      path.lineTo(i + stripeWidth + size.height, size.height);
+      path.lineTo(i + size.height, size.height);
+      path.close();
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

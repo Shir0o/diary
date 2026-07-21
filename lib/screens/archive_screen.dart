@@ -203,12 +203,12 @@ class _EntryList extends StatelessWidget {
 
     switch (action) {
       case _ListAction.restore:
-        bgColor = AppTheme.successColor;
+        bgColor = const Color(0xFF6B9C5A);
         iconData = Icons.unarchive;
         label = 'Restore';
         break;
       case _ListAction.delete:
-        bgColor = AppTheme.warningColor;
+        bgColor = const Color(0xFFC78B3C);
         iconData = Icons.delete;
         label = 'Trash';
         break;

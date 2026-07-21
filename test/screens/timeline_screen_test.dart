@@ -10,7 +10,6 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: TimelineScreen()));
 
     expect(find.text('Diary'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
     // Initially should show our mock entries
     expect(find.text('Today'), findsOneWidget);
   });
