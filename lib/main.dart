@@ -15,8 +15,10 @@ import 'screens/entry_search_delegate.dart';
 import 'screens/archive_screen.dart';
 import 'screens/trash_screen.dart';
 import 'screens/biometric_lock_screen.dart';
-import 'widgets/side_drawer.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/entry_detail_screen.dart';
 import 'models/diary_entry.dart';
+import 'widgets/side_drawer.dart';
 import 'services/auth_service.dart';
 import 'services/security_service.dart';
 import 'services/theme_service.dart';
@@ -61,18 +63,38 @@ class DiaryApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: themeService,
       builder: (context, _) {
+        String palette = 'lilac';
+        try {
+          palette = themeService.themePalette;
+        } catch (_) {}
+
+        ThemeMode mode = ThemeMode.system;
+        try {
+          mode = themeService.themeMode;
+        } catch (_) {}
+
+        bool isOnboardingDone = true;
+        try {
+          isOnboardingDone = themeService.onboardingCompleted;
+        } catch (_) {}
+
         return MaterialApp(
           title: 'Diary',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeService.themeMode,
-          home: MainScreen(
-            entryStore: entryStore ?? SqliteDiaryEntryStore(),
-            authService: authService,
-            securityService: securityService,
-            themeService: themeService,
-          ),
+          theme: AppTheme.buildTheme(Brightness.light, palette),
+          darkTheme: AppTheme.buildTheme(Brightness.dark, palette),
+          themeMode: mode,
+          home: isOnboardingDone
+              ? MainScreen(
+                  entryStore: entryStore ?? SqliteDiaryEntryStore(),
+                  authService: authService,
+                  securityService: securityService,
+                  themeService: themeService,
+                )
+              : OnboardingScreen(
+                  themeService: themeService,
+                  onCompleted: () {},
+                ),
         );
       },
     );
@@ -518,6 +540,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       return BiometricLockScreen(
         onUnlock: _checkAuthentication,
         isAuthenticating: _isAuthenticating,
+        themeService: widget.themeService,
       );
     }
 
@@ -534,6 +557,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           selectedIndex: _selectedDrawerIndex,
           authService: widget.authService,
         ),
+        bottomNavigationBar: _showTabBar ? _buildFloatingTabBar(context) : null,
+        extendBody: true,
         body: AnimatedSwitcher(
           duration: AppTheme.transitionDuration,
           reverseDuration: AppTheme.reverseTransitionDuration,
@@ -560,6 +585,25 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _showEntryDetail(DiaryEntry entry) {
+    Navigator.of(context).push(
+      EntryDetailScreen.route(
+        entry: entry,
+        themeService: widget.themeService,
+        onEdit: () {
+          Navigator.of(context).pop();
+          _editEntry(entry);
+        },
+        onDelete: () {
+          _deleteEntry(entry.id);
+        },
+        onArchive: () {
+          _archiveEntry(entry.id, !entry.isArchived);
+        },
+      ),
+    );
+  }
+
   Widget _buildCurrentScreen() {
     final isLoading = _isLoadingEntries;
 
@@ -567,11 +611,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _MainScreen.timeline => TimelineScreen(
         isLoading: isLoading,
         entries: _entries.where((e) => !e.isArchived && !e.isDeleted).toList(),
+        themeService: widget.themeService,
         onMenuPressed: _openDrawer,
         onAddEntry: _createEntry,
         onSearchEntries: _searchEntries,
         onCalendarPressed: _showCalendar,
-        onEditEntry: _editEntry,
+        onEditEntry: _showEntryDetail,
         onDeleteEntry: _deleteEntry,
         onArchiveEntry: (id) => _archiveEntry(id, true),
         onRefresh: () async {
@@ -594,11 +639,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         },
       ),
       _MainScreen.calendar => CalendarScreen(
+        themeService: widget.themeService,
         isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
         onSearchEntries: _searchEntries,
-        onEditEntry: _editEntry,
+        onEditEntry: _showEntryDetail,
       ),
       _MainScreen.archive => ArchiveScreen(
         isLoading: isLoading,
@@ -625,6 +671,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         onBackPressed: _goBackToTimeline,
       ),
       _MainScreen.analytics => AnalyticsScreen(
+        themeService: widget.themeService,
         isLoading: isLoading,
         entries: _entries.where((e) => !e.isDeleted).toList(),
         onBackPressed: _goBackToTimeline,
@@ -637,16 +684,130 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         themeService: widget.themeService,
         entryStore: widget.entryStore,
         onSyncCompleted: _loadEntries,
+        onNavigateToScreen: (screen) {
+          setState(() {
+            _currentScreen = screen == 'archive'
+                ? _MainScreen.archive
+                : screen == 'trash'
+                ? _MainScreen.trash
+                : screen == 'media'
+                ? _MainScreen.media
+                : _MainScreen.settings;
+          });
+        },
       ),
       _MainScreen.help => InfoScreen.help(
         isLoading: isLoading,
-        onBackPressed: _goBackToTimeline,
+        onBackPressed: () =>
+            setState(() => _currentScreen = _MainScreen.settings),
       ),
       _MainScreen.about => InfoScreen.about(
         isLoading: isLoading,
-        onBackPressed: _goBackToTimeline,
+        onBackPressed: () =>
+            setState(() => _currentScreen = _MainScreen.settings),
       ),
     };
+  }
+
+  bool get _showTabBar {
+    return [
+      _MainScreen.timeline,
+      _MainScreen.calendar,
+      _MainScreen.analytics,
+      _MainScreen.settings,
+    ].contains(_currentScreen);
+  }
+
+  String _safePalette() {
+    try {
+      return widget.themeService.themePalette;
+    } catch (_) {
+      return 'lilac';
+    }
+  }
+
+  Widget _buildFloatingTabBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = _safePalette();
+    final cardBg = AppTheme.getCardBackground(theme.brightness, palette);
+    final primary = AppTheme.getPrimaryColor(palette);
+
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+        height: 64,
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(
+            color: AppTheme.getHairlineColor(theme.brightness),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildTabIcon('🏠', _MainScreen.timeline, 22),
+            _buildTabIcon('🗓️', _MainScreen.calendar, 22),
+            _buildComposeButton(primary),
+            _buildTabIcon('📊', _MainScreen.analytics, 22),
+            _buildTabIcon('⚙️', _MainScreen.settings, 22),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabIcon(String emoji, _MainScreen screen, double size) {
+    final isActive = _currentScreen == screen;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() {
+          _currentScreen = screen;
+        });
+      },
+      child: Opacity(
+        opacity: isActive ? 1.0 : 0.4,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(emoji, style: TextStyle(fontSize: size)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComposeButton(Color primary) {
+    return GestureDetector(
+      onTap: _createEntry,
+      child: Transform.translate(
+        offset: const Offset(0, -12),
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            gradient: AppTheme.getAccentGradient(_safePalette()),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Center(
+            child: Icon(Icons.add, color: Colors.white, size: 28),
+          ),
+        ),
+      ),
+    );
   }
 }
 

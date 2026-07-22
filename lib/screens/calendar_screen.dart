@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/diary_entry.dart';
-import '../widgets/entry_card.dart';
+import '../services/theme_service.dart';
+import '../config/app_theme.dart';
 import '../helpers/font_helper.dart';
 import '../widgets/skeleton_loader.dart';
+import '../widgets/entry_card.dart';
 
 class CalendarScreen extends StatefulWidget {
+  final ThemeService? themeService;
   final DateTime? initialDate;
   final VoidCallback onBackPressed;
   final VoidCallback? onSearchEntries;
@@ -15,6 +18,7 @@ class CalendarScreen extends StatefulWidget {
 
   const CalendarScreen({
     super.key,
+    this.themeService,
     this.initialDate,
     required this.onBackPressed,
     this.onSearchEntries,
@@ -80,67 +84,159 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final brightness = theme.brightness;
+    String palette = 'lilac';
+    try {
+      palette = widget.themeService?.themePalette ?? 'lilac';
+    } catch (_) {}
+
+    final bgGradient = AppTheme.getScreenBackground(brightness, palette);
+    final headingColor = AppTheme.getHeadingColor(brightness);
+    final bodyColor = AppTheme.getBodyColor(brightness);
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Calendar',
-          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: widget.onBackPressed,
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: colorScheme.onSurface),
-            onPressed: widget.onSearchEntries,
-          ),
-        ],
-      ),
-      body: widget.isLoading
-          ? const CalendarScreenSkeleton()
-          : Column(
-              children: [
-                _buildCustomCalendar(context),
-                Divider(
-                  height: 1,
-                  color: colorScheme.outline.withValues(alpha: 0.2),
+      backgroundColor: bgGradient.colors.first,
+      body: Container(
+        decoration: BoxDecoration(gradient: bgGradient),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // Custom Redesigned Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
                 ),
-                Expanded(
-                  child: _filteredEntries.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No entries for this day',
-                            style: safeGoogleFont(
-                              'Inter',
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: widget.onBackPressed,
+                        ),
+                        const SizedBox(width: 14),
+                        Text(
+                          'Calendar',
+                          style: safeGoogleFont(
+                            'Quicksand',
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: headingColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: widget.onSearchEntries,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: AppTheme.getCardBackground(
+                            brightness,
+                            palette,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text('🔍', style: TextStyle(fontSize: 16)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Calendar Body
+              Expanded(
+                child: widget.isLoading
+                    ? const CalendarScreenSkeleton()
+                    : Column(
+                        children: [
+                          Offstage(
+                            child: CalendarDatePicker(
+                              initialDate: _selectedDate,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                              onDateChanged: (date) {
+                                setState(() {
+                                  _selectedDate = date;
+                                  _currentMonth = DateTime(
+                                    date.year,
+                                    date.month,
+                                  );
+                                });
+                              },
+                            ),
+                          ),
+                          Flexible(
+                            child: _buildCustomCalendar(brightness, palette),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 4,
+                            ),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                DateFormat(
+                                  'EEEE, MMM d, yyyy',
+                                ).format(_selectedDate).toUpperCase(),
+                                style: safeGoogleFont(
+                                  'Space Mono',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.getFaintColor(brightness),
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: _filteredEntries.length,
-                          itemBuilder: (context, index) {
-                            final entry = _filteredEntries[index];
-                            return EntryCard(
-                              entry: entry,
-                              onTap: widget.onEditEntry == null
-                                  ? null
-                                  : () => widget.onEditEntry!(entry),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
+                          Expanded(
+                            child: _filteredEntries.isEmpty
+                                ? _buildEmptyDayState(headingColor, bodyColor)
+                                : ListView.builder(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 4,
+                                    ),
+                                    itemCount: _filteredEntries.length,
+                                    itemBuilder: (context, index) {
+                                      final entry = _filteredEntries[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: EntryCard(
+                                          entry: entry,
+                                          onTap: () {
+                                            if (widget.onEditEntry != null) {
+                                              widget.onEditEntry!(entry);
+                                            }
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -164,10 +260,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
   }
 
-  Widget _buildCustomCalendar(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+  Widget _buildCustomCalendar(Brightness brightness, String palette) {
     final days = _daysInMonth(_currentMonth);
     final firstWeekday = _firstWeekdayOfMonth(_currentMonth);
 
@@ -180,153 +273,219 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final today = DateTime.now();
-    final entryDates = _entries
-        .where((entry) => !entry.isArchived && !entry.isDeleted)
-        .map(
-          (entry) => '${entry.date.year}-${entry.date.month}-${entry.date.day}',
-        )
-        .toSet();
+
+    // Map entries to string keys for fast lookup
+    final Map<String, List<DiaryEntry>> entryMap = {};
+    for (var entry in _entries) {
+      if (!entry.isArchived && !entry.isDeleted) {
+        final key = '${entry.date.year}-${entry.date.month}-${entry.date.day}';
+        entryMap.putIfAbsent(key, () => []).add(entry);
+      }
+    }
 
     final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-    return Column(
-      children: [
-        // Month Selector Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: _previousMonth,
-              ),
-              Text(
-                DateFormat('MMMM yyyy').format(_currentMonth),
-                style: safeGoogleFont(
-                  'Inter',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: _nextMonth,
-              ),
-            ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.getCardBackground(brightness, palette),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
-        ),
-        // Weekdays Abbreviations
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: weekdays.map((day) {
-              return SizedBox(
-                width: 40,
-                child: Text(
-                  day,
-                  textAlign: TextAlign.center,
+        ],
+        border: Border.all(color: AppTheme.getHairlineColor(brightness)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Month Selector Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: _previousMonth,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.getChipColor(brightness),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.chevron_left, size: 18),
+                  ),
+                ),
+                Text(
+                  DateFormat('MMMM yyyy').format(_currentMonth),
                   style: safeGoogleFont(
-                    'Inter',
-                    fontSize: 12,
+                    'Quicksand',
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    color: AppTheme.getHeadingColor(brightness),
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Day Grid
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 1.3,
-            ),
-            itemCount: cells.length,
-            itemBuilder: (context, index) {
-              final cell = cells[index];
-              if (cell == null) return const SizedBox.shrink();
-
-              final isSelected =
-                  cell.year == _selectedDate.year &&
-                  cell.month == _selectedDate.month &&
-                  cell.day == _selectedDate.day;
-
-              final isToday =
-                  cell.year == today.year &&
-                  cell.month == today.month &&
-                  cell.day == today.day;
-
-              final hasEntries = entryDates.contains(
-                '${cell.year}-${cell.month}-${cell.day}',
-              );
-
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedDate = cell;
-                  });
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : isToday
-                        ? colorScheme.primary.withValues(alpha: 0.1)
-                        : Colors.transparent,
-                    shape: BoxShape.circle,
-                    border: isToday && !isSelected
-                        ? Border.all(color: colorScheme.primary, width: 1.5)
-                        : null,
+                GestureDetector(
+                  onTap: _nextMonth,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.getChipColor(brightness),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.chevron_right, size: 18),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        cell.day.toString(),
-                        style: safeGoogleFont(
-                          'Inter',
-                          fontSize: 14,
-                          fontWeight: isSelected || isToday
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onSurface,
-                        ),
-                      ),
-                      if (hasEntries) ...[
-                        const SizedBox(height: 2),
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Weekdays Abbreviations
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: weekdays.map((day) {
+                return SizedBox(
+                  width: 38,
+                  child: Text(
+                    day,
+                    textAlign: TextAlign.center,
+                    style: safeGoogleFont(
+                      'Space Mono',
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.getFaintColor(brightness),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+
+            // Day Grid
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisSpacing: 2,
+                crossAxisSpacing: 2,
+                childAspectRatio: 1.35,
+              ),
+              itemCount: cells.length,
+              itemBuilder: (context, index) {
+                final date = cells[index];
+                if (date == null) {
+                  return const SizedBox.shrink();
+                }
+
+                final isSelected =
+                    date.year == _selectedDate.year &&
+                    date.month == _selectedDate.month &&
+                    date.day == _selectedDate.day;
+
+                final isToday =
+                    date.year == today.year &&
+                    date.month == today.month &&
+                    date.day == today.day;
+
+                final key = '${date.year}-${date.month}-${date.day}';
+                final dayEntries = entryMap[key] ?? [];
+                final hasEntries = dayEntries.isNotEmpty;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: isSelected
+                          ? AppTheme.getAccentGradient(palette)
+                          : null,
+                      color: !isSelected && isToday
+                          ? AppTheme.getSoftBg(palette)
+                          : Colors.transparent,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Text(
+                          '${date.day}',
+                          style: safeGoogleFont(
+                            'Quicksand',
+                            fontSize: 14,
+                            fontWeight: isSelected || isToday
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                             color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.primary,
-                            shape: BoxShape.circle,
+                                ? Colors.white
+                                : isToday
+                                ? AppTheme.getPrimaryColor(palette)
+                                : AppTheme.getHeadingColor(brightness),
                           ),
                         ),
+                        if (hasEntries && !isSelected)
+                          Positioned(
+                            bottom: 5,
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: AppTheme.getPrimaryColor(palette),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyDayState(Color headingColor, Color bodyColor) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🗓️', style: TextStyle(fontSize: 38)),
+            const SizedBox(height: 12),
+            Text(
+              'A blank page',
+              style: safeGoogleFont(
+                'Quicksand',
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: headingColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'No reflections written for this date yet.',
+              textAlign: TextAlign.center,
+              style: safeGoogleFont(
+                'Quicksand',
+                fontSize: 13,
+                color: bodyColor,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

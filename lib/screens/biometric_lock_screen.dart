@@ -1,17 +1,20 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
+import '../services/theme_service.dart';
 
 class BiometricLockScreen extends StatefulWidget {
   final VoidCallback onUnlock;
   final bool isAuthenticating;
   final bool animate;
+  final ThemeService? themeService;
 
   const BiometricLockScreen({
     super.key,
     required this.onUnlock,
     required this.isAuthenticating,
     this.animate = true,
+    this.themeService,
   });
 
   @override
@@ -45,25 +48,14 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Premium adaptive gradients
-    final backgroundGradient = isDark
-        ? const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.darkGradientStart,
-              AppTheme.darkGradientMiddle,
-              AppTheme.darkGradientEnd,
-            ],
-          )
-        : const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.lightGradientStart,
-              AppTheme.lightGradientMiddle,
-              AppTheme.lightGradientEnd,
-            ],
-          );
+    String palette = 'lilac';
+    try {
+      palette = widget.themeService?.themePalette ?? 'lilac';
+    } catch (_) {}
+    final backgroundGradient = AppTheme.getScreenBackground(
+      Theme.of(context).brightness,
+      palette,
+    );
 
     return Scaffold(
       body: Container(

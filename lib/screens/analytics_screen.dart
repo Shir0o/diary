@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/diary_entry.dart';
-import '../helpers/analytics_helper.dart';
+import '../services/theme_service.dart';
+import '../config/app_theme.dart';
 import '../helpers/font_helper.dart';
+import '../helpers/analytics_helper.dart';
 import '../widgets/skeleton_loader.dart';
 
 class AnalyticsScreen extends StatefulWidget {
+  final ThemeService? themeService;
   final List<DiaryEntry> entries;
   final DateTime? referenceDate;
   final VoidCallback onBackPressed;
@@ -12,6 +15,7 @@ class AnalyticsScreen extends StatefulWidget {
 
   const AnalyticsScreen({
     super.key,
+    this.themeService,
     required this.entries,
     this.referenceDate,
     required this.onBackPressed,
@@ -39,10 +43,62 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return widget.entries.where((e) => e.date.isAfter(cutoff)).toList();
   }
 
+  int _calculateTotalWords(List<DiaryEntry> entries) {
+    return entries.fold<int>(0, (sum, entry) {
+      final words = entry.content
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty);
+      return sum + words.length;
+    });
+  }
+
+  String _calculateAverageMood(List<DiaryEntry> entries) {
+    if (entries.isEmpty) return '📝';
+    final Map<String, int> counts = {};
+    for (var entry in entries) {
+      counts[entry.mood] = (counts[entry.mood] ?? 0) + 1;
+    }
+    String bestMood = '📝';
+    int maxCount = 0;
+    counts.forEach((mood, count) {
+      if (count > maxCount) {
+        maxCount = count;
+        bestMood = mood;
+      }
+    });
+    return bestMood;
+  }
+
+  String _getMoodLabel(String mood) {
+    switch (mood) {
+      case '😊':
+        return 'Happy';
+      case '😌':
+        return 'Calm';
+      case '😍':
+        return 'Love';
+      case '😔':
+        return 'Down';
+      case '😴':
+        return 'Tired';
+      case '🥳':
+        return 'Proud';
+      default:
+        return 'Good';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final brightness = theme.brightness;
+    String palette = 'lilac';
+    try {
+      palette = widget.themeService?.themePalette ?? 'lilac';
+    } catch (_) {}
+
+    final bgGradient = AppTheme.getScreenBackground(brightness, palette);
+    final headingColor = AppTheme.getHeadingColor(brightness);
 
     final filtered = _filteredEntries;
     final totalEntries = AnalyticsHelper.calculateTotalEntries(filtered);
@@ -50,478 +106,492 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       filtered,
       relativeTo: widget.referenceDate,
     );
+    final totalWords = _calculateTotalWords(filtered);
+    final avgMood = _calculateAverageMood(filtered);
+
     final moodDist = AnalyticsHelper.calculateMoodDistribution(filtered);
     final tagDist = AnalyticsHelper.calculateTagDistribution(filtered);
-    final weeklyActivity = AnalyticsHelper.getWeeklyActivity(
-      filtered,
-      relativeTo: widget.referenceDate,
-    );
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Analytics',
-          style: safeGoogleFont('Inter', fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: widget.onBackPressed,
-        ),
-      ),
-      body: widget.isLoading
-          ? const AnalyticsScreenSkeleton()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildRangeSelector(context),
-                Row(
+      backgroundColor: bgGradient.colors.first,
+      body: Container(
+        decoration: BoxDecoration(gradient: bgGradient),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // Custom Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                child: Row(
                   children: [
-                    Expanded(
-                      child: _buildSummaryCard(
-                        context,
-                        'Total Entries',
-                        totalEntries.toString(),
-                        Icons.book_outlined,
-                        colorScheme.primary,
+                    GestureDetector(
+                      onTap: widget.onBackPressed,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: AppTheme.getCardBackground(
+                            brightness,
+                            palette,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.arrow_back, size: 18),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildSummaryCard(
-                        context,
-                        'Current Streak',
-                        '$streak days',
-                        Icons.local_fire_department_outlined,
-                        Colors.orange,
+                    const SizedBox(width: 14),
+                    Text(
+                      'Analytics',
+                      style: safeGoogleFont(
+                        'Quicksand',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: headingColor,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Mood Distribution', context),
-                const SizedBox(height: 8),
-                _buildMoodDistribution(moodDist, context),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Tag Distribution', context),
-                const SizedBox(height: 8),
-                _buildTagDistribution(tagDist, context),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Weekly Activity', context),
-                const SizedBox(height: 8),
-                _buildActivityChart(weeklyActivity, context),
-                const SizedBox(height: 24),
-                _buildInsightsCard(moodDist, context),
-              ],
-            ),
+              ),
+
+              // Scrollable Body
+              Expanded(
+                child: widget.isLoading
+                    ? const AnalyticsScreenSkeleton()
+                    : ListView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        children: [
+                          _buildRangeSelector(brightness, palette),
+                          const SizedBox(height: 8),
+
+                          // Highlights section
+                          Text(
+                            "HIGHLIGHTS",
+                            style: safeGoogleFont(
+                              'Space Mono',
+                              color: AppTheme.getFaintColor(brightness),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildHighlightsCard(
+                            brightness,
+                            palette,
+                            totalEntries,
+                            totalWords,
+                            streak,
+                            avgMood,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Mood Distribution Section
+                          Text(
+                            "Mood Distribution",
+                            style: safeGoogleFont(
+                              'Space Mono',
+                              color: AppTheme.getFaintColor(brightness),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildMoodDistributionCard(
+                            brightness,
+                            palette,
+                            moodDist,
+                            totalEntries,
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Popular Tags Section
+                          Text(
+                            "POPULAR TAGS",
+                            style: safeGoogleFont(
+                              'Space Mono',
+                              color: AppTheme.getFaintColor(brightness),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          _buildPopularTagsCard(
+                            brightness,
+                            palette,
+                            tagDist,
+                            totalEntries,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      elevation: 0,
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: safeGoogleFont(
-                'Inter',
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+  Widget _buildRangeSelector(Brightness brightness, String palette) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: ['7 Days', '30 Days', '90 Days', 'All Time'].map((range) {
+          final isSelected = _selectedRange == range;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedRange = range;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isSelected
+                      ? AppTheme.getAccentGradient(palette)
+                      : null,
+                  color: isSelected
+                      ? null
+                      : AppTheme.getCardBackground(brightness, palette),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.getPrimaryColor(
+                              palette,
+                            ).withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
+                  border: isSelected
+                      ? null
+                      : Border.all(
+                          color: AppTheme.getHairlineColor(brightness),
+                        ),
+                ),
+                child: Text(
+                  range,
+                  style: safeGoogleFont(
+                    'Quicksand',
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected
+                        ? Colors.white
+                        : AppTheme.getMutedColor(brightness),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: safeGoogleFont(
-                'Inter',
-                fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildHighlightsCard(
+    Brightness brightness,
+    String palette,
+    int totalEntries,
+    int totalWords,
+    int streak,
+    String avgMood,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.getCardBackground(brightness, palette),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: AppTheme.getHairlineColor(brightness)),
+      ),
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 2.2,
+        children: [
+          _buildStatItem(brightness, 'Total Entries', '$totalEntries', '📝'),
+          _buildStatItem(brightness, 'Total words', '$totalWords words', '✍️'),
+          _buildStatItem(brightness, 'Current Streak', '$streak days', '🔥'),
+          _buildStatItem(
+            brightness,
+            'Average mood',
+            '${_getMoodLabel(avgMood)} $avgMood',
+            '🎭',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+    Brightness brightness,
+    String label,
+    String value,
+    String emoji,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: safeGoogleFont(
+                  'Quicksand',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.getFaintColor(brightness),
+                ),
               ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          overflow: TextOverflow.ellipsis,
+          style: safeGoogleFont(
+            'Quicksand',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.getHeadingColor(brightness),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildSectionHeader(String title, BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Text(
-      title,
-      style: safeGoogleFont(
-        'Inter',
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: colorScheme.onSurface,
-      ),
-    );
-  }
-
-  Widget _buildMoodDistribution(
-    Map<String, int> distribution,
-    BuildContext context,
+  Widget _buildMoodDistributionCard(
+    Brightness brightness,
+    String palette,
+    Map<String, int> moodDist,
+    int total,
   ) {
-    if (distribution.isEmpty) {
-      return _buildEmptyState(context);
-    }
+    final themePrimary = AppTheme.getPrimaryColor(palette);
+    final activeMoods = moodDist.keys
+        .where((k) => (moodDist[k] ?? 0) > 0)
+        .toList();
+    final moods = activeMoods.isNotEmpty
+        ? activeMoods
+        : ['😊', '😌', '😍', '😔', '😴', '🥳'];
 
-    final colorScheme = Theme.of(context).colorScheme;
-    final total = distribution.values.fold(0, (sum, val) => sum + val);
-
-    return Card(
-      elevation: 0,
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.getCardBackground(brightness, palette),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: AppTheme.getHairlineColor(brightness)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: distribution.entries.map((e) {
-            final percentage = e.value / total;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  Text(e.key, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        LinearProgressIndicator(
-                          value: percentage,
-                          backgroundColor: colorScheme.surfaceContainerHighest,
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(4),
-                          minHeight: 8,
+      child: total == 0
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'No data available',
+                  style: safeGoogleFont(
+                    'Quicksand',
+                    fontSize: 13,
+                    color: AppTheme.getFaintColor(brightness),
+                  ),
+                ),
+              ),
+            )
+          : Column(
+              children: moods.map((mood) {
+                final count = moodDist[mood] ?? 0;
+                final double pct = total == 0 ? 0.0 : count / total;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 32,
+                        child: Text(mood, style: const TextStyle(fontSize: 20)),
+                      ),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: pct,
+                            backgroundColor: AppTheme.getChipColor(brightness),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              themePrimary,
+                            ),
+                            minHeight: 10,
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 32,
+                        child: Text(
+                          '${(pct * 100).toInt()}%',
+                          style: safeGoogleFont(
+                            'Space Mono',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.getMutedColor(brightness),
+                          ),
+                          textAlign: Alignment.centerRight.x == 1.0
+                              ? TextAlign.right
+                              : TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${(percentage * 100).toStringAsFixed(0)}%',
-                    style: safeGoogleFont(
-                      'Inter',
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+                );
+              }).toList(),
+            ),
     );
   }
 
-  Widget _buildTagDistribution(
-    Map<String, int> distribution,
-    BuildContext context,
+  Widget _buildPopularTagsCard(
+    Brightness brightness,
+    String palette,
+    Map<String, int> tagDist,
+    int total,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final sortedTags = tagDist.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
-    if (distribution.isEmpty) {
-      return Card(
-        elevation: 0,
-        color: colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
+    if (sortedTags.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppTheme.getCardBackground(brightness, palette),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppTheme.getHairlineColor(brightness)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: Text(
-              'No tags used yet',
-              style: safeGoogleFont(
-                'Inter',
-                fontSize: 14,
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+        child: Center(
+          child: Text(
+            'No tags found yet.',
+            style: safeGoogleFont(
+              'Quicksand',
+              color: AppTheme.getFaintColor(brightness),
             ),
           ),
         ),
       );
     }
 
-    final total = distribution.values.fold(0, (sum, val) => sum + val);
-
-    final sortedEntries = distribution.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    return Card(
-      elevation: 0,
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: sortedEntries.map((e) {
-            final percentage = e.value / total;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.label_outlined,
-                    size: 18,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      e.key,
-                      overflow: TextOverflow.ellipsis,
-                      style: safeGoogleFont(
-                        'Inter',
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 5,
-                    child: LinearProgressIndicator(
-                      value: percentage,
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(4),
-                      minHeight: 8,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${e.value} (${(percentage * 100).toStringAsFixed(0)}%)',
-                    style: safeGoogleFont(
-                      'Inter',
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActivityChart(List<DayActivity> activity, BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final maxCount = activity
-        .map((e) => e.count)
-        .fold(0, (max, e) => e > max ? e : max);
-
-    return Card(
-      elevation: 0,
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.1)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: SizedBox(
-          height: 150,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: activity.asMap().entries.map((entry) {
-              final day = entry.value;
-              final heightFactor = maxCount == 0
-                  ? 0.05
-                  : (day.count / maxCount).clamp(0.05, 1.0);
-
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    width: 20,
-                    height: 100 * heightFactor,
-                    decoration: BoxDecoration(
-                      color: day.count > 0
-                          ? colorScheme.primary
-                          : colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _getWeekdayLabel(day.date),
-                    style: safeGoogleFont(
-                      'Inter',
-                      fontSize: 10,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _getWeekdayLabel(DateTime date) {
-    final weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    return weekdays[date.weekday - 1];
-  }
-
-  Widget _buildInsightsCard(Map<String, int> moodDist, BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    if (moodDist.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final mostCommonMoodEntry = moodDist.entries.fold<MapEntry<String, int>?>(
-      null,
-      (max, e) => max == null || e.value > max.value ? e : max,
-    );
-
-    if (mostCommonMoodEntry == null) return const SizedBox.shrink();
-
-    final mood = mostCommonMoodEntry.key;
-    final moodDescription = switch (mood) {
-      '🚀' => 'Energetic',
-      '☕' => 'Relaxed',
-      '📝' => 'Reflective',
-      '😊' => 'Happy',
-      '😌' => 'Peaceful',
-      '😢' => 'Sad',
-      '😤' => 'Stressed',
-      '🎉' => 'Celebratory',
-      _ => 'Wonderful',
-    };
-
-    return Card(
-      elevation: 0,
-      color: colorScheme.primary.withValues(alpha: 0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.primary, width: 0.5),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(Icons.auto_awesome, color: colorScheme.primary, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "You've been feeling $mood \"$moodDescription\" most of this period. Keep up the great work!",
-                style: safeGoogleFont(
-                  'Inter',
-                  fontSize: 14,
-                  color: colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRangeSelector(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final ranges = ['7 Days', '30 Days', '90 Days', 'All Time'];
+    final maxCount = sortedTags.first.value;
 
     return Container(
-      height: 40,
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: ranges.length,
-        itemBuilder: (context, index) {
-          final range = ranges[index];
-          final isSelected = _selectedRange == range;
-
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.getCardBackground(brightness, palette),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: AppTheme.getHairlineColor(brightness)),
+      ),
+      child: Column(
+        children: sortedTags.take(5).map((entry) {
+          final tag = entry.key;
+          final count = entry.value;
+          final double pct = maxCount == 0 ? 0.0 : count / maxCount;
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(
-                range,
-                style: safeGoogleFont(
-                  'Inter',
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurface,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    '#$tag',
+                    style: safeGoogleFont(
+                      'Quicksand',
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.getMutedColor(brightness),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    _selectedRange = range;
-                  });
-                }
-              },
-              selectedColor: colorScheme.primary,
-              backgroundColor: colorScheme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: isSelected
-                      ? Colors.transparent
-                      : colorScheme.outline.withValues(alpha: 0.3),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: pct,
+                      backgroundColor: AppTheme.getChipColor(brightness),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        const Color(0xFF7A63C9),
+                      ),
+                      minHeight: 10,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '$count',
+                    style: safeGoogleFont(
+                      'Space Mono',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.getFaintColor(brightness),
+                    ),
+                    textAlign: Alignment.centerRight.x == 1.0
+                        ? TextAlign.right
+                        : TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           );
-        },
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      alignment: Alignment.center,
-      child: Text(
-        'No data available',
-        style: safeGoogleFont(
-          'Inter',
-          color: colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
+        }).toList(),
       ),
     );
   }

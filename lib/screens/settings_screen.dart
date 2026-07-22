@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +19,7 @@ class SettingsScreen extends StatefulWidget {
   final ThemeService themeService;
   final DiaryEntryStore entryStore;
   final VoidCallback? onSyncCompleted;
+  final ValueChanged<String>? onNavigateToScreen;
   final bool isLoading;
 
   const SettingsScreen({
@@ -28,6 +30,7 @@ class SettingsScreen extends StatefulWidget {
     required this.themeService,
     required this.entryStore,
     this.onSyncCompleted,
+    this.onNavigateToScreen,
     this.isLoading = false,
   });
 
@@ -46,6 +49,33 @@ class _SettingsScreenState extends State<SettingsScreen>
   late AnimationController _syncAnimationController;
   bool _autoDeleteTrash = true;
   int _trashRetentionDays = 30;
+  late final TextEditingController _nameController;
+
+  String _safeUserName() {
+    try {
+      return widget.themeService.userName;
+    } catch (_) {
+      return 'User';
+    }
+  }
+
+  String _safePalette() {
+    try {
+      return widget.themeService.themePalette;
+    } catch (_) {
+      return 'lilac';
+    }
+  }
+
+  ThemeMode _safeThemeMode() {
+    try {
+      return widget.themeService.themeMode;
+    } catch (_) {
+      return ThemeMode.system;
+    }
+  }
+
+  StreamSubscription<GoogleSignInAccount?>? _userSub;
 
   @override
   void initState() {
@@ -54,12 +84,18 @@ class _SettingsScreenState extends State<SettingsScreen>
       vsync: this,
       duration: const Duration(seconds: 1),
     );
+    _nameController = TextEditingController(text: _safeUserName());
     _loadSettings();
+    _userSub = widget.authService.onCurrentUserChanged.listen((user) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _userSub?.cancel();
     _syncAnimationController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -90,7 +126,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Future<void> _toggleBiometricLock(bool enabled) async {
     if (enabled) {
-      // If enabling, verify we can authenticate first
       final canAuth = await widget.securityService.canAuthenticate();
       if (!canAuth) {
         if (mounted) {
@@ -115,128 +150,317 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface.withValues(alpha: 0.95),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: widget.onBackPressed,
-        ),
-        title: Text(
-          'Settings',
-          style: safeGoogleFont(
-            'IBM Plex Sans',
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+  void _showNameEditDialog() {
+    _nameController.text = widget.themeService.userName;
+    showDialog(
+      context: context,
+      builder: (context) {
+        final brightness = Theme.of(context).brightness;
+        return AlertDialog(
+          backgroundColor: AppTheme.getCardBackground(
+            brightness,
+            widget.themeService.themePalette,
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: widget.isLoading
-          ? const SettingsScreenSkeleton()
-          : StreamBuilder<GoogleSignInAccount?>(
-              stream: widget.authService.onCurrentUserChanged,
-              initialData: widget.authService.currentUser,
-              builder: (context, snapshot) {
-                final user = snapshot.data;
-
-                return ListView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  children: [
-                    const SizedBox(height: AppTheme.spacingSmall),
-                    _buildSectionHeader('ACCOUNT'),
-                    _buildSettingsCard([
-                      if (user == null)
-                        _buildActionItem(
-                          icon: Icons.login,
-                          title: 'Sign in with Google',
-                          onTap: () async {
-                            await widget.authService.signIn();
-                          },
-                        )
-                      else
-                        _buildAccountItem(user),
-                    ]),
-                    const SizedBox(height: AppTheme.spacingMedium),
-                    _buildSectionHeader('SECURITY & APPEARANCE'),
-                    _buildSettingsCard([
-                      _buildToggleItem(
-                        icon: Icons.fingerprint,
-                        title: 'Biometric Lock',
-                        value: _biometricLock,
-                        onChanged: _toggleBiometricLock,
-                        showBorder: true,
-                      ),
-                      _buildDropdownItem(
-                        icon: Icons.palette_outlined,
-                        title: 'Theme',
-                        value: ThemeModeOption.fromMode(
-                          widget.themeService.themeMode,
-                        ),
-                        items: ThemeModeOption.values,
-                        onChanged: (ThemeModeOption? newValue) {
-                          if (newValue != null) {
-                            widget.themeService.setThemeMode(newValue.mode);
-                          }
-                        },
-                      ),
-                    ]),
-                    const SizedBox(height: AppTheme.spacingMedium),
-                    _buildSectionHeader('TRASH & ARCHIVE'),
-                    _buildSettingsCard([
-                      _buildToggleItem(
-                        icon: Icons.auto_delete_outlined,
-                        title: 'Auto-delete Trash',
-                        value: _autoDeleteTrash,
-                        onChanged: (val) async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool('auto_delete_trash', val);
-                          setState(() {
-                            _autoDeleteTrash = val;
-                          });
-                          widget.onSyncCompleted?.call();
-                        },
-                        showBorder: _autoDeleteTrash,
-                      ),
-                      if (_autoDeleteTrash) _buildRetentionPeriodItem(),
-                    ]),
-                    const SizedBox(height: AppTheme.spacingMedium),
-                    _buildSectionHeader('CLOUD SYNC'),
-                    _buildCloudBackupCard(user != null),
-                    const SizedBox(height: AppTheme.spacingExtraLarge),
-                    _buildFooter(),
-                  ],
-                );
-              },
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Edit Name',
+            style: safeGoogleFont(
+              'Quicksand',
+              fontWeight: FontWeight.bold,
+              color: AppTheme.getHeadingColor(brightness),
             ),
+          ),
+          content: TextField(
+            controller: _nameController,
+            autofocus: true,
+            style: safeGoogleFont(
+              'Quicksand',
+              color: AppTheme.getHeadingColor(brightness),
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter your name',
+              hintStyle: TextStyle(color: AppTheme.getFaintColor(brightness)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: safeGoogleFont('Quicksand', fontWeight: FontWeight.bold),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = _nameController.text.trim();
+                if (name.isNotEmpty) {
+                  widget.themeService.setUserName(name);
+                  setState(() {});
+                }
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Save',
+                style: safeGoogleFont('Quicksand', fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildRetentionPeriodItem() {
-    final colorScheme = Theme.of(context).colorScheme;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final palette = _safePalette();
 
+    final bgGradient = AppTheme.getScreenBackground(brightness, palette);
+    final headingColor = AppTheme.getHeadingColor(brightness);
+    final mutedColor = AppTheme.getMutedColor(brightness);
+
+    return Scaffold(
+      backgroundColor: bgGradient.colors.first,
+      body: Container(
+        decoration: BoxDecoration(gradient: bgGradient),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // Custom Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: widget.onBackPressed,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'Settings',
+                      style: safeGoogleFont(
+                        'Quicksand',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: headingColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Settings scroll list
+              Expanded(
+                child: widget.isLoading
+                    ? const SettingsScreenSkeleton()
+                    : Builder(
+                        builder: (context) {
+                          final user = widget.authService.currentUser;
+
+                          return ListView(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            children: [
+                              _buildSectionHeader('ACCOUNT'),
+                              _buildSettingsCard(brightness, palette, [
+                                if (user == null)
+                                  _buildActionItem(
+                                    brightness,
+                                    palette,
+                                    icon: Icons.login,
+                                    title: 'Sign in with Google',
+                                    onTap: () async {
+                                      await widget.authService.signIn();
+                                    },
+                                  )
+                                else
+                                  _buildAccountItem(brightness, palette, user),
+                                const Divider(height: 1),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: ListTile(
+                                    onTap: _showNameEditDialog,
+                                    leading: const Text(
+                                      '👋',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    title: Text(
+                                      'Your name',
+                                      style: safeGoogleFont(
+                                        'Quicksand',
+                                        fontWeight: FontWeight.bold,
+                                        color: headingColor,
+                                      ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _safeUserName(),
+                                          style: safeGoogleFont(
+                                            'Quicksand',
+                                            color: mutedColor,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.chevron_right,
+                                          size: 16,
+                                          color: AppTheme.getFaintColor(
+                                            brightness,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ]),
+                              const SizedBox(height: 10),
+
+                              _buildSectionHeader('SECURITY & APPEARANCE'),
+                              _buildSettingsCard(brightness, palette, [
+                                _buildToggleItem(
+                                  brightness,
+                                  palette,
+                                  icon: Icons.fingerprint,
+                                  title: 'Biometric Lock',
+                                  value: _biometricLock,
+                                  onChanged: _toggleBiometricLock,
+                                ),
+                                const Divider(height: 1),
+                                _buildDropdownItem(
+                                  brightness,
+                                  palette,
+                                  icon: Icons.palette_outlined,
+                                  title: 'Appearance mode',
+                                  value: ThemeModeOption.fromMode(
+                                    _safeThemeMode(),
+                                  ),
+                                  items: ThemeModeOption.values,
+                                  onChanged: (ThemeModeOption? newValue) {
+                                    if (newValue != null) {
+                                      widget.themeService.setThemeMode(
+                                        newValue.mode,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ]),
+                              const SizedBox(height: 10),
+
+                              _buildSectionHeader('TRASH & ARCHIVE'),
+                              _buildSettingsCard(brightness, palette, [
+                                _buildToggleItem(
+                                  brightness,
+                                  palette,
+                                  icon: Icons.auto_delete_outlined,
+                                  title: 'Auto-delete Trash',
+                                  value: _autoDeleteTrash,
+                                  onChanged: (val) async {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setBool(
+                                      'auto_delete_trash',
+                                      val,
+                                    );
+                                    setState(() {
+                                      _autoDeleteTrash = val;
+                                    });
+                                    widget.onSyncCompleted?.call();
+                                  },
+                                ),
+                                if (_autoDeleteTrash) ...[
+                                  const Divider(height: 1),
+                                  _buildRetentionPeriodItem(
+                                    brightness,
+                                    palette,
+                                  ),
+                                ],
+                                const Divider(height: 1),
+                                _buildActionItem(
+                                  brightness,
+                                  palette,
+                                  icon: Icons.photo_library_outlined,
+                                  title: 'Media Gallery',
+                                  onTap: () =>
+                                      widget.onNavigateToScreen?.call('media'),
+                                ),
+                                const Divider(height: 1),
+                                _buildActionItem(
+                                  brightness,
+                                  palette,
+                                  icon: Icons.archive_outlined,
+                                  title: 'View Archive',
+                                  onTap: () => widget.onNavigateToScreen?.call(
+                                    'archive',
+                                  ),
+                                ),
+                                const Divider(height: 1),
+                                _buildActionItem(
+                                  brightness,
+                                  palette,
+                                  icon: Icons.delete_outline,
+                                  title: 'View Trash',
+                                  onTap: () =>
+                                      widget.onNavigateToScreen?.call('trash'),
+                                ),
+                              ]),
+                              const SizedBox(height: 10),
+
+                              _buildSectionHeader('CLOUD SYNC'),
+                              _buildCloudBackupCard(
+                                brightness,
+                                palette,
+                                user != null,
+                              ),
+                              const SizedBox(height: 32),
+                              _buildFooter(brightness),
+                              const SizedBox(height: 50),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRetentionPeriodItem(Brightness brightness, String palette) {
+    final headingColor = AppTheme.getHeadingColor(brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          _buildIconContainer(Icons.timer_outlined),
-          const SizedBox(width: AppTheme.spacingMedium),
+          Icon(
+            Icons.timer_outlined,
+            color: AppTheme.getMutedColor(brightness),
+            size: 22,
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
               'Retention Period',
               style: safeGoogleFont(
-                'IBM Plex Sans',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
+                'Quicksand',
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: headingColor,
               ),
             ),
           ),
@@ -253,8 +477,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   widget.onSyncCompleted?.call();
                 }
               },
-              icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
-              dropdownColor: colorScheme.surface,
+              icon: Icon(Icons.arrow_drop_down, color: headingColor),
+              dropdownColor: AppTheme.getCardBackground(brightness, palette),
               items: const [
                 DropdownMenuItem<int>(value: 7, child: Text('7 days')),
                 DropdownMenuItem<int>(value: 30, child: Text('30 days')),
@@ -267,29 +491,30 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildDropdownItem({
+  Widget _buildDropdownItem(
+    Brightness brightness,
+    String palette, {
     required IconData icon,
     required String title,
     required ThemeModeOption value,
     required List<ThemeModeOption> items,
     required ValueChanged<ThemeModeOption?> onChanged,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+    final headingColor = AppTheme.getHeadingColor(brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: colorScheme.onSurface),
-          const SizedBox(width: AppTheme.spacingMedium),
+          Icon(icon, color: AppTheme.getMutedColor(brightness), size: 22),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
               style: safeGoogleFont(
-                'IBM Plex Sans',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
+                'Quicksand',
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: headingColor,
               ),
             ),
           ),
@@ -297,17 +522,18 @@ class _SettingsScreenState extends State<SettingsScreen>
             child: DropdownButton<ThemeModeOption>(
               value: value,
               onChanged: onChanged,
-              icon: Icon(Icons.arrow_drop_down, color: colorScheme.onSurface),
-              dropdownColor: colorScheme.surface,
+              icon: Icon(Icons.arrow_drop_down, color: headingColor),
+              dropdownColor: AppTheme.getCardBackground(brightness, palette),
               items: items.map((option) {
                 return DropdownMenuItem<ThemeModeOption>(
                   value: option,
                   child: Text(
                     option.label,
                     style: safeGoogleFont(
-                      'IBM Plex Sans',
+                      'Quicksand',
                       fontSize: 14,
-                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      color: headingColor,
                     ),
                   ),
                 );
@@ -320,36 +546,37 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildSectionHeader(String title) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Text(
         title,
         style: safeGoogleFont(
-          'IBM Plex Sans',
-          fontSize: 12,
+          'Space Mono',
+          fontSize: 11.5,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onSurface.withValues(alpha: 0.7),
-          letterSpacing: 1.2,
+          color: AppTheme.getFaintColor(brightness),
+          letterSpacing: 0.6,
         ),
       ),
     );
   }
 
-  Widget _buildSettingsCard(List<Widget> children) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildSettingsCard(
+    Brightness brightness,
+    String palette,
+    List<Widget> children,
+  ) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
+        color: AppTheme.getCardBackground(brightness, palette),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.getHairlineColor(brightness)),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: isDark ? 0.2 : 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -357,7 +584,11 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildAccountItem(GoogleSignInAccount user) {
+  Widget _buildAccountItem(
+    Brightness brightness,
+    String palette,
+    GoogleSignInAccount user,
+  ) {
     return Column(
       children: [
         Padding(
@@ -382,19 +613,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Text(
                       user.displayName ?? 'Google User',
                       style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 16,
+                        'Quicksand',
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
+                        color: AppTheme.getHeadingColor(brightness),
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       user.email,
                       style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 14,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        'Quicksand',
+                        fontSize: 13,
+                        color: AppTheme.getMutedColor(brightness),
                       ),
                     ),
                   ],
@@ -403,61 +634,59 @@ class _SettingsScreenState extends State<SettingsScreen>
             ],
           ),
         ),
-        const Divider(height: 1, indent: 16, endIndent: 16),
+        const Divider(height: 1),
         _buildActionItem(
+          brightness,
+          palette,
           icon: Icons.logout,
           title: 'Sign Out',
           onTap: () async {
             await widget.authService.signOut();
           },
-          textColor: Colors.red[700],
-          iconColor: Colors.red[700],
+          textColor: Colors.red[600],
+          iconColor: Colors.red[600],
         ),
       ],
     );
   }
 
-  Widget _buildActionItem({
+  Widget _buildActionItem(
+    Brightness brightness,
+    String palette, {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
     Color? textColor,
     Color? iconColor,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final effectiveIconColor = iconColor ?? colorScheme.onSurface;
-    final effectiveTextColor = textColor ?? colorScheme.onSurface;
+    final effectiveIconColor = iconColor ?? AppTheme.getMutedColor(brightness);
+    final effectiveTextColor =
+        textColor ?? AppTheme.getHeadingColor(brightness);
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: effectiveIconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: effectiveIconColor, size: 24),
-            ),
+            Icon(icon, color: effectiveIconColor, size: 22),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: safeGoogleFont(
-                  'IBM Plex Sans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  'Quicksand',
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
                   color: effectiveTextColor,
                 ),
               ),
             ),
             Icon(
               Icons.chevron_right,
-              color: colorScheme.outline.withValues(alpha: 0.8),
+              color: AppTheme.getFaintColor(brightness),
+              size: 18,
             ),
           ],
         ),
@@ -465,78 +694,61 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildToggleItem({
+  Widget _buildToggleItem(
+    Brightness brightness,
+    String palette, {
     required IconData icon,
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
-    bool showBorder = false,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
+    final headingColor = AppTheme.getHeadingColor(brightness);
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: showBorder
-            ? Border(
-                bottom: BorderSide(
-                  color: colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              )
-            : null,
-      ),
       child: Row(
         children: [
-          _buildIconContainer(icon),
+          Icon(icon, color: AppTheme.getMutedColor(brightness), size: 22),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
               style: safeGoogleFont(
-                'IBM Plex Sans',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
+                'Quicksand',
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: headingColor,
               ),
             ),
           ),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: colorScheme.primary,
+            activeColor: AppTheme.getPrimaryColor(palette),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildIconContainer(IconData icon) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: colorScheme.onSurface.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(icon, color: colorScheme.onSurface, size: 24),
-    );
-  }
+  Widget _buildCloudBackupCard(
+    Brightness brightness,
+    String palette,
+    bool isSignedIn,
+  ) {
+    final headingColor = AppTheme.getHeadingColor(brightness);
+    final mutedColor = AppTheme.getMutedColor(brightness);
 
-  Widget _buildCloudBackupCard(bool isSignedIn) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
+        color: AppTheme.getCardBackground(brightness, palette),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.getHairlineColor(brightness)),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: isDark ? 0.2 : 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -547,16 +759,18 @@ class _SettingsScreenState extends State<SettingsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.15),
+                  color: AppTheme.getSoftBg(palette),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.cloud_sync,
-                  color: colorScheme.primary,
-                  size: 28,
+                child: Center(
+                  child: Icon(
+                    Icons.cloud_sync,
+                    color: AppTheme.getPrimaryColor(palette),
+                    size: 24,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -567,10 +781,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Text(
                       'Auto-sync',
                       style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 16,
+                        'Quicksand',
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
+                        color: headingColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -579,9 +793,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                           ? 'Keep your diary entries in sync with Google Drive.'
                           : 'Sign in to sync your entries with Google Drive.',
                       style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 14,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        'Quicksand',
+                        fontSize: 13,
+                        color: mutedColor,
                       ),
                     ),
                   ],
@@ -598,16 +812,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                         }
                       }
                     : null,
-                activeThumbColor: colorScheme.primary,
+                activeColor: AppTheme.getPrimaryColor(palette),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Divider(color: colorScheme.outline.withValues(alpha: 0.3), height: 1),
-          const SizedBox(height: 20),
+          Divider(color: AppTheme.getHairlineColor(brightness), height: 1),
+          const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Icons.history, size: 18, color: colorScheme.onSurface),
+              Icon(Icons.history, size: 16, color: mutedColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Row(
@@ -615,19 +829,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Text(
                       'Last sync: ',
                       style: safeGoogleFont(
-                        'IBM Plex Sans',
-                        fontSize: 14,
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        'Quicksand',
+                        fontSize: 13.5,
+                        color: mutedColor,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Flexible(
                       child: Text(
                         isSignedIn ? _formatLastSync() : 'Not available',
                         style: safeGoogleFont(
-                          'IBM Plex Sans',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: colorScheme.onSurface,
+                          'Quicksand',
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: headingColor,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -637,7 +852,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -647,40 +862,33 @@ class _SettingsScreenState extends State<SettingsScreen>
                     }
                   : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _isSyncing
-                    ? colorScheme.primary.withValues(alpha: 0.8)
-                    : colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                disabledBackgroundColor: colorScheme.onSurface.withValues(
-                  alpha: 0.12,
-                ),
-                disabledForegroundColor: colorScheme.onSurface.withValues(
-                  alpha: 0.38,
-                ),
+                backgroundColor: AppTheme.getPrimaryColor(palette),
+                foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9999),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 16,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   RotationTransition(
                     turns: _syncAnimationController,
-                    child: const Icon(Icons.sync, size: 20),
+                    child: const Icon(
+                      Icons.sync,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     _isSyncing ? 'Syncing…' : 'Sync now',
                     style: safeGoogleFont(
-                      'IBM Plex Sans',
+                      'Quicksand',
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ],
@@ -692,28 +900,31 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildFooter() {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildFooter(Brightness brightness) {
     return Column(
       children: [
-        Icon(Icons.lock, size: 24, color: colorScheme.onSurface),
+        Icon(
+          Icons.lock_outline,
+          size: 22,
+          color: AppTheme.getFaintColor(brightness),
+        ),
         const SizedBox(height: 8),
         Text(
           'Your data is encrypted locally.',
           style: safeGoogleFont(
-            'IBM Plex Sans',
+            'Quicksand',
             fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            fontWeight: FontWeight.bold,
+            color: AppTheme.getFaintColor(brightness),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          'Version 0.1.0',
+          'Version 1.0.0',
           style: safeGoogleFont(
-            'IBM Plex Sans',
+            'Space Mono',
             fontSize: 10,
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            color: AppTheme.getFaintColor(brightness),
           ),
         ),
       ],
