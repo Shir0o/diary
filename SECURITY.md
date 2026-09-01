@@ -1,29 +1,18 @@
 # Security Policy
 
-## Supported versions
+## Reporting a Vulnerability
 
-Only the latest commit on `main` is supported. There are no backported fixes.
+If you discover a security vulnerability in this project, please report it
+responsibly using GitHub's private vulnerability reporting.
 
-## Reporting a vulnerability
+1. Go to the **Security** tab of this repository.
+2. Click **Report a vulnerability**.
+3. Fill in the details and submit.
 
-Please **do not** open a public issue for security vulnerabilities.
+Your report will be reviewed and you will receive a response within 7 days.
+Please do not open public issues for security vulnerabilities.
 
-Report privately via either:
+## Supported Versions
 
-- GitHub's private vulnerability reporting: [github.com/Shir0o/diary/security/advisories/new](https://github.com/Shir0o/diary/security/advisories/new) (preferred)
-- Email: **yilongwang05@gmail.com**
-
-Please include:
-
-- A description of the issue and its impact.
-- Steps to reproduce (proof-of-concept if available).
-- Affected versions/commits.
-- Any suggested mitigations.
-
-## What to expect
-
-- Acknowledgement within 7 days.
-- A status update at least every 14 days while the report is open.
-- Credit in the fix's release notes if you'd like (let us know your preferred handle).
-
-There is no bug-bounty program for this project.
+Only the latest release on the default branch is actively supported with
+security updates.
