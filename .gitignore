@@ -45,3 +45,9 @@ app.*.symbols
 migrate_working_dir/
 GEMINI.md
 test/**/failures/
+
+# Release keystore & credentials
+key.properties
+android/key.properties
+android/key.properties.example
+fastlane/play-supply-credentials.json
