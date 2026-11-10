@@ -734,7 +734,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+        margin: const EdgeInsets.only(left: 12, right: 12, bottom: 20),
         height: 64,
         decoration: BoxDecoration(
           color: cardBg,
@@ -751,59 +751,77 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           ),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildTabIcon('🏠', _MainScreen.timeline, 22),
-            _buildTabIcon('🗓️', _MainScreen.calendar, 22),
+            _buildTabIcon('🏠', _MainScreen.timeline, 22, 'Timeline'),
+            _buildTabIcon('🗓️', _MainScreen.calendar, 22, 'Calendar'),
             _buildComposeButton(primary),
-            _buildTabIcon('📊', _MainScreen.analytics, 22),
-            _buildTabIcon('⚙️', _MainScreen.settings, 22),
+            _buildTabIcon('📊', _MainScreen.analytics, 22, 'Analytics'),
+            _buildTabIcon('⚙️', _MainScreen.settings, 22, 'Settings'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTabIcon(String emoji, _MainScreen screen, double size) {
+  Widget _buildTabIcon(
+    String emoji,
+    _MainScreen screen,
+    double size,
+    String semanticLabel,
+  ) {
     final isActive = _currentScreen == screen;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        setState(() {
-          _currentScreen = screen;
-        });
-      },
-      child: Opacity(
-        opacity: isActive ? 1.0 : 0.4,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(emoji, style: TextStyle(fontSize: size)),
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: semanticLabel,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            setState(() {
+              _currentScreen = screen;
+            });
+          },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: Opacity(
+              opacity: isActive ? 1.0 : 0.65,
+              child: Center(
+                child: Text(emoji, style: TextStyle(fontSize: size)),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildComposeButton(Color primary) {
-    return GestureDetector(
-      onTap: _createEntry,
-      child: Transform.translate(
-        offset: const Offset(0, -12),
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: AppTheme.getAccentGradient(_safePalette()),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: const Center(
-            child: Icon(Icons.add, color: Colors.white, size: 28),
+    return Semantics(
+      button: true,
+      label: 'New entry',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _createEntry,
+        child: Transform.translate(
+          offset: const Offset(0, -12),
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: AppTheme.getAccentGradient(_safePalette()),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Icon(Icons.add, color: Colors.white, size: 28),
+            ),
           ),
         ),
       ),

@@ -156,75 +156,102 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hi, ${widget.themeService?.userName ?? 'User'} 👋',
-                          style: safeGoogleFont(
-                            'Quicksand',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.getMutedColor(brightness),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi, ${widget.themeService?.userName ?? 'User'} 👋',
+                            style: safeGoogleFont(
+                              'Quicksand',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.getMutedColor(brightness),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Your day',
-                          style: safeGoogleFont(
-                            'Quicksand',
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: headingColor,
+                          const SizedBox(height: 2),
+                          Text(
+                            'Your day',
+                            style: safeGoogleFont(
+                              'Quicksand',
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: headingColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         if (widget.onMenuPressed != null)
                           IconButton(
                             icon: const Icon(Icons.menu),
+                            tooltip: 'Menu',
                             onPressed: widget.onMenuPressed,
                           ),
-                        GestureDetector(
-                          onTap: widget.onSearchEntries,
-                          child: Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: AppTheme.getCardBackground(
-                                brightness,
-                                palette,
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                        Semantics(
+                          button: true,
+                          label: 'Search entries',
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: widget.onSearchEntries,
+                            child: SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: Center(
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.getCardBackground(
+                                      brightness,
+                                      palette,
+                                    ),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      '🔍',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                  ),
                                 ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text('🔍', style: TextStyle(fontSize: 18)),
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFC9B8FF), Color(0xFFFFC9DE)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                        const SizedBox(width: 6),
+                        ExcludeSemantics(
+                          child: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFFC9B8FF), Color(0xFFFFC9DE)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
                             ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: Text('🌷', style: TextStyle(fontSize: 16)),
+                            child: const Center(
+                              child: Text('🌷', style: TextStyle(fontSize: 16)),
+                            ),
                           ),
                         ),
                       ],
@@ -366,16 +393,23 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    _formatTimelineDate(entry.date),
-                                    style: safeGoogleFont(
-                                      'Quicksand',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.getFaintColor(brightness),
+                                  Expanded(
+                                    child: Text(
+                                      _formatTimelineDate(entry.date),
+                                      style: safeGoogleFont(
+                                        'Quicksand',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.getFaintColor(
+                                          brightness,
+                                        ),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  if (entry.tags.isNotEmpty)
+                                  if (entry.tags.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 9,
@@ -395,6 +429,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                         ),
                                       ),
                                     ),
+                                  ],
                                 ],
                               ),
                               const SizedBox(height: 6),
@@ -438,15 +473,19 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      entry.location!,
-                                      style: safeGoogleFont(
-                                        'Quicksand',
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.getFaintColor(
-                                          brightness,
+                                    Expanded(
+                                      child: Text(
+                                        entry.location!,
+                                        style: safeGoogleFont(
+                                          'Quicksand',
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.getFaintColor(
+                                            brightness,
+                                          ),
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
