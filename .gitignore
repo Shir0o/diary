@@ -45,6 +45,7 @@ app.*.symbols
 migrate_working_dir/
 GEMINI.md
 test/**/failures/
+/test/goldens/
 
 # Release keystore & credentials
 key.properties

@@ -204,7 +204,7 @@ class AppTheme {
 
   static Color getMutedColor(Brightness brightness) {
     return brightness == Brightness.light
-        ? const Color(0xFF8B83A8)
+        ? const Color(0xFF676082)
         : const Color(0xFF9A92B8);
   }
 
