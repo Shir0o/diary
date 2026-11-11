@@ -565,8 +565,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     child: LinearProgressIndicator(
                       value: pct,
                       backgroundColor: AppTheme.getChipColor(brightness),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color(0xFF7A63C9),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF7A63C9),
                       ),
                       minHeight: 10,
                     ),

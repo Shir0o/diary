@@ -19,40 +19,6 @@ class EntryCard extends StatelessWidget {
     this.trailing,
   });
 
-  Color _getTagColor(String tag) {
-    switch (tag.toLowerCase()) {
-      case 'work':
-        return const Color(0xFF7A63C9);
-      case 'reading':
-        return const Color(0xFFB06CA6);
-      case 'friends':
-        return const Color(0xFFA86BC9);
-      case 'outdoors':
-        return const Color(0xFF6B9C5A);
-      case 'travel':
-        return const Color(0xFFC78B3C);
-      default:
-        return const Color(0xFF8B6CFF);
-    }
-  }
-
-  Color _getTagBg(String tag) {
-    switch (tag.toLowerCase()) {
-      case 'work':
-        return const Color(0xFFEFE9FF);
-      case 'reading':
-        return const Color(0xFFFBE9F6);
-      case 'friends':
-        return const Color(0xFFF3E9FB);
-      case 'outdoors':
-        return const Color(0xFFE6F2E2);
-      case 'travel':
-        return const Color(0xFFF6EDDC);
-      default:
-        return const Color(0xFFEFE9FF);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -108,7 +74,10 @@ class EntryCard extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: _getTagBg(entry.tags.first),
+                              color: AppTheme.getTagChipColor(
+                                entry.tags.first,
+                                brightness,
+                              ),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -117,7 +86,10 @@ class EntryCard extends StatelessWidget {
                                 'Quicksand',
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: _getTagColor(entry.tags.first),
+                                color: AppTheme.getTagColor(
+                                  entry.tags.first,
+                                  brightness,
+                                ),
                               ),
                             ),
                           ),
@@ -127,7 +99,7 @@ class EntryCard extends StatelessWidget {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF4F1FB),
+                            color: AppTheme.getChipColor(brightness),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(

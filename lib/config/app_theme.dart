@@ -198,7 +198,7 @@ class AppTheme {
 
   static Color getBodyColor(Brightness brightness) {
     return brightness == Brightness.light
-        ? const Color(0xFF7D769A)
+        ? const Color(0xFF5E5778)
         : const Color(0xFFB8B0D2);
   }
 
@@ -208,10 +208,12 @@ class AppTheme {
         : const Color(0xFF9A92B8);
   }
 
+  /// Caption ink designed to meet WCAG AA on white and light card surfaces
+  /// (#FFFFFF, #F4F1FF), where the faintest legible tone is a deep grey-violet.
   static Color getFaintColor(Brightness brightness) {
     return brightness == Brightness.light
-        ? const Color(0xFFA99FC4)
-        : const Color(0xFF7C749A);
+        ? const Color(0xFF665E82)
+        : const Color(0xFFABA2C8);
   }
 
   static Color getHairlineColor(Brightness brightness) {
@@ -244,6 +246,70 @@ class AppTheme {
     return brightness == Brightness.light
         ? const Color(0xFFF4F1FB)
         : Colors.white.withValues(alpha: 0.06);
+  }
+
+  /// Ink for captions drawn over the light photo-placeholder scrim, which
+  /// stays light in both themes and therefore needs a light-surface ink.
+  static Color getPhotoLabelColor() => const Color(0xFF5E5778);
+
+  /// Tag foreground ink. Light-mode values are deepened so every tag clears
+  /// 4.5:1 on its pastel chip; dark-mode values are lightened to sit on a
+  /// tinted chip over a dark card.
+  static Color getTagColor(String tag, Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    switch (tag.toLowerCase()) {
+      case 'work':
+        return isDark ? const Color(0xFFC2B4FF) : const Color(0xFF5B45A8);
+      case 'reading':
+        return isDark ? const Color(0xFFF2B6DD) : const Color(0xFF8E4177);
+      case 'friends':
+        return isDark ? const Color(0xFFD6BBF2) : const Color(0xFF7B469C);
+      case 'outdoors':
+        return isDark ? const Color(0xFFAEDC9E) : const Color(0xFF477235);
+      case 'travel':
+        return isDark ? const Color(0xFFF0C98B) : const Color(0xFF8A5A12);
+      default:
+        return isDark ? const Color(0xFFC9B8FF) : const Color(0xFF5F45C4);
+    }
+  }
+
+  /// Tag chip surface. Dark mode uses a subtle tint of the tag accent so the
+  /// chip reads on a dark card instead of punching a light pastel hole in it.
+  static Color getTagChipColor(String tag, Brightness brightness) {
+    if (brightness == Brightness.dark) {
+      return _getTagAccent(tag).withValues(alpha: 0.22);
+    }
+    switch (tag.toLowerCase()) {
+      case 'work':
+        return const Color(0xFFEFE9FF);
+      case 'reading':
+        return const Color(0xFFFBE9F6);
+      case 'friends':
+        return const Color(0xFFF3E9FB);
+      case 'outdoors':
+        return const Color(0xFFE6F2E2);
+      case 'travel':
+        return const Color(0xFFF6EDDC);
+      default:
+        return const Color(0xFFEFE9FF);
+    }
+  }
+
+  static Color _getTagAccent(String tag) {
+    switch (tag.toLowerCase()) {
+      case 'work':
+        return const Color(0xFF7A63C9);
+      case 'reading':
+        return const Color(0xFFB06CA6);
+      case 'friends':
+        return const Color(0xFFA86BC9);
+      case 'outdoors':
+        return const Color(0xFF6B9C5A);
+      case 'travel':
+        return const Color(0xFFC78B3C);
+      default:
+        return const Color(0xFF8B6CFF);
+    }
   }
 
   static ThemeData buildTheme(Brightness brightness, String palette) {

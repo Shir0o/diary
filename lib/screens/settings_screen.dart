@@ -723,7 +723,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.getPrimaryColor(palette),
+            activeThumbColor: AppTheme.getPrimaryColor(palette),
           ),
         ],
       ),
@@ -812,7 +812,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         }
                       }
                     : null,
-                activeColor: AppTheme.getPrimaryColor(palette),
+                activeThumbColor: AppTheme.getPrimaryColor(palette),
               ),
             ],
           ),

@@ -531,7 +531,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                                         ? Image.network(
                                             _imageUrls.first,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorBuilder: (_, _, _) =>
                                                 CustomPaint(
                                                   painter:
                                                       DiagonalStripesPainter(
@@ -548,7 +548,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                                         : Image.file(
                                             File(_imageUrls.first),
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorBuilder: (_, _, _) =>
                                                 CustomPaint(
                                                   painter:
                                                       DiagonalStripesPainter(
@@ -575,8 +575,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                                       child: Container(
                                         width: 20,
                                         height: 20,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0x992B2540),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0x992B2540),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Center(
