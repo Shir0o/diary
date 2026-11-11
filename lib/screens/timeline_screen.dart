@@ -83,42 +83,6 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
   List<DiaryEntry> get _entries => widget.entries ?? _defaultEntries;
 
-  Color _getTagColor(String tag) {
-    switch (tag.toLowerCase()) {
-      case 'work':
-        return const Color(0xFF7A63C9);
-      case 'reading':
-        return const Color(0xFFB06CA6);
-      case 'friends':
-        return const Color(0xFFA86BC9);
-      case 'outdoors':
-        return const Color(0xFF6B9C5A);
-      case 'travel':
-        return const Color(0xFFC78B3C);
-      default:
-        return AppTheme.getPrimaryColor(
-          widget.themeService?.themePalette ?? 'lilac',
-        );
-    }
-  }
-
-  Color _getTagBg(String tag) {
-    switch (tag.toLowerCase()) {
-      case 'work':
-        return const Color(0xFFEFE9FF);
-      case 'reading':
-        return const Color(0xFFFBE9F6);
-      case 'friends':
-        return const Color(0xFFF3E9FB);
-      case 'outdoors':
-        return const Color(0xFFE6F2E2);
-      case 'travel':
-        return const Color(0xFFF6EDDC);
-      default:
-        return const Color(0xFFEFE9FF);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -345,7 +309,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: _getCategoryIconBg(entry.mood),
+                        color: _getCategoryIconBg(entry.mood, brightness),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -416,7 +380,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                         vertical: 3,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _getTagBg(entry.tags.first),
+                                        color: AppTheme.getTagChipColor(
+                                          entry.tags.first,
+                                          brightness,
+                                        ),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
@@ -425,7 +392,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                           'Quicksand',
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
-                                          color: _getTagColor(entry.tags.first),
+                                          color: AppTheme.getTagColor(
+                                            entry.tags.first,
+                                            brightness,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -453,10 +423,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                               ),
                               if (entry.imageUrls.isNotEmpty) ...[
                                 const SizedBox(height: 11),
-                                _buildPhotoPlaceholder(
-                                  brightness,
-                                  entry.imageUrls.first,
-                                ),
+                                _buildPhotoPlaceholder(entry.imageUrls.first),
                               ],
                               if (entry.location != null &&
                                   entry.location!.isNotEmpty) ...[
@@ -604,7 +571,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: _getCategoryIconBg(entry.mood),
+                            color: _getCategoryIconBg(entry.mood, brightness),
                             borderRadius: BorderRadius.circular(13),
                           ),
                           child: Center(
@@ -786,7 +753,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                     style: safeGoogleFont(
                                       'Space Mono',
                                       fontSize: 9.5,
-                                      color: AppTheme.getFaintColor(brightness),
+                                      color: AppTheme.getPhotoLabelColor(),
                                     ),
                                   ),
                                 ),
@@ -818,7 +785,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getTagBg(entry.tags.first),
+                                      color: AppTheme.getTagChipColor(
+                                        entry.tags.first,
+                                        brightness,
+                                      ),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
@@ -827,7 +797,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                         'Quicksand',
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: _getTagColor(entry.tags.first),
+                                        color: AppTheme.getTagColor(
+                                          entry.tags.first,
+                                          brightness,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -889,7 +862,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: _getCategoryIconBg(entry.mood),
+                      color: _getCategoryIconBg(entry.mood, brightness),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
@@ -1123,7 +1096,12 @@ class _TimelineScreenState extends State<TimelineScreen> {
     }
   }
 
-  Color _getCategoryIconBg(String emoji) {
+  /// Mood badge surface. In dark mode it becomes a subtle tint of the mood
+  /// accent instead of a light pastel block on a dark card.
+  Color _getCategoryIconBg(String emoji, Brightness brightness) {
+    if (brightness == Brightness.dark) {
+      return _getMoodAccent(emoji).withValues(alpha: 0.22);
+    }
     switch (emoji) {
       case '🚀':
         return const Color(0xFFDFF0E4);
@@ -1135,6 +1113,21 @@ class _TimelineScreenState extends State<TimelineScreen> {
         return const Color(0xFFE0EFDF);
       default:
         return const Color(0xFFF4F1FB);
+    }
+  }
+
+  Color _getMoodAccent(String emoji) {
+    switch (emoji) {
+      case '🚀':
+        return const Color(0xFF6B9C5A);
+      case '📖':
+        return const Color(0xFFA86BC9);
+      case '☕':
+        return const Color(0xFFC78B3C);
+      case '⛰️':
+        return const Color(0xFF6B9C5A);
+      default:
+        return const Color(0xFF8B6CFF);
     }
   }
 
@@ -1168,7 +1161,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
     return DateFormat('MMM d').format(date).toUpperCase();
   }
 
-  Widget _buildPhotoPlaceholder(Brightness brightness, String name) {
+  Widget _buildPhotoPlaceholder(String name) {
     return Container(
       height: 104,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
@@ -1198,7 +1191,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 style: safeGoogleFont(
                   'Space Mono',
                   fontSize: 9.5,
-                  color: AppTheme.getFaintColor(brightness),
+                  color: AppTheme.getPhotoLabelColor(),
                 ),
               ),
             ),
@@ -1213,6 +1206,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
     Color headingColor,
     Color bodyColor,
   ) {
+    final brightness = Theme.of(context).brightness;
+    final palette = widget.themeService?.themePalette ?? 'lilac';
+    final primary = AppTheme.getPrimaryColor(palette);
+
     return Center(
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -1225,23 +1222,17 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 width: 96,
                 height: 96,
                 decoration: BoxDecoration(
-                  color:
-                      (widget.themeService?.themePalette ?? 'lilac') == 'lilac'
+                  color: brightness == Brightness.light && palette == 'lilac'
                       ? const Color(0xFFEFE9FF)
-                      : AppTheme.getPrimaryColor(
-                          widget.themeService?.themePalette ?? 'lilac',
-                        ).withValues(alpha: 0.1),
+                      : primary.withValues(
+                          alpha: brightness == Brightness.light ? 0.1 : 0.22,
+                        ),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '📝',
-                    style: TextStyle(
-                      fontSize: 48,
-                      color: AppTheme.getPrimaryColor(
-                        widget.themeService?.themePalette ?? 'lilac',
-                      ),
-                    ),
+                    style: TextStyle(fontSize: 48, color: primary),
                   ),
                 ),
               ),

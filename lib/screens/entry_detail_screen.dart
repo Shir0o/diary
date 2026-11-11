@@ -244,7 +244,7 @@ class EntryDetailScreen extends StatelessWidget {
                                     style: safeGoogleFont(
                                       'Space Mono',
                                       fontSize: 10,
-                                      color: faintColor,
+                                      color: AppTheme.getPhotoLabelColor(),
                                     ),
                                   ),
                                 ),
