@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Shir0o/diary/compare/v0.2.0...v0.2.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **ui:** improve text contrast and refine dark mode chip styling ([#77](https://github.com/Shir0o/diary/issues/77)) ([b90e77a](https://github.com/Shir0o/diary/commit/b90e77a8b7f56bfb00ef81c9c7ab02315bb90014))
+
 ## [0.2.0](https://github.com/Shir0o/diary/compare/v0.1.0...v0.2.0) (2026-11-10)
 
 

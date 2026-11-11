@@ -1,7 +1,7 @@
 name: diary
 description: A personal diary app for writing, reviewing, and reflecting on entries.
 publish_to: none
-version: 0.2.0
+version: 0.2.1
 environment:
   sdk: ^3.11.5
 dependencies:
