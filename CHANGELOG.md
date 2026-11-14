@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/Shir0o/diary/compare/v0.2.3...v0.2.4) (2026-11-14)
+
+
+### Bug Fixes
+
+* **ci:** build release with JDK 21 for AGP 9 lint ([#83](https://github.com/Shir0o/diary/issues/83)) ([c66c5c5](https://github.com/Shir0o/diary/commit/c66c5c5a7f11a2dbf302878294a73e5fb250451b))
+
 ## [0.2.3](https://github.com/Shir0o/diary/compare/v0.2.2...v0.2.3) (2026-11-14)
 
 
