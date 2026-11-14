@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/Shir0o/diary/compare/v0.2.2...v0.2.3) (2026-11-14)
+
+
+### Bug Fixes
+
+* **android:** migrate app build to AGP 9 built-in Kotlin DSL ([#81](https://github.com/Shir0o/diary/issues/81)) ([730e972](https://github.com/Shir0o/diary/commit/730e972211566642440beb98ee327e1872a5c1c2))
+
 ## [0.2.2](https://github.com/Shir0o/diary/compare/v0.2.1...v0.2.2) (2026-11-14)
 
 
