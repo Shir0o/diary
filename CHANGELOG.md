@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Shir0o/diary/compare/v0.2.1...v0.2.2) (2026-11-14)
+
+
+### Bug Fixes
+
+* **android:** bump Gradle 9.5.0 / AGP 9.3.1 to meet Flutter minimum ([#79](https://github.com/Shir0o/diary/issues/79)) ([f835c4b](https://github.com/Shir0o/diary/commit/f835c4b1eb13b6363249b65564b73e081bdf4145))
+
 ## [0.2.1](https://github.com/Shir0o/diary/compare/v0.2.0...v0.2.1) (2026-11-11)
 
 
