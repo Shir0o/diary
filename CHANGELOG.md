@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/Shir0o/diary/compare/v0.2.4...v0.2.5) (2026-11-18)
+
+
+### Bug Fixes
+
+* **ui:** fix calendar selected-day visibility, overflow, and a11y ([#86](https://github.com/Shir0o/diary/issues/86)) ([cbdb189](https://github.com/Shir0o/diary/commit/cbdb18977a73ed252bd5d9203125a09f3a2348b8))
+
 ## [0.2.4](https://github.com/Shir0o/diary/compare/v0.2.3...v0.2.4) (2026-11-14)
 
 
