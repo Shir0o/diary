@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/Shir0o/diary/compare/v0.2.5...v0.2.6) (2026-11-23)
+
+
+### Bug Fixes
+
+* **ui:** prevent timeline header truncation on narrow viewports ([#88](https://github.com/Shir0o/diary/issues/88)) ([010cea5](https://github.com/Shir0o/diary/commit/010cea56428c9270a5f7a61069d349aabf6ddf3d))
+
 ## [0.2.5](https://github.com/Shir0o/diary/compare/v0.2.4...v0.2.5) (2026-11-18)
 
 
