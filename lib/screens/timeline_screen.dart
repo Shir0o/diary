@@ -112,116 +112,135 @@ class _TimelineScreenState extends State<TimelineScreen> {
             children: [
               const SizedBox(width: 0, height: 0, child: Text('Diary')),
               // Custom Redesigned Timeline Header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hi, ${widget.themeService?.userName ?? 'User'} 👋',
-                            style: safeGoogleFont(
-                              'Quicksand',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.getMutedColor(brightness),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Your day',
-                            style: safeGoogleFont(
-                              'Quicksand',
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: headingColor,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // At 320dp with 1.6x text the three trailing items leave too
+                  // little room for the greeting and title, so the purely
+                  // decorative tulip steps aside, the side padding tightens and
+                  // the title scales down rather than truncating.
+                  final compact = constraints.maxWidth < 360;
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 16 : 24,
+                      vertical: 12,
                     ),
-                    const SizedBox(width: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (widget.onMenuPressed != null)
-                          IconButton(
-                            icon: const Icon(Icons.menu),
-                            tooltip: 'Menu',
-                            onPressed: widget.onMenuPressed,
-                          ),
-                        Semantics(
-                          button: true,
-                          label: 'Search entries',
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: widget.onSearchEntries,
-                            child: SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: Center(
-                                child: Container(
-                                  width: 42,
-                                  height: 42,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.getCardBackground(
-                                      brightness,
-                                      palette,
-                                    ),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.05,
-                                        ),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hi, ${widget.themeService?.userName ?? 'User'} 👋',
+                                style: safeGoogleFont(
+                                  'Quicksand',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.getMutedColor(brightness),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Your day',
+                                  style: safeGoogleFont(
+                                    'Quicksand',
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    color: headingColor,
                                   ),
-                                  child: const Center(
-                                    child: Text(
-                                      '🔍',
-                                      style: TextStyle(fontSize: 18),
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.onMenuPressed != null)
+                              IconButton(
+                                icon: const Icon(Icons.menu),
+                                tooltip: 'Menu',
+                                onPressed: widget.onMenuPressed,
+                              ),
+                            Semantics(
+                              button: true,
+                              label: 'Search entries',
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: widget.onSearchEntries,
+                                child: SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: Center(
+                                    child: Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.getCardBackground(
+                                          brightness,
+                                          palette,
+                                        ),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.05,
+                                            ),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Center(
+                                        child: Text(
+                                          '🔍',
+                                          style: TextStyle(fontSize: 18),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        ExcludeSemantics(
-                          child: Container(
-                            width: 42,
-                            height: 42,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFFC9B8FF), Color(0xFFFFC9DE)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                            if (!compact) ...[
+                              const SizedBox(width: 6),
+                              ExcludeSemantics(
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFFC9B8FF),
+                                        Color(0xFFFFC9DE),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      '🌷',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ),
                               ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: Text('🌷', style: TextStyle(fontSize: 16)),
-                            ),
-                          ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
 
               // Timeline Content

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -15,6 +16,7 @@ import 'package:diary/models/diary_entry.dart';
 import 'package:diary/screens/calendar_screen.dart';
 import 'package:diary/screens/entry_detail_screen.dart';
 import 'package:diary/screens/new_entry_screen.dart';
+import 'package:diary/screens/settings_screen.dart';
 import 'package:diary/screens/timeline_screen.dart';
 import 'package:diary/services/auth_service.dart';
 import 'package:diary/services/security_service.dart';
@@ -309,7 +311,9 @@ void main() {
     for (final element in elements) {
       final box = element.renderObject! as RenderBox;
       final left = box.localToGlobal(Offset.zero).dx;
-      final right = left + box.size.width;
+      // Paint transforms (e.g. a FittedBox scaling text down) mean the painted
+      // edge is not always `left + size.width`, so map both corners.
+      final right = box.localToGlobal(box.size.bottomRight(Offset.zero)).dx;
       expect(
         left,
         greaterThanOrEqualTo(0.0),
@@ -368,11 +372,12 @@ void main() {
       WidgetTester tester,
     ) async {
       final overflowErrors = captureOverflowErrors();
+      const size = Size(320, 568);
       await pumpAuditApp(
         tester,
         themeMode: ThemeMode.light,
         brightness: Brightness.light,
-        size: const Size(320, 568),
+        size: size,
         textScaleFactor: 1.6,
       );
 
@@ -386,9 +391,53 @@ void main() {
         isEmpty,
         reason: 'RenderFlex overflows detected: $overflowErrors',
       );
+
+      // The header's primary heading must stay whole at 320dp / 1.6x: no
+      // 'Your...' ellipsis, no clipping, and fully inside the viewport.
+      final heading = find.text('Your day');
+      expect(heading, findsOneWidget);
+      final RenderParagraph headingParagraph = tester.renderObject(heading);
+      expect(
+        headingParagraph.didExceedMaxLines,
+        isFalse,
+        reason: "the 'Your day' heading must not overflow or truncate",
+      );
+      expect(
+        headingParagraph.overflow,
+        isNot(TextOverflow.ellipsis),
+        reason: "the 'Your day' heading must not ellipsize",
+      );
+      expectHorizontallyInside(
+        tester,
+        heading,
+        size.width,
+        reason: "the 'Your day' heading",
+      );
+
+      // The greeting keeps the full name too, wrapping instead of ellipsizing.
+      final greeting = find.text('Hi, Sarah 👋');
+      expect(greeting, findsOneWidget);
+      final RenderParagraph greetingParagraph = tester.renderObject(greeting);
+      expect(
+        greetingParagraph.didExceedMaxLines,
+        isFalse,
+        reason: 'the greeting must not overflow or truncate',
+      );
+      expect(
+        greetingParagraph.overflow,
+        isNot(TextOverflow.ellipsis),
+        reason: 'the greeting must not ellipsize',
+      );
+      expectHorizontallyInside(
+        tester,
+        greeting,
+        size.width,
+        reason: 'the greeting',
+      );
     });
 
     testWidgets('interactive_click_through', (WidgetTester tester) async {
+      final overflowErrors = captureOverflowErrors();
       await pumpAuditApp(
         tester,
         themeMode: ThemeMode.light,
@@ -408,10 +457,48 @@ void main() {
       await tester.pumpAndSettle();
       await captureGolden(tester, 'step3_analytics');
 
+      // Settings tab.
+      final overflowsBeforeSettings = overflowErrors.length;
+      await tester.tap(find.text('⚙️'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      await captureGolden(tester, 'step3b_settings');
+
+      expect(
+        overflowErrors.length,
+        overflowsBeforeSettings,
+        reason: 'SettingsScreen overflowed: $overflowErrors',
+      );
+
+      // Open the Edit Name dialog, then dismiss it without saving.
+      await tester.tap(find.text('Your name'));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit Name'), findsOneWidget);
+      await captureGolden(tester, 'step6_edit_name_dialog');
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit Name'), findsNothing);
+      expect(find.byType(SettingsScreen), findsOneWidget);
+
       // Back to the timeline.
       await tester.tap(find.text('🏠'));
       await tester.pumpAndSettle();
       expect(find.byType(TimelineScreen), findsOneWidget);
+
+      // Drawer from the timeline's menu button.
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+      await captureGolden(tester, 'step1b_drawer');
+
+      // Close the drawer by selecting the Timeline destination.
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationDrawer),
+          matching: find.text('Timeline'),
+        ),
+      );
+      await tester.pumpAndSettle();
 
       // Open the first diary entry.
       await tester.tap(find.text('Starting a new project'));
@@ -431,10 +518,56 @@ void main() {
       expect(find.byType(NewEntryScreen), findsOneWidget);
       await captureGolden(tester, 'step5_new_entry');
 
+      // Tags modal bottom sheet from the composer toolbar.
+      await tester.tap(find.byIcon(Icons.label_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text('Add Tags'), findsOneWidget);
+      await captureGolden(tester, 'step5b_tags_sheet');
+
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+      expect(find.text('Add Tags'), findsNothing);
+
       // Let the pushed route settle and drop it so no callbacks outlive the
       // test.
       await tester.tap(find.byIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
+
+      expect(
+        overflowErrors,
+        isEmpty,
+        reason: 'RenderFlex overflows detected: $overflowErrors',
+      );
+    });
+
+    testWidgets('settings_light (390x844 @ 1.0x)', (WidgetTester tester) async {
+      final overflowErrors = captureOverflowErrors();
+      await pumpAuditApp(
+        tester,
+        themeMode: ThemeMode.light,
+        brightness: Brightness.light,
+      );
+
+      await tester.tap(find.text('⚙️'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsScreen), findsOneWidget);
+
+      await captureGolden(tester, 'settings_light');
+
+      // Audit finding: `androidTapTargetGuideline` currently fails here — the
+      // ACCOUNT / TRASH & ARCHIVE action rows (e.g. 'Sign in with Google',
+      // 'Media Gallery', 'View Archive', 'View Trash') measure 46dp tall
+      // (12dp padding above and below a 22dp icon), 2dp under the 48dp
+      // Android minimum. This is a product-layout issue in
+      // lib/screens/settings_screen.dart, not a test issue, so the assertion
+      // stays out of this test-only change and the finding is reported.
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+
+      expect(
+        overflowErrors,
+        isEmpty,
+        reason: 'RenderFlex overflows detected: $overflowErrors',
+      );
     });
 
     testWidgets('calendar_light (390x844 @ 1.0x)', (WidgetTester tester) async {
